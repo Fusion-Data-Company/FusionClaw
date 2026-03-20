@@ -1,0 +1,448 @@
+import {
+  pgTable,
+  text,
+  varchar,
+  timestamp,
+  jsonb,
+  index,
+  uuid,
+  integer,
+  decimal,
+  boolean,
+  date,
+  pgEnum,
+} from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
+
+// ─── Enums ──────────────────────────────────────────────────────────────────
+
+export const userRoleEnum = pgEnum("user_role", ["admin", "employee"]);
+export const shiftStatusEnum = pgEnum("shift_status", ["OPEN", "SUBMITTED"]);
+export const checklistCategoryEnum = pgEnum("checklist_category", ["SOCIAL", "BLOG"]);
+export const checkpointEnum = pgEnum("checkpoint", ["AM8", "PM12", "PM4"]);
+export const platformEnum = pgEnum("platform", ["FACEBOOK", "LINKEDIN", "INSTAGRAM", "YOUTUBE", "BLOG"]);
+export const uploadCategoryEnum = pgEnum("upload_category", ["SOCIAL", "BLOG", "OUTREACH", "EMAIL"]);
+export const taskPriorityEnum = pgEnum("task_priority", ["LOW", "MEDIUM", "HIGH", "URGENT"]);
+export const leadStatusEnum = pgEnum("lead_status", [
+  "new", "contacted", "qualified", "proposal", "negotiation",
+  "closed", "won", "lost", "inactive", "assigned", "in_call",
+]);
+export const leadPriorityEnum = pgEnum("lead_priority", ["low", "medium", "high", "urgent"]);
+export const callOutcomeEnum = pgEnum("call_outcome", [
+  "no_answer", "voicemail", "interested", "not_interested",
+  "callback", "meeting_scheduled", "wrong_number", "do_not_call",
+]);
+export const followUpEnum = pgEnum("follow_up", ["1_day", "3_days", "7_days", "14_days", "30_days"]);
+export const clientStatusEnum = pgEnum("client_status", ["active", "ongoing", "completed", "inactive"]);
+export const campaignStatusEnum = pgEnum("campaign_status", ["draft", "scheduled", "sent", "cancelled"]);
+export const contentQueueStatusEnum = pgEnum("content_queue_status", ["pending", "approved", "rejected", "published"]);
+export const dncReasonEnum = pgEnum("dnc_reason", [
+  "not_interested", "wrong_number", "do_not_call", "hostile", "bad_number", "disconnected",
+]);
+
+// ─── Users (from mat-ops) ───────────────────────────────────────────────────
+
+export const users = pgTable("users", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  clerkId: varchar("clerk_id", { length: 255 }).unique().notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  name: varchar("name", { length: 255 }),
+  role: userRoleEnum("role").default("employee").notNull(),
+  avatarUrl: varchar("avatar_url", { length: 500 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_users_clerk_id").on(table.clerkId),
+]);
+
+// ─── Shifts (from mat-ops) ──────────────────────────────────────────────────
+
+export const shifts = pgTable("shifts", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").references(() => users.id).notNull(),
+  shiftDate: date("shift_date").notNull(),
+  startedAt: timestamp("started_at").notNull(),
+  endedAt: timestamp("ended_at"),
+  status: shiftStatusEnum("status").default("OPEN").notNull(),
+  upworkNewJobs: integer("upwork_new_jobs").default(0).notNull(),
+  upworkProposals: integer("upwork_proposals").default(0).notNull(),
+  upworkFollowups: integer("upwork_followups").default(0).notNull(),
+  upworkReplies: integer("upwork_replies").default(0).notNull(),
+  upworkCallsBooked: integer("upwork_calls_booked").default(0).notNull(),
+  emailsSent: integer("emails_sent").default(0).notNull(),
+  emailReplies: integer("email_replies").default(0).notNull(),
+  coldCallsMade: integer("cold_calls_made").default(0).notNull(),
+  trackerUpdated: boolean("tracker_updated").default(false).notNull(),
+  notes: text("notes"),
+  completionPercent: integer("completion_percent").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_shifts_user_date").on(table.userId, table.shiftDate),
+  index("idx_shifts_status").on(table.status),
+]);
+
+// ─── Checklist Items (from mat-ops) ─────────────────────────────────────────
+
+export const checklistItems = pgTable("checklist_items", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  shiftId: uuid("shift_id").references(() => shifts.id, { onDelete: "cascade" }).notNull(),
+  key: varchar("key", { length: 100 }).notNull(),
+  label: varchar("label", { length: 255 }).notNull(),
+  category: checklistCategoryEnum("category").notNull(),
+  checkpoint: checkpointEnum("checkpoint"),
+  platform: platformEnum("platform"),
+  completed: boolean("completed").default(false).notNull(),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_checklist_shift").on(table.shiftId),
+]);
+
+// ─── Uploads (from mat-ops) ─────────────────────────────────────────────────
+
+export const uploads = pgTable("uploads", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  shiftId: uuid("shift_id").references(() => shifts.id, { onDelete: "cascade" }).notNull(),
+  checklistItemId: uuid("checklist_item_id").references(() => checklistItems.id, { onDelete: "set null" }),
+  category: uploadCategoryEnum("category").notNull(),
+  blobUrl: text("blob_url").notNull(),
+  filename: varchar("filename", { length: 500 }).notNull(),
+  mimeType: varchar("mime_type", { length: 100 }).notNull(),
+  sizeBytes: integer("size_bytes").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_uploads_shift").on(table.shiftId),
+]);
+
+// ─── Tasks (from mat-ops) ───────────────────────────────────────────────────
+
+export const tasks = pgTable("tasks", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  title: varchar("title", { length: 500 }).notNull(),
+  description: text("description"),
+  dueDate: date("due_date").notNull(),
+  priority: taskPriorityEnum("priority").default("MEDIUM").notNull(),
+  completed: boolean("completed").default(false).notNull(),
+  completedAt: timestamp("completed_at"),
+  completedBy: uuid("completed_by").references(() => users.id),
+  assignedBy: uuid("assigned_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_tasks_due").on(table.dueDate),
+  index("idx_tasks_completed").on(table.completed),
+]);
+
+// ─── Chat Messages (from mat-ops) ──────────────────────────────────────────
+
+export const chatMessages = pgTable("chat_messages", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").references(() => users.id).notNull(),
+  role: varchar("role", { length: 20 }).notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_chat_user_created").on(table.userId, table.createdAt),
+]);
+
+// ─── Knowledge Base (from mat-ops) ──────────────────────────────────────────
+
+export const knowledgeBase = pgTable("knowledge_base", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// ─── Leads (from lead-annex, minus enrichment) ─────────────────────────────
+
+export const leads = pgTable("leads", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  company: varchar("company", { length: 255 }).notNull(),
+  type: varchar("type", { length: 255 }),
+  website: varchar("website", { length: 500 }),
+  contact: varchar("contact", { length: 255 }),
+  jobTitle: varchar("job_title", { length: 255 }),
+  phone: varchar("phone", { length: 50 }),
+  altPhone: varchar("alt_phone", { length: 50 }),
+  email: varchar("email", { length: 255 }),
+  email2: varchar("email_2", { length: 255 }),
+  linkedin: varchar("linkedin", { length: 500 }),
+  instagram: varchar("instagram", { length: 500 }),
+  facebook: varchar("facebook", { length: 500 }),
+  twitterX: varchar("twitter_x", { length: 500 }),
+  youtube: varchar("youtube", { length: 500 }),
+  tiktok: varchar("tiktok", { length: 500 }),
+  address: text("address"),
+  description: text("description"),
+  status: leadStatusEnum("status").default("new").notNull(),
+  assignedTo: uuid("assigned_to").references(() => users.id),
+  saleMade: boolean("sale_made").default(false),
+  notes: text("notes"),
+  callOutcome: callOutcomeEnum("call_outcome"),
+  followUp: followUpEnum("follow_up"),
+  aiQualityScore: decimal("ai_quality_score", { precision: 5, scale: 2 }),
+  tags: jsonb("tags").$type<string[]>().default([]),
+  source: varchar("source", { length: 255 }),
+  priority: leadPriorityEnum("priority"),
+  lastContactDate: timestamp("last_contact_date"),
+  nextFollowUpDate: timestamp("next_follow_up_date"),
+  timesContacted: integer("times_contacted").default(0),
+  dealValue: decimal("deal_value", { precision: 12, scale: 2 }),
+  wonBy: uuid("won_by").references(() => users.id),
+  wonDate: timestamp("won_date"),
+  clientStatus: clientStatusEnum("client_status"),
+  latitude: decimal("latitude", { precision: 10, scale: 7 }),
+  longitude: decimal("longitude", { precision: 10, scale: 7 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_leads_status").on(table.status),
+  index("idx_leads_assigned").on(table.assignedTo),
+  index("idx_leads_company").on(table.company),
+  index("idx_leads_email").on(table.email),
+]);
+
+// ─── Lead Notes ─────────────────────────────────────────────────────────────
+
+export const leadNotes = pgTable("lead_notes", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  leadId: uuid("lead_id").references(() => leads.id, { onDelete: "cascade" }).notNull(),
+  authorId: uuid("author_id").references(() => users.id).notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_lead_notes_lead").on(table.leadId),
+]);
+
+// ─── Lead Activities ────────────────────────────────────────────────────────
+
+export const leadActivities = pgTable("lead_activities", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  leadId: uuid("lead_id").references(() => leads.id, { onDelete: "cascade" }).notNull(),
+  userId: uuid("user_id").references(() => users.id).notNull(),
+  type: varchar("type", { length: 100 }).notNull(),
+  description: text("description"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_lead_activities_lead").on(table.leadId),
+]);
+
+// ─── Do Not Call Leads ──────────────────────────────────────────────────────
+
+export const doNotCallLeads = pgTable("do_not_call_leads", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  originalLeadId: uuid("original_lead_id").notNull(),
+  company: varchar("company", { length: 255 }).notNull(),
+  type: varchar("type", { length: 255 }),
+  website: varchar("website", { length: 500 }),
+  contact: varchar("contact", { length: 255 }),
+  phone: varchar("phone", { length: 50 }),
+  email: varchar("email", { length: 255 }),
+  reason: dncReasonEnum("reason").notNull(),
+  lastCallOutcome: callOutcomeEnum("last_call_outcome").notNull(),
+  movedBy: uuid("moved_by").references(() => users.id),
+  movedAt: timestamp("moved_at").defaultNow().notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// ─── Bad Contact Leads ──────────────────────────────────────────────────────
+
+export const badContactLeads = pgTable("bad_contact_leads", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  originalLeadId: uuid("original_lead_id").notNull(),
+  company: varchar("company", { length: 255 }).notNull(),
+  contact: varchar("contact", { length: 255 }),
+  phone: varchar("phone", { length: 50 }),
+  email: varchar("email", { length: 255 }),
+  reason: varchar("reason", { length: 255 }).notNull(),
+  movedBy: uuid("moved_by").references(() => users.id),
+  movedAt: timestamp("moved_at").defaultNow().notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// ─── Content Projects (from content-command-center) ─────────────────────────
+
+export const projects = pgTable("projects", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  status: varchar("status", { length: 50 }).default("active"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// ─── Content (from content-command-center) ──────────────────────────────────
+
+export const content = pgTable("content", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  projectId: uuid("project_id").references(() => projects.id, { onDelete: "cascade" }).notNull(),
+  contentHtml: text("content_html"),
+  contentMarkdown: text("content_markdown"),
+  metaTitle: varchar("meta_title", { length: 255 }),
+  metaDescription: text("meta_description"),
+  urlSlug: varchar("url_slug", { length: 255 }),
+  version: integer("version").default(1).notNull(),
+  isNaturalized: boolean("is_naturalized").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// ─── Messages (from content-command-center) ─────────────────────────────────
+
+export const messages = pgTable("messages", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  projectId: uuid("project_id").references(() => projects.id, { onDelete: "cascade" }).notNull(),
+  role: varchar("role", { length: 20 }).notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_messages_project").on(table.projectId),
+]);
+
+// ─── Brand Profiles (from content-command-center) ───────────────────────────
+
+export const brandProfiles = pgTable("brand_profiles", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  colorPalette: jsonb("color_palette").$type<string[]>(),
+  brandGuidelines: text("brand_guidelines"),
+  logoUrl: varchar("logo_url", { length: 500 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// ─── Studio Generations (from content-command-center) ───────────────────────
+
+export const studioGenerations = pgTable("studio_generations", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  brandProfileId: uuid("brand_profile_id").references(() => brandProfiles.id),
+  prompt: text("prompt").notNull(),
+  model: varchar("model", { length: 100 }).notNull(),
+  aspectRatio: varchar("aspect_ratio", { length: 20 }),
+  resultImageUrls: jsonb("result_image_urls").$type<string[]>().default([]),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// ─── Gallery Items (from content-command-center) ────────────────────────────
+
+export const galleryItems = pgTable("gallery_items", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  imageUrl: text("image_url").notNull(),
+  prompt: text("prompt"),
+  tags: jsonb("tags").$type<string[]>().default([]),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// ─── WordPress Sites (from content-command-center) ──────────────────────────
+
+export const wordpressSites = pgTable("wordpress_sites", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  url: varchar("url", { length: 500 }).notNull(),
+  username: varchar("username", { length: 255 }).notNull(),
+  appPassword: varchar("app_password", { length: 255 }).notNull(),
+  isConnected: boolean("is_connected").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// ─── WordPress Content ──────────────────────────────────────────────────────
+
+export const wordpressContent = pgTable("wordpress_content", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  siteId: uuid("site_id").references(() => wordpressSites.id, { onDelete: "cascade" }).notNull(),
+  wpPostId: integer("wp_post_id"),
+  title: varchar("title", { length: 500 }),
+  status: varchar("status", { length: 50 }),
+  publishedAt: timestamp("published_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// ─── Settings (from content-command-center) ─────────────────────────────────
+
+export const settings = pgTable("settings", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  defaultImageModel: varchar("default_image_model", { length: 100 }).default("fal-ai/nano-banana-pro"),
+  chatModel: varchar("chat_model", { length: 100 }).default("anthropic/claude-sonnet-4"),
+  chatMaxTokens: integer("chat_max_tokens").default(4096),
+  chatTemperature: decimal("chat_temperature", { precision: 3, scale: 2 }).default("0.70"),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// ─── Campaigns (from stain-and-seal) ────────────────────────────────────────
+
+export const campaigns = pgTable("campaigns", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  type: varchar("type", { length: 50 }),
+  status: campaignStatusEnum("status").default("draft").notNull(),
+  subject: varchar("subject", { length: 500 }),
+  contentHtml: text("content_html"),
+  scheduledFor: timestamp("scheduled_for"),
+  sentAt: timestamp("sent_at"),
+  stats: jsonb("stats"),
+  createdBy: uuid("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// ─── AI Content Queue (from stain-and-seal) ─────────────────────────────────
+
+export const aiContentQueue = pgTable("ai_content_queue", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  type: varchar("type", { length: 50 }),
+  title: varchar("title", { length: 255 }),
+  content: text("content"),
+  status: contentQueueStatusEnum("status").default("pending").notNull(),
+  reviewedBy: uuid("reviewed_by").references(() => users.id),
+  reviewNotes: text("review_notes"),
+  generatedAt: timestamp("generated_at").defaultNow().notNull(),
+  reviewedAt: timestamp("reviewed_at"),
+});
+
+// ─── Relations ──────────────────────────────────────────────────────────────
+
+export const usersRelations = relations(users, ({ many }) => ({
+  shifts: many(shifts),
+  tasks: many(tasks),
+  chatMessages: many(chatMessages),
+  leadNotes: many(leadNotes),
+  leadActivities: many(leadActivities),
+}));
+
+export const shiftsRelations = relations(shifts, ({ one, many }) => ({
+  user: one(users, { fields: [shifts.userId], references: [users.id] }),
+  checklistItems: many(checklistItems),
+  uploads: many(uploads),
+}));
+
+export const checklistItemsRelations = relations(checklistItems, ({ one, many }) => ({
+  shift: one(shifts, { fields: [checklistItems.shiftId], references: [shifts.id] }),
+  uploads: many(uploads),
+}));
+
+export const uploadsRelations = relations(uploads, ({ one }) => ({
+  shift: one(shifts, { fields: [uploads.shiftId], references: [shifts.id] }),
+  checklistItem: one(checklistItems, { fields: [uploads.checklistItemId], references: [checklistItems.id] }),
+}));
+
+export const leadsRelations = relations(leads, ({ one, many }) => ({
+  assignedUser: one(users, { fields: [leads.assignedTo], references: [users.id] }),
+  wonByUser: one(users, { fields: [leads.wonBy], references: [users.id] }),
+  notes: many(leadNotes),
+  activities: many(leadActivities),
+}));
+
+export const leadNotesRelations = relations(leadNotes, ({ one }) => ({
+  lead: one(leads, { fields: [leadNotes.leadId], references: [leads.id] }),
+  author: one(users, { fields: [leadNotes.authorId], references: [users.id] }),
+}));
+
+export const projectsRelations = relations(projects, ({ many }) => ({
+  content: many(content),
+  messages: many(messages),
+}));
+
+export const contentRelations = relations(content, ({ one }) => ({
+  project: one(projects, { fields: [content.projectId], references: [projects.id] }),
+}));
