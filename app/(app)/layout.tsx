@@ -200,9 +200,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Bottom */}
         {!sidebarCollapsed && (
           <div className="p-4 border-t border-border">
-            <UserButton
-              appearance={{ elements: { avatarBox: "w-8 h-8" } }}
-            />
+            <UserButton appearance={{ elements: { avatarBox: "w-8 h-8" } }} />
           </div>
         )}
       </aside>
