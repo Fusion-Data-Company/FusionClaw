@@ -26,6 +26,7 @@ import {
   Menu,
   ChevronLeft,
   ChevronRight,
+  Clock,
 } from "lucide-react";
 
 const NAV_SECTIONS = [
@@ -69,6 +70,7 @@ const NAV_SECTIONS = [
   {
     label: "SYSTEM",
     items: [
+      { name: "Cron Jobs", href: "/cron-jobs", icon: Clock },
       { name: "Knowledge Base", href: "/knowledge-base", icon: BookOpen },
       { name: "Chat", href: "/chat", icon: MessageSquare },
       { name: "Settings", href: "/settings", icon: Settings },
@@ -138,7 +140,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           md:translate-x-0 ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}
           bg-surface
         `}
-        style={{ borderRight: "1px solid rgba(218,165,32,0.08)" }}
+        style={{ borderRight: "1px solid rgba(59,130,246,0.08)" }}
       >
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-border">
@@ -179,10 +181,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                         isActive ? "" : "hover:bg-elevated"
                       }`}
                       style={{
-                        background: isActive ? "rgba(218,165,32,0.08)" : undefined,
+                        background: isActive ? "rgba(59,130,246,0.08)" : undefined,
                         color: isActive ? "var(--color-amber)" : "var(--color-text-secondary)",
                         borderLeft: isActive
-                          ? "2px solid rgba(218,165,32,0.5)"
+                          ? "2px solid rgba(59,130,246,0.5)"
                           : "2px solid transparent",
                       }}
                       title={sidebarCollapsed ? item.name : undefined}

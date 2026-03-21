@@ -106,12 +106,12 @@ export function SpotlightCard({ children, className = "", style }: SpotlightCard
       {/* Spotlight gradient overlay */}
       <div className="absolute inset-0 pointer-events-none opacity-0 hover:opacity-100 transition-opacity duration-300"
         style={{
-          background: "radial-gradient(300px circle at var(--spotlight-x, 50%) var(--spotlight-y, 50%), rgba(218,165,32,0.08), transparent 60%)",
+          background: "radial-gradient(300px circle at var(--spotlight-x, 50%) var(--spotlight-y, 50%), rgba(59,130,246,0.08), transparent 60%)",
         }} />
       {/* Border glow */}
       <div className="absolute inset-0 pointer-events-none opacity-0 hover:opacity-100 transition-opacity duration-300 rounded-inherit"
         style={{
-          background: "radial-gradient(300px circle at var(--spotlight-x, 50%) var(--spotlight-y, 50%), rgba(218,165,32,0.15), transparent 60%)",
+          background: "radial-gradient(300px circle at var(--spotlight-x, 50%) var(--spotlight-y, 50%), rgba(59,130,246,0.15), transparent 60%)",
           mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
           maskComposite: "exclude",
           WebkitMaskComposite: "xor",

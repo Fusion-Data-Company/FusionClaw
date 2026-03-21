@@ -36,6 +36,17 @@ export const followUpEnum = pgEnum("follow_up", ["1_day", "3_days", "7_days", "1
 export const clientStatusEnum = pgEnum("client_status", ["active", "ongoing", "completed", "inactive"]);
 export const campaignStatusEnum = pgEnum("campaign_status", ["draft", "scheduled", "sent", "cancelled"]);
 export const contentQueueStatusEnum = pgEnum("content_queue_status", ["pending", "approved", "rejected", "published"]);
+
+// Cron Job Enums
+export const cronJobStatusEnum = pgEnum("cron_job_status", [
+  "idle", "running", "completed", "failed", "paused", "scheduled"
+]);
+export const cronJobFrequencyEnum = pgEnum("cron_job_frequency", [
+  "once", "hourly", "daily", "weekly", "monthly", "custom"
+]);
+export const cronJobCategoryEnum = pgEnum("cron_job_category", [
+  "data_sync", "reports", "cleanup", "notifications", "backups", "integrations", "ai_tasks", "custom"
+]);
 export const dncReasonEnum = pgEnum("dnc_reason", [
   "not_interested", "wrong_number", "do_not_call", "hostile", "bad_number", "disconnected",
 ]);
@@ -400,6 +411,82 @@ export const aiContentQueue = pgTable("ai_content_queue", {
   reviewedAt: timestamp("reviewed_at"),
 });
 
+// ─── Cron Jobs ───────────────────────────────────────────────────────────────
+
+export const cronJobs = pgTable("cron_jobs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  category: cronJobCategoryEnum("category").default("custom").notNull(),
+
+  // Schedule configuration
+  cronExpression: varchar("cron_expression", { length: 100 }),
+  frequency: cronJobFrequencyEnum("frequency").default("daily").notNull(),
+  timezone: varchar("timezone", { length: 100 }).default("America/New_York"),
+
+  // Execution details
+  status: cronJobStatusEnum("status").default("idle").notNull(),
+  enabled: boolean("enabled").default(true).notNull(),
+  lastRunAt: timestamp("last_run_at"),
+  nextRunAt: timestamp("next_run_at"),
+
+  // Job configuration
+  command: text("command"),
+  endpoint: varchar("endpoint", { length: 500 }),
+  payload: jsonb("payload"),
+  headers: jsonb("headers").$type<Record<string, string>>(),
+  timeout: integer("timeout").default(30000),
+  retryCount: integer("retry_count").default(0),
+  maxRetries: integer("max_retries").default(3),
+
+  // Kanban positioning
+  kanbanColumn: varchar("kanban_column", { length: 50 }).default("idle").notNull(),
+  kanbanOrder: integer("kanban_order").default(0).notNull(),
+
+  // Stats
+  totalRuns: integer("total_runs").default(0).notNull(),
+  successfulRuns: integer("successful_runs").default(0).notNull(),
+  failedRuns: integer("failed_runs").default(0).notNull(),
+  avgDurationMs: integer("avg_duration_ms").default(0),
+
+  // Metadata
+  tags: jsonb("tags").$type<string[]>().default([]),
+  createdBy: uuid("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_cron_jobs_status").on(table.status),
+  index("idx_cron_jobs_enabled").on(table.enabled),
+  index("idx_cron_jobs_next_run").on(table.nextRunAt),
+  index("idx_cron_jobs_category").on(table.category),
+]);
+
+// ─── Cron Job Runs (Execution History) ───────────────────────────────────────
+
+export const cronJobRuns = pgTable("cron_job_runs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  cronJobId: uuid("cron_job_id").references(() => cronJobs.id, { onDelete: "cascade" }).notNull(),
+
+  status: varchar("status", { length: 50 }).notNull(),
+  startedAt: timestamp("started_at").notNull(),
+  completedAt: timestamp("completed_at"),
+  durationMs: integer("duration_ms"),
+
+  // Results
+  output: text("output"),
+  errorMessage: text("error_message"),
+  errorStack: text("error_stack"),
+  httpStatus: integer("http_status"),
+
+  // Metadata
+  triggeredBy: varchar("triggered_by", { length: 50 }).default("scheduler"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_cron_job_runs_job").on(table.cronJobId),
+  index("idx_cron_job_runs_started").on(table.startedAt),
+]);
+
 // ─── Relations ──────────────────────────────────────────────────────────────
 
 export const usersRelations = relations(users, ({ many }) => ({
@@ -445,4 +532,13 @@ export const projectsRelations = relations(projects, ({ many }) => ({
 
 export const contentRelations = relations(content, ({ one }) => ({
   project: one(projects, { fields: [content.projectId], references: [projects.id] }),
+}));
+
+export const cronJobsRelations = relations(cronJobs, ({ one, many }) => ({
+  createdByUser: one(users, { fields: [cronJobs.createdBy], references: [users.id] }),
+  runs: many(cronJobRuns),
+}));
+
+export const cronJobRunsRelations = relations(cronJobRuns, ({ one }) => ({
+  cronJob: one(cronJobs, { fields: [cronJobRuns.cronJobId], references: [cronJobs.id] }),
 }));

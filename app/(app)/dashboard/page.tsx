@@ -189,24 +189,24 @@ export default function DashboardPage() {
                 hidden: {
                   opacity: 0,
                   scale: 0.95,
-                  filter: "brightness(0.3) drop-shadow(0 0 0px rgba(218,165,32,0))",
+                  filter: "brightness(0.3) drop-shadow(0 0 0px rgba(59,130,246,0))",
                 },
                 visible: {
                   opacity: 1,
                   scale: 1,
-                  filter: "brightness(1) drop-shadow(0 0 20px rgba(218,165,32,0.8))",
+                  filter: "brightness(1) drop-shadow(0 0 20px rgba(59,130,246,0.8))",
                   transition: { duration: 0.6, ease: [0.23, 1, 0.32, 1] },
                 },
               }}
             >
               <motion.div
                 variants={{
-                  hidden: { boxShadow: "0 0 0px rgba(218,165,32,0)" },
+                  hidden: { boxShadow: "0 0 0px rgba(59,130,246,0)" },
                   visible: {
                     boxShadow: [
-                      "0 0 0px rgba(218,165,32,0)",
-                      "0 0 30px rgba(218,165,32,0.6)",
-                      "0 0 15px rgba(218,165,32,0.3)",
+                      "0 0 0px rgba(59,130,246,0)",
+                      "0 0 30px rgba(59,130,246,0.6)",
+                      "0 0 15px rgba(59,130,246,0.3)",
                     ],
                     transition: { duration: 0.8, times: [0, 0.5, 1], delay: 0.3 },
                   },
@@ -219,14 +219,14 @@ export default function DashboardPage() {
                       <div className="flex items-center gap-2 mb-1">
                         <motion.div
                           variants={{
-                            hidden: { opacity: 0, scale: 0.5, filter: "drop-shadow(0 0 0px rgba(218,165,32,0))" },
+                            hidden: { opacity: 0, scale: 0.5, filter: "drop-shadow(0 0 0px rgba(59,130,246,0))" },
                             visible: {
                               opacity: 1,
                               scale: 1,
                               filter: [
-                                "drop-shadow(0 0 0px rgba(218,165,32,0))",
-                                "drop-shadow(0 0 12px rgba(218,165,32,1))",
-                                "drop-shadow(0 0 8px rgba(218,165,32,0.6))",
+                                "drop-shadow(0 0 0px rgba(59,130,246,0))",
+                                "drop-shadow(0 0 12px rgba(59,130,246,1))",
+                                "drop-shadow(0 0 8px rgba(59,130,246,0.6))",
                               ],
                               transition: { duration: 0.6, times: [0, 0.6, 1], delay: 0.2 },
                             },
