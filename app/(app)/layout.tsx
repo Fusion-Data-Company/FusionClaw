@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { UserButton } from "@clerk/nextjs";
+import { User } from "lucide-react";
 import { RightSidebar } from "@/components/admin/RightSidebar";
 import {
   LayoutDashboard,
@@ -200,7 +200,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Bottom */}
         {!sidebarCollapsed && (
           <div className="p-4 border-t border-border">
-            <UserButton appearance={{ elements: { avatarBox: "w-8 h-8" } }} />
+            <div className="w-8 h-8 rounded-full bg-amber/20 flex items-center justify-center"><User className="w-4 h-4 text-amber" /></div>
           </div>
         )}
       </aside>
@@ -245,7 +245,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </button>
 
             <div className="hidden md:block">
-              <UserButton appearance={{ elements: { avatarBox: "w-8 h-8" } }} />
+              <div className="w-8 h-8 rounded-full bg-amber/20 flex items-center justify-center"><User className="w-4 h-4 text-amber" /></div>
             </div>
           </div>
         </header>
