@@ -1,9 +1,26 @@
 export async function POST(req: Request) {
   try {
-    const { projectId, message, history } = await req.json();
+    const body = await req.json();
 
-    if (!projectId || !message) {
-      return new Response(JSON.stringify({ error: "Missing required fields" }), { status: 400 });
+    // Support both formats:
+    // 1. { messages: [{role, content}] } - simple chat format
+    // 2. { projectId, message, history } - legacy format
+    let chatMessages: { role: string; content: string }[];
+
+    if (body.messages && Array.isArray(body.messages)) {
+      // Simple format - just use messages directly
+      chatMessages = body.messages;
+    } else if (body.message) {
+      // Legacy format
+      chatMessages = [
+        ...(body.history || []).map((m: { role: string; content: string }) => ({
+          role: m.role,
+          content: m.content,
+        })),
+        { role: "user", content: body.message },
+      ];
+    } else {
+      return new Response(JSON.stringify({ error: "Missing messages or message field" }), { status: 400 });
     }
 
     const apiKey = process.env.OPENROUTER_API_KEY;
@@ -15,11 +32,7 @@ export async function POST(req: Request) {
 
     const messages = [
       { role: "system", content: systemPrompt },
-      ...(history || []).map((m: { role: string; content: string }) => ({
-        role: m.role,
-        content: m.content,
-      })),
-      { role: "user", content: message },
+      ...chatMessages,
     ];
 
     const openRouterRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {

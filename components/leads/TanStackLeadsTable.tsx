@@ -99,9 +99,9 @@ interface Lead {
 interface TanStackLeadsTableProps {
   searchTerm?: string;
   statusFilter?: string;
-  selectedLeads?: number[];
-  onSelectionChange?: (leadIds: number[]) => void;
-  onLeadSelect?: (leadId: number) => void;
+  selectedLeads?: (number | string)[];
+  onSelectionChange?: (leadIds: (number | string)[]) => void;
+  onLeadSelect?: (leadId: number | string) => void;
   className?: string;
 }
 
@@ -192,9 +192,9 @@ function SortHeader({ column, icon: Icon, label }: { column: any; icon: any; lab
       <Icon className="h-3 w-3 opacity-60 shrink-0" />
       <span>{label}</span>
       {column.getIsSorted() === "asc" ? (
-        <ArrowUp className="ml-auto h-3 w-3 shrink-0 text-amber" />
+        <ArrowUp className="ml-auto h-3 w-3 shrink-0 text-accent" />
       ) : column.getIsSorted() === "desc" ? (
-        <ArrowDown className="ml-auto h-3 w-3 shrink-0 text-amber" />
+        <ArrowDown className="ml-auto h-3 w-3 shrink-0 text-accent" />
       ) : null}
     </div>
   );
@@ -220,10 +220,10 @@ function XIcon({ className }: { className?: string }) {
 
 // Column definitions
 const createColumns = (
-  updateLead: (leadId: number, field: string, value: any) => void,
-  deleteLead: (leadId: number) => void,
+  updateLead: (leadId: number | string, field: string, value: any) => void,
+  deleteLead: (leadId: number | string) => void,
   toast: (options: { title: string; description: string; variant?: "destructive" }) => void,
-  onLeadSelect?: (leadId: number) => void
+  onLeadSelect?: (leadId: number | string) => void
 ): ColumnDef<Lead>[] => [
   // Selection
   {
@@ -233,7 +233,7 @@ const createColumns = (
         checked={table.getIsAllPageRowsSelected()}
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
         aria-label="Select all"
-        className="border-amber/50 data-[state=checked]:bg-amber data-[state=checked]:border-amber"
+        className="border-accent/50 data-[state=checked]:bg-accent data-[state=checked]:border-accent"
       />
     ),
     cell: ({ row }) => (
@@ -242,7 +242,7 @@ const createColumns = (
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
           aria-label="Select row"
-          className="border-amber/50 data-[state=checked]:bg-amber data-[state=checked]:border-amber"
+          className="border-accent/50 data-[state=checked]:bg-accent data-[state=checked]:border-accent"
         />
       </div>
     ),
@@ -262,7 +262,7 @@ const createColumns = (
           e.stopPropagation();
           row.toggleExpanded();
         }}
-        className="h-6 w-6 p-0 text-text-muted hover:text-amber hover:bg-amber/10"
+        className="h-6 w-6 p-0 text-text-muted hover:text-accent hover:bg-accent/10"
       >
         {row.getIsExpanded() ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
       </Button>
@@ -362,7 +362,7 @@ const createColumns = (
           {lead.website ? (
             <button
               onClick={() => window.open(lead.website, "_blank")}
-              className="text-text-muted hover:text-amber transition-colors"
+              className="text-text-muted hover:text-accent transition-colors"
               title={lead.website}
             >
               <Globe className="h-4 w-4" />
@@ -616,7 +616,7 @@ const createColumns = (
             variant="ghost"
             size="icon"
             onClick={() => onLeadSelect?.(lead.id)}
-            className="h-7 w-7 text-text-muted hover:text-amber hover:bg-amber/10"
+            className="h-7 w-7 text-text-muted hover:text-accent hover:bg-accent/10"
             title="View Details"
           >
             <Eye className="h-4 w-4" />
@@ -850,7 +850,7 @@ export default function TanStackLeadsTable({
       >
         <div className="flex items-center gap-2">
           <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-          <span className="text-sm font-semibold text-amber">Leads Database</span>
+          <span className="text-sm font-semibold text-accent">Leads Database</span>
           <span className="text-xs text-text-muted">({filteredData.length} leads)</span>
         </div>
         <div className="flex items-center gap-2">
@@ -916,8 +916,8 @@ export default function TanStackLeadsTable({
                 <tr
                   key={row.id}
                   className={cn(
-                    "group hover:bg-elevated/50 transition-colors cursor-pointer",
-                    row.getIsSelected() && "bg-amber/5"
+                    "group hover:bg-elevated/50 hover:shadow-[inset_3px_0_0_rgba(59,130,246,0.5)] transition-colors cursor-pointer",
+                    row.getIsSelected() && "bg-accent/5"
                   )}
                   onClick={() => onLeadSelect?.(row.original.id)}
                   style={{
@@ -927,7 +927,7 @@ export default function TanStackLeadsTable({
                     left: 0,
                     width: "100%",
                     transform: `translateY(${virtualRow.start}px)`,
-                    borderLeft: row.getIsSelected() ? "2px solid var(--color-amber)" : "2px solid transparent",
+                    borderLeft: row.getIsSelected() ? "2px solid var(--color-accent)" : "2px solid transparent",
                   }}
                 >
                   {row.getVisibleCells().map((cell) => (
@@ -945,7 +945,7 @@ export default function TanStackLeadsTable({
         {isLoading && (
           <div className="flex flex-col items-center justify-center py-16 px-8">
             <div className="w-16 h-16 rounded-full bg-surface-2 flex items-center justify-center border border-border mb-4 animate-pulse">
-              <div className="w-7 h-7 rounded-full bg-amber/30" />
+              <div className="w-7 h-7 rounded-full bg-accent/30" />
             </div>
             <h3 className="text-base font-semibold text-text-primary mb-1">Loading leads...</h3>
             <p className="text-sm text-text-muted text-center max-w-sm">Fetching your lead database</p>

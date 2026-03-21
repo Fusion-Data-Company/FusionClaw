@@ -15,7 +15,7 @@ const STATUS_CONFIG = {
   pending: { icon: Clock, color: "text-warning", bg: "bg-warning/10 border-warning/30" },
   approved: { icon: CheckCircle, color: "text-success", bg: "bg-success/10 border-success/30" },
   rejected: { icon: XCircle, color: "text-error", bg: "bg-error/10 border-error/30" },
-  published: { icon: Sparkles, color: "text-amber", bg: "bg-amber/10 border-amber/30" },
+  published: { icon: Sparkles, color: "text-accent", bg: "bg-accent/10 border-accent/30" },
 };
 
 export default function AIQueuePage() {

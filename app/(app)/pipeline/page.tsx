@@ -1,47 +1,94 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
 import { GlassCard } from "@/components/primitives";
 import { PIPELINE_STAGES } from "@/lib/pipelineConfig";
-import { Phone, Mail, DollarSign, Calendar, MoreHorizontal } from "lucide-react";
+import { Phone, Mail, DollarSign, MoreHorizontal, Loader2 } from "lucide-react";
 
 interface PipelineLead {
   id: string;
   company: string;
-  contact: string;
-  phone?: string;
-  email?: string;
-  dealValue?: number;
-  lastContactDate?: string;
+  contact: string | null;
+  phone?: string | null;
+  email?: string | null;
+  dealValue?: string | null;
+  lastContactDate?: string | null;
   status: string;
 }
 
-// Demo data
-const DEMO_PIPELINE_LEADS: PipelineLead[] = Array.from({ length: 30 }, (_, i) => ({
-  id: `pl-${i}`,
-  company: `Company ${i + 1}`,
-  contact: `Contact ${i + 1}`,
-  phone: `(702) 555-${String(i).padStart(4, "0")}`,
-  email: `lead${i + 1}@example.com`,
-  dealValue: Math.round(Math.random() * 25000 + 1000),
-  lastContactDate: new Date(Date.now() - Math.random() * 7 * 86400000).toISOString(),
-  status: PIPELINE_STAGES[i % PIPELINE_STAGES.length].id,
-}));
-
 export default function PipelinePage() {
-  const [leads, setLeads] = useState(DEMO_PIPELINE_LEADS);
+  const [leads, setLeads] = useState<PipelineLead[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState<string | null>(null);
 
-  const onDragEnd = useCallback((result: DropResult) => {
+  useEffect(() => {
+    fetchLeads();
+  }, []);
+
+  const fetchLeads = async () => {
+    try {
+      const res = await fetch("/api/leads?limit=500");
+      const data = await res.json();
+      setLeads(data.leads || []);
+    } catch (err) {
+      console.error("Failed to fetch leads:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onDragEnd = useCallback(async (result: DropResult) => {
     if (!result.destination) return;
     const { draggableId, destination } = result;
+    const newStatus = destination.droppableId;
+
+    // Optimistic update
     setLeads((prev) =>
-      prev.map((l) => (l.id === draggableId ? { ...l, status: destination.droppableId } : l))
+      prev.map((l) => (l.id === draggableId ? { ...l, status: newStatus } : l))
     );
+    setUpdating(draggableId);
+
+    try {
+      const res = await fetch(`/api/leads/${draggableId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to update");
+      }
+    } catch (err) {
+      console.error("Failed to update lead status:", err);
+      // Revert on error
+      fetchLeads();
+    } finally {
+      setUpdating(null);
+    }
   }, []);
 
   const getLeadsForStage = (stageId: string) =>
     leads.filter((l) => l.status === stageId);
+
+  // Map lead statuses to pipeline stages
+  const pipelineStageIds = PIPELINE_STAGES.map((s) => s.id);
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <div>
+          <h1 className="text-2xl font-bold text-text-primary" style={{ fontFamily: "var(--font-display)" }}>
+            Pipeline
+          </h1>
+          <p className="text-sm text-text-muted">Loading leads...</p>
+        </div>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-accent" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -90,19 +137,23 @@ export default function PipelinePage() {
                             >
                               <GlassCard padding="sm" variant="interactive" className="!rounded-[var(--radius-md)]">
                                 <div className="flex items-start justify-between mb-1">
-                                  <div className="font-semibold text-xs text-text-primary truncate">
+                                  <div className="font-semibold text-xs text-text-primary truncate flex-1">
                                     {lead.company}
                                   </div>
-                                  <button className="text-text-muted hover:text-text-primary cursor-pointer">
-                                    <MoreHorizontal className="w-3.5 h-3.5" />
-                                  </button>
+                                  {updating === lead.id ? (
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin text-accent" />
+                                  ) : (
+                                    <button className="text-text-muted hover:text-text-primary cursor-pointer">
+                                      <MoreHorizontal className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
                                 </div>
-                                <div className="text-[11px] text-text-muted mb-2">{lead.contact}</div>
+                                <div className="text-[11px] text-text-muted mb-2">{lead.contact || "No contact"}</div>
                                 <div className="flex items-center gap-3 text-[10px] text-text-muted">
                                   {lead.dealValue && (
                                     <span className="flex items-center gap-0.5 text-success">
                                       <DollarSign className="w-3 h-3" />
-                                      {lead.dealValue.toLocaleString()}
+                                      {parseFloat(lead.dealValue).toLocaleString()}
                                     </span>
                                   )}
                                   {lead.phone && <Phone className="w-3 h-3" />}

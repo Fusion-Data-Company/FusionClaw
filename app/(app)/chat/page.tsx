@@ -81,7 +81,8 @@ export default function ChatPage() {
 
           try {
             const parsed = JSON.parse(data);
-            const delta = parsed.choices?.[0]?.delta?.content;
+            // API returns { content: delta } directly
+            const delta = parsed.content;
             if (delta) {
               accumulated += delta;
               setStreamingContent(accumulated);
@@ -147,8 +148,8 @@ export default function ChatPage() {
         {isEmpty ? (
           <div className="flex-1 flex items-center justify-center min-h-[60vh]">
             <div className="text-center max-w-lg">
-              <div className="w-16 h-16 rounded-2xl bg-amber/10 flex items-center justify-center mx-auto mb-5">
-                <Sparkles className="w-8 h-8 text-amber" />
+              <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-5">
+                <Sparkles className="w-8 h-8 text-accent" />
               </div>
               <h2 className="text-2xl font-bold text-text-primary mb-2" style={{ fontFamily: "var(--font-display)" }}>
                 What would you like to create?
@@ -161,7 +162,7 @@ export default function ChatPage() {
                   <button
                     key={s.label}
                     onClick={() => sendMessage(s.prompt)}
-                    className="flex flex-col items-start gap-1 p-4 rounded-xl bg-surface border border-border text-left hover:border-amber/40 hover:bg-amber/5 transition-all cursor-pointer"
+                    className="flex flex-col items-start gap-1 p-4 rounded-xl bg-surface border border-border text-left hover:border-accent/40 hover:bg-accent/5 transition-all cursor-pointer"
                   >
                     <span className="text-sm font-medium text-text-primary">{s.label}</span>
                     <span className="text-[11px] text-text-muted">{s.desc}</span>
@@ -187,7 +188,7 @@ export default function ChatPage() {
 
       {/* Input */}
       <div className="border-t border-border px-6 py-4">
-        <div className="flex items-end gap-3 bg-surface border border-border rounded-2xl px-4 py-3 focus-within:border-amber/30 transition-colors">
+        <div className="flex items-end gap-3 bg-surface border border-border rounded-2xl px-4 py-3 focus-within:border-accent/30 transition-colors">
           <textarea
             ref={textareaRef}
             value={input}
@@ -209,7 +210,7 @@ export default function ChatPage() {
             <button
               onClick={() => sendMessage(input)}
               disabled={!input.trim()}
-              className="p-2 rounded-lg bg-amber text-bg hover:bg-amber/90 transition-colors disabled:opacity-30 disabled:cursor-not-allowed shrink-0 cursor-pointer"
+              className="p-2 rounded-lg bg-accent text-bg hover:bg-accent/90 transition-colors disabled:opacity-30 disabled:cursor-not-allowed shrink-0 cursor-pointer"
             >
               <Send className="w-4 h-4" />
             </button>
@@ -236,19 +237,19 @@ function MessageBubble({ message, isStreaming }: { message: Message; isStreaming
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
       {!isUser && (
-        <div className="shrink-0 w-8 h-8 rounded-lg bg-amber/10 flex items-center justify-center mr-3 mt-1">
-          <Bot className="w-4 h-4 text-amber" />
+        <div className="shrink-0 w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center mr-3 mt-1">
+          <Bot className="w-4 h-4 text-accent" />
         </div>
       )}
-      <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${isUser ? "bg-amber/10 border border-amber/20" : "bg-glass border border-border"}`}>
+      <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${isUser ? "bg-accent/10 border border-accent/20" : "bg-glass border border-border"}`}>
         <p className="text-sm leading-relaxed text-text-primary whitespace-pre-wrap">{message.content}</p>
-        {isStreaming && <span className="inline-block w-2 h-4 bg-amber ml-0.5 animate-pulse" />}
+        {isStreaming && <span className="inline-block w-2 h-4 bg-accent ml-0.5 animate-pulse" />}
         <div className="flex items-center justify-between mt-2 pt-1.5">
           <span className="text-[10px] text-text-muted">
             {message.createdAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
           </span>
           {!isUser && !isStreaming && message.content && (
-            <button onClick={handleCopy} className="p-1 rounded text-text-muted hover:text-amber transition-colors cursor-pointer">
+            <button onClick={handleCopy} className="p-1 rounded text-text-muted hover:text-accent transition-colors cursor-pointer">
               {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
             </button>
           )}

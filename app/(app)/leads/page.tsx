@@ -8,9 +8,9 @@ import { Search, Download, Upload, Plus } from "lucide-react";
 export default function LeadsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [selectedLeads, setSelectedLeads] = useState<number[]>([]);
+  const [selectedLeads, setSelectedLeads] = useState<(number | string)[]>([]);
 
-  const handleLeadSelect = (leadId: number) => {
+  const handleLeadSelect = (leadId: number | string) => {
     console.log("Selected lead:", leadId);
     // TODO: Open lead detail panel
   };
@@ -27,17 +27,17 @@ export default function LeadsPage() {
         </div>
         <div className="flex gap-2">
           <MagneticElement strength={0.2} radius={80}>
-            <button className="px-3 py-2 rounded-lg text-xs font-medium bg-surface text-text-secondary border border-border hover:bg-elevated cursor-pointer flex items-center gap-1 transition-all hover:border-amber/30">
+            <button className="px-3 py-2 rounded-lg text-xs font-medium bg-surface text-text-secondary border border-border hover:bg-elevated cursor-pointer flex items-center gap-1 transition-all hover:border-accent/30">
               <Upload className="w-3.5 h-3.5" /> Import
             </button>
           </MagneticElement>
           <MagneticElement strength={0.2} radius={80}>
-            <button className="px-3 py-2 rounded-lg text-xs font-medium bg-surface text-text-secondary border border-border hover:bg-elevated cursor-pointer flex items-center gap-1 transition-all hover:border-amber/30">
+            <button className="px-3 py-2 rounded-lg text-xs font-medium bg-surface text-text-secondary border border-border hover:bg-elevated cursor-pointer flex items-center gap-1 transition-all hover:border-accent/30">
               <Download className="w-3.5 h-3.5" /> Export
             </button>
           </MagneticElement>
           <MagneticElement strength={0.3} radius={100}>
-            <button className="px-3 py-2 rounded-lg text-xs font-medium bg-amber/20 text-amber border border-amber/30 hover:bg-amber/30 cursor-pointer flex items-center gap-1 transition-all hover:shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+            <button className="px-3 py-2 rounded-lg text-xs font-medium bg-accent/20 text-accent border border-accent/30 hover:bg-accent/30 cursor-pointer flex items-center gap-1 transition-all hover:shadow-[0_0_15px_rgba(59,130,246,0.3)]">
               <Plus className="w-3.5 h-3.5" /> Add Lead
             </button>
           </MagneticElement>
@@ -53,7 +53,7 @@ export default function LeadsPage() {
             placeholder="Search leads..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full h-9 pl-9 pr-4 rounded-lg text-sm bg-surface border border-border text-text-primary placeholder:text-text-muted focus:border-amber/30 outline-none"
+            className="w-full h-9 pl-9 pr-4 rounded-lg text-sm bg-surface border border-border text-text-primary placeholder:text-text-muted focus:border-accent/30 outline-none"
           />
         </div>
         <select

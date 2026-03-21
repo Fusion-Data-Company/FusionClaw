@@ -10,12 +10,12 @@
   --color-border-med:  rgba(255,255,255,0.10);
   --color-border-high: rgba(255,255,255,0.16);
 
-  /* Brand Accents — Fusion blue primary */
-  --color-amber:       #3B82F6;
-  --color-amber-light: #60A5FA;
-  --color-amber-dim:   #2563EB;
-  --color-amber-glow:  rgba(59,130,246,0.35);
-  --color-amber-bg:    rgba(59,130,246,0.08);
+  /* Brand Accents — Blue primary */
+  --color-accent:       #3B82F6;
+  --color-accent-light: #60A5FA;
+  --color-accent-dim:   #2563EB;
+  --color-accent-glow:  rgba(59,130,246,0.35);
+  --color-accent-bg:    rgba(59,130,246,0.08);
 
   /* Cyan secondary */
   --color-cyan:        #06B6D4;

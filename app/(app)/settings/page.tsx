@@ -90,8 +90,8 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6 max-w-4xl">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-amber/10 flex items-center justify-center">
-          <Settings className="w-5 h-5 text-amber" />
+        <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+          <Settings className="w-5 h-5 text-accent" />
         </div>
         <div>
           <h1 className="text-2xl font-bold text-text-primary" style={{ fontFamily: "var(--font-display)" }}>Settings</h1>
@@ -130,7 +130,7 @@ export default function SettingsPage() {
       {/* AI Configuration */}
       <GlassCard padding="lg">
         <div className="flex items-center gap-2 mb-4">
-          <Cpu className="w-4 h-4 text-amber" />
+          <Cpu className="w-4 h-4 text-accent" />
           <h2 className="text-sm font-bold text-text-primary">AI Configuration</h2>
         </div>
         <div className="space-y-5">
@@ -139,7 +139,7 @@ export default function SettingsPage() {
             <select
               value={settings.chatModel}
               onChange={(e) => update({ chatModel: e.target.value })}
-              className="w-full max-w-md bg-surface border border-border rounded-lg px-3 py-2.5 text-sm text-text-primary focus:outline-none focus:border-amber/30"
+              className="w-full max-w-md bg-surface border border-border rounded-lg px-3 py-2.5 text-sm text-text-primary focus:outline-none focus:border-accent/30"
             >
               {AI_MODELS.map((m) => (
                 <option key={m.value} value={m.value}>
@@ -152,7 +152,7 @@ export default function SettingsPage() {
           <div>
             <label className="text-xs font-medium text-text-primary block mb-2">
               Creativity Level
-              <span className="ml-2 text-amber font-normal">{settings.chatTemperature.toFixed(1)} — {tempLabel}</span>
+              <span className="ml-2 text-accent font-normal">{settings.chatTemperature.toFixed(1)} — {tempLabel}</span>
             </label>
             <input
               type="range"
@@ -161,7 +161,7 @@ export default function SettingsPage() {
               step="0.1"
               value={settings.chatTemperature}
               onChange={(e) => update({ chatTemperature: parseFloat(e.target.value) })}
-              className="w-full max-w-md accent-amber h-1.5 bg-elevated rounded-full appearance-none cursor-pointer"
+              className="w-full max-w-md accent-accent h-1.5 bg-elevated rounded-full appearance-none cursor-pointer"
             />
             <div className="flex justify-between max-w-md mt-1">
               {TEMP_LABELS.map((t) => (
@@ -183,7 +183,7 @@ export default function SettingsPage() {
                   onClick={() => update({ chatMaxTokens: opt.value })}
                   className={`flex-1 py-2 rounded-lg border text-xs font-medium transition-colors cursor-pointer ${
                     settings.chatMaxTokens === opt.value
-                      ? "border-amber/50 bg-amber/5 text-amber"
+                      ? "border-accent/50 bg-accent/5 text-accent"
                       : "border-border text-text-muted hover:text-text-primary"
                   }`}
                 >
@@ -198,7 +198,7 @@ export default function SettingsPage() {
       {/* Image Generation */}
       <GlassCard padding="lg">
         <div className="flex items-center gap-2 mb-4">
-          <ImageIcon className="w-4 h-4 text-amber" />
+          <ImageIcon className="w-4 h-4 text-accent" />
           <h2 className="text-sm font-bold text-text-primary">Image Generation</h2>
         </div>
         <div className="space-y-5">
@@ -207,7 +207,7 @@ export default function SettingsPage() {
             <select
               value={settings.defaultImageModel}
               onChange={(e) => update({ defaultImageModel: e.target.value })}
-              className="w-full max-w-md bg-surface border border-border rounded-lg px-3 py-2.5 text-sm text-text-primary focus:outline-none focus:border-amber/30"
+              className="w-full max-w-md bg-surface border border-border rounded-lg px-3 py-2.5 text-sm text-text-primary focus:outline-none focus:border-accent/30"
             >
               {IMAGE_MODELS.map((m) => (
                 <option key={m.value} value={m.value}>{m.label} — {m.note}</option>
@@ -224,7 +224,7 @@ export default function SettingsPage() {
                   onClick={() => update({ defaultAspectRatio: ar.value })}
                   className={`px-3 py-2 rounded-lg border text-xs font-medium transition-colors cursor-pointer ${
                     settings.defaultAspectRatio === ar.value
-                      ? "border-amber/50 bg-amber/5 text-amber"
+                      ? "border-accent/50 bg-accent/5 text-accent"
                       : "border-border text-text-muted hover:text-text-primary"
                   }`}
                 >
@@ -254,7 +254,7 @@ export default function SettingsPage() {
       {/* Content Defaults */}
       <GlassCard padding="lg">
         <div className="flex items-center gap-2 mb-4">
-          <FileText className="w-4 h-4 text-amber" />
+          <FileText className="w-4 h-4 text-accent" />
           <h2 className="text-sm font-bold text-text-primary">Content Defaults</h2>
         </div>
         <div className="space-y-5">
@@ -267,7 +267,7 @@ export default function SettingsPage() {
                   onClick={() => update({ defaultContentTone: tone })}
                   className={`px-3 py-2 rounded-lg border text-xs font-medium transition-colors capitalize cursor-pointer ${
                     settings.defaultContentTone === tone
-                      ? "border-amber/50 bg-amber/5 text-amber"
+                      ? "border-accent/50 bg-accent/5 text-accent"
                       : "border-border text-text-muted hover:text-text-primary"
                   }`}
                 >
@@ -280,7 +280,7 @@ export default function SettingsPage() {
           <div>
             <label className="text-xs font-medium text-text-primary block mb-2">
               Target Word Count
-              <span className="ml-2 text-amber font-normal">{settings.targetWordCount.toLocaleString()} words</span>
+              <span className="ml-2 text-accent font-normal">{settings.targetWordCount.toLocaleString()} words</span>
             </label>
             <input
               type="range"
@@ -289,7 +289,7 @@ export default function SettingsPage() {
               step="250"
               value={settings.targetWordCount}
               onChange={(e) => update({ targetWordCount: parseInt(e.target.value) })}
-              className="w-full max-w-md accent-amber h-1.5 bg-elevated rounded-full appearance-none cursor-pointer"
+              className="w-full max-w-md accent-accent h-1.5 bg-elevated rounded-full appearance-none cursor-pointer"
             />
             <div className="flex justify-between max-w-md mt-1">
               <span className="text-[10px] text-text-muted">500</span>
@@ -303,7 +303,7 @@ export default function SettingsPage() {
       {/* Notifications */}
       <GlassCard padding="lg">
         <div className="flex items-center gap-2 mb-4">
-          <Bell className="w-4 h-4 text-amber" />
+          <Bell className="w-4 h-4 text-accent" />
           <h2 className="text-sm font-bold text-text-primary">Notifications</h2>
         </div>
         <div className="space-y-3">
@@ -380,7 +380,7 @@ function ToggleRow({ label, description, checked, onChange }: { label: string; d
       </div>
       <button
         onClick={() => onChange(!checked)}
-        className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer ${checked ? "bg-amber" : "bg-elevated"}`}
+        className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer ${checked ? "bg-accent" : "bg-elevated"}`}
       >
         <div className={`absolute top-0.5 w-4 h-4 rounded-full transition-transform ${checked ? "translate-x-5 bg-bg" : "translate-x-0.5 bg-text-muted"}`} />
       </button>

@@ -102,8 +102,8 @@ export function Calendar({
                 "h-8 w-8 rounded-md text-sm font-medium transition-colors cursor-pointer flex items-center justify-center",
                 !isCurrentMonth && "text-text-disabled opacity-50",
                 isCurrentMonth && !isSelected && "text-text-secondary hover:bg-elevated",
-                isDayToday && !isSelected && "bg-surface-2 text-amber",
-                isSelected && "bg-amber text-bg hover:bg-amber-light"
+                isDayToday && !isSelected && "bg-surface-2 text-accent",
+                isSelected && "bg-accent text-bg hover:bg-accent-light"
               )}
             >
               {format(day, "d")}

@@ -30,7 +30,7 @@ export default function PublishingPage() {
           <h1 className="text-2xl font-bold text-text-primary" style={{ fontFamily: "var(--font-display)" }}>Publishing Hub</h1>
           <p className="text-sm text-text-muted">WordPress publishing and content management</p>
         </div>
-        <button className="px-3 py-2 rounded-lg text-xs font-medium bg-amber/20 text-amber border border-amber/30 hover:bg-amber/30 cursor-pointer flex items-center gap-1">
+        <button className="px-3 py-2 rounded-lg text-xs font-medium bg-accent/20 text-accent border border-accent/30 hover:bg-accent/30 cursor-pointer flex items-center gap-1">
           <Plus className="w-3.5 h-3.5" /> Connect Site
         </button>
       </div>
@@ -40,7 +40,7 @@ export default function PublishingPage() {
         {DEMO_SITES.map((site) => (
           <GlassCard key={site.id} variant="interactive" padding="md">
             <div className="flex items-center gap-2 mb-2">
-              <Globe className="w-4 h-4 text-amber" />
+              <Globe className="w-4 h-4 text-accent" />
               <span className="text-sm font-bold text-text-primary">{site.name}</span>
             </div>
             <div className="flex items-center gap-2 text-xs text-text-muted mb-3">
@@ -48,7 +48,7 @@ export default function PublishingPage() {
               {site.connected ? "Connected" : "Disconnected"}
               <span className="ml-auto">{site.posts} posts</span>
             </div>
-            <a href={site.url} target="_blank" rel="noopener noreferrer" className="text-[11px] text-amber hover:text-amber-light flex items-center gap-1">
+            <a href={site.url} target="_blank" rel="noopener noreferrer" className="text-[11px] text-accent hover:text-accent-light flex items-center gap-1">
               <ExternalLink className="w-3 h-3" /> Visit Site
             </a>
           </GlassCard>

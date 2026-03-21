@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, useInView, useMotionValue, useSpring } from "framer-motion";
 import { GlassCard } from "@/components/primitives";
 import { SpotlightCard } from "@/components/effects/EliteEffects";
-import { LayoutDashboard, TrendingUp, Users, Target, Plus, ListTodo, Database, Sparkles } from "lucide-react";
+import { TrendingUp, Target, Plus, ListTodo, Database, Sparkles, CheckCircle2, Loader2, Activity } from "lucide-react";
 import Link from "next/link";
 
 // Animated counter hook
@@ -51,58 +51,24 @@ function AnimatedCurrency({ value }: { value: number }) {
   return <span ref={ref}>{displayValue}</span>;
 }
 
-function AnimatedPercentage({ value }: { value: number }) {
-  const { ref, value: animatedValue } = useAnimatedCounter(value * 10);
-  const [displayValue, setDisplayValue] = useState("0.0%");
-
-  useEffect(() => {
-    const unsubscribe = animatedValue.on("change", (latest) => {
-      setDisplayValue(`${(latest / 10).toFixed(1)}%`);
-    });
-    return unsubscribe;
-  }, [animatedValue]);
-
-  return <span ref={ref}>{displayValue}</span>;
+interface DashboardMetrics {
+  totalLeads: number;
+  newLeadsThisMonth: number;
+  wonDeals: number;
+  totalDealValue: number;
+  pendingTasks: number;
+  completedTasksThisWeek: number;
+  shiftsThisWeek: number;
+  imagesGenerated: number;
 }
 
-const METRICS = [
-  {
-    label: "Pipeline Value",
-    value: 127400,
-    displayType: "currency" as const,
-    change: "+18.2%",
-    positive: true,
-    sparkline: [35, 42, 38, 55, 49, 62, 58, 72, 68, 85],
-    Icon: TrendingUp,
-  },
-  {
-    label: "Active Leads",
-    value: 847,
-    displayType: "number" as const,
-    change: "+12.5%",
-    positive: true,
-    sparkline: [120, 135, 148, 142, 165, 159, 178, 171, 185, 195],
-    Icon: Database,
-  },
-  {
-    label: "Proposals Sent",
-    value: 43,
-    displayType: "number" as const,
-    change: "+23.1%",
-    positive: true,
-    sparkline: [3, 4, 2, 5, 6, 4, 7, 5, 8, 6],
-    Icon: Target,
-  },
-  {
-    label: "Conversion Rate",
-    value: 8.4,
-    displayType: "percentage" as const,
-    change: "+1.2%",
-    positive: true,
-    sparkline: [6.8, 7.2, 7.5, 7.1, 7.8, 8.0, 7.9, 8.2, 8.1, 8.4],
-    Icon: Users,
-  },
-];
+interface RecentActivity {
+  id: string;
+  type: string;
+  description: string | null;
+  createdAt: string;
+  leadId: string;
+}
 
 const QUICK_LINKS = [
   { label: "New Lead", href: "/leads", icon: Plus },
@@ -141,6 +107,68 @@ function MiniSparkline({ data, positive }: { data: number[]; positive: boolean }
 }
 
 export default function DashboardPage() {
+  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const res = await fetch("/api/dashboard");
+        const data = await res.json();
+        setMetrics(data.metrics);
+        setRecentActivity(data.recentActivity || []);
+      } catch (err) {
+        console.error("Failed to fetch dashboard data:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  // Build metrics array from real data
+  const METRICS = metrics
+    ? [
+        {
+          label: "Pipeline Value",
+          value: metrics.totalDealValue,
+          displayType: "currency" as const,
+          change: `+${metrics.wonDeals} deals`,
+          positive: true,
+          sparkline: [35, 42, 38, 55, 49, 62, 58, 72, 68, 85],
+          Icon: TrendingUp,
+        },
+        {
+          label: "Total Leads",
+          value: metrics.totalLeads,
+          displayType: "number" as const,
+          change: `+${metrics.newLeadsThisMonth} this month`,
+          positive: true,
+          sparkline: [120, 135, 148, 142, 165, 159, 178, 171, 185, 195],
+          Icon: Database,
+        },
+        {
+          label: "Pending Tasks",
+          value: metrics.pendingTasks,
+          displayType: "number" as const,
+          change: `${metrics.completedTasksThisWeek} completed this week`,
+          positive: metrics.pendingTasks < 10,
+          sparkline: [3, 4, 2, 5, 6, 4, 7, 5, 8, 6],
+          Icon: Target,
+        },
+        {
+          label: "Images Generated",
+          value: metrics.imagesGenerated,
+          displayType: "number" as const,
+          change: `${metrics.shiftsThisWeek} shifts this week`,
+          positive: true,
+          sparkline: [6.8, 7.2, 7.5, 7.1, 7.8, 8.0, 7.9, 8.2, 8.1, 8.4],
+          Icon: Sparkles,
+        },
+      ]
+    : [];
+
   return (
     <div className="space-y-6">
       {/* Page header */}
@@ -150,7 +178,7 @@ export default function DashboardPage() {
             Dashboard
           </h1>
           <p className="text-sm mt-0.5 text-text-muted">
-            Welcome back, Boss. Here&apos;s your business at a glance.
+            Welcome back. Here&apos;s your business at a glance.
           </p>
         </div>
         <div className="flex gap-2">
@@ -171,104 +199,137 @@ export default function DashboardPage() {
       </div>
 
       {/* Metrics row with staggered neon power-on animation */}
-      <motion.div
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-100px" }}
-        variants={{
-          visible: { transition: { staggerChildren: 0.2 } },
-        }}
-      >
-        {METRICS.map((m) => {
-          const Icon = m.Icon;
-          return (
-            <motion.div
-              key={m.label}
-              variants={{
-                hidden: {
-                  opacity: 0,
-                  scale: 0.95,
-                  filter: "brightness(0.3) drop-shadow(0 0 0px rgba(59,130,246,0))",
-                },
-                visible: {
-                  opacity: 1,
-                  scale: 1,
-                  filter: "brightness(1) drop-shadow(0 0 20px rgba(59,130,246,0.8))",
-                  transition: { duration: 0.6, ease: [0.23, 1, 0.32, 1] },
-                },
-              }}
-            >
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-32 rounded-[var(--radius-lg)] bg-surface border border-border animate-pulse" />
+          ))}
+        </div>
+      ) : (
+        <motion.div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={{
+            visible: { transition: { staggerChildren: 0.2 } },
+          }}
+        >
+          {METRICS.map((m) => {
+            const Icon = m.Icon;
+            return (
               <motion.div
+                key={m.label}
                 variants={{
-                  hidden: { boxShadow: "0 0 0px rgba(59,130,246,0)" },
+                  hidden: {
+                    opacity: 0,
+                    scale: 0.95,
+                    filter: "brightness(0.3) drop-shadow(0 0 0px rgba(59,130,246,0))",
+                  },
                   visible: {
-                    boxShadow: [
-                      "0 0 0px rgba(59,130,246,0)",
-                      "0 0 30px rgba(59,130,246,0.6)",
-                      "0 0 15px rgba(59,130,246,0.3)",
-                    ],
-                    transition: { duration: 0.8, times: [0, 0.5, 1], delay: 0.3 },
+                    opacity: 1,
+                    scale: 1,
+                    filter: "brightness(1) drop-shadow(0 0 20px rgba(59,130,246,0.8))",
+                    transition: { duration: 0.6, ease: [0.23, 1, 0.32, 1] },
                   },
                 }}
-                className="rounded-[var(--radius-lg)]"
               >
-                <SpotlightCard className="p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <motion.div
-                          variants={{
-                            hidden: { opacity: 0, scale: 0.5, filter: "drop-shadow(0 0 0px rgba(59,130,246,0))" },
-                            visible: {
-                              opacity: 1,
-                              scale: 1,
-                              filter: [
-                                "drop-shadow(0 0 0px rgba(59,130,246,0))",
-                                "drop-shadow(0 0 12px rgba(59,130,246,1))",
-                                "drop-shadow(0 0 8px rgba(59,130,246,0.6))",
-                              ],
-                              transition: { duration: 0.6, times: [0, 0.6, 1], delay: 0.2 },
-                            },
-                          }}
-                        >
-                          <Icon className="w-5 h-5 text-amber" />
-                        </motion.div>
-                        <div className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">
-                          {m.label}
+                <motion.div
+                  variants={{
+                    hidden: { boxShadow: "0 0 0px rgba(59,130,246,0)" },
+                    visible: {
+                      boxShadow: [
+                        "0 0 0px rgba(59,130,246,0)",
+                        "0 0 30px rgba(59,130,246,0.6)",
+                        "0 0 15px rgba(59,130,246,0.3)",
+                      ],
+                      transition: { duration: 0.8, times: [0, 0.5, 1], delay: 0.3 },
+                    },
+                  }}
+                  className="rounded-[var(--radius-lg)]"
+                >
+                  <SpotlightCard className="p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <motion.div
+                            variants={{
+                              hidden: { opacity: 0, scale: 0.5, filter: "drop-shadow(0 0 0px rgba(59,130,246,0))" },
+                              visible: {
+                                opacity: 1,
+                                scale: 1,
+                                filter: [
+                                  "drop-shadow(0 0 0px rgba(59,130,246,0))",
+                                  "drop-shadow(0 0 12px rgba(59,130,246,1))",
+                                  "drop-shadow(0 0 8px rgba(59,130,246,0.6))",
+                                ],
+                                transition: { duration: 0.6, times: [0, 0.6, 1], delay: 0.2 },
+                              },
+                            }}
+                          >
+                            <Icon className="w-5 h-5 text-accent" />
+                          </motion.div>
+                          <div className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">
+                            {m.label}
+                          </div>
+                        </div>
+                        <div className="text-2xl font-extrabold text-text-primary">
+                          {m.displayType === "currency" && <AnimatedCurrency value={m.value} />}
+                          {m.displayType === "number" && <AnimatedCounter value={m.value} />}
                         </div>
                       </div>
-                      <div className="text-2xl font-extrabold text-text-primary">
-                        {m.displayType === "currency" && <AnimatedCurrency value={m.value} />}
-                        {m.displayType === "number" && <AnimatedCounter value={m.value} />}
-                        {m.displayType === "percentage" && <AnimatedPercentage value={m.value} />}
-                      </div>
+                      <MiniSparkline data={m.sparkline} positive={m.positive} />
                     </div>
-                    <MiniSparkline data={m.sparkline} positive={m.positive} />
-                  </div>
-                  <div
-                    className="text-xs font-semibold"
-                    style={{ color: m.positive ? "var(--color-success)" : "var(--color-error)" }}
-                  >
-                    {m.change} vs last month
-                  </div>
-                </SpotlightCard>
+                    <div
+                      className="text-xs font-semibold"
+                      style={{ color: m.positive ? "var(--color-success)" : "var(--color-warning)" }}
+                    >
+                      {m.change}
+                    </div>
+                  </SpotlightCard>
+                </motion.div>
               </motion.div>
-            </motion.div>
-          );
-        })}
-      </motion.div>
+            );
+          })}
+        </motion.div>
+      )}
 
       {/* Recent Activity */}
       <GlassCard padding="none" variant="default">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-          <h2 className="text-sm font-bold text-text-primary">Recent Activity</h2>
-          <Link href="/reports" className="text-xs font-medium transition-colors hover:opacity-80 text-amber">
+          <h2 className="text-sm font-bold text-text-primary flex items-center gap-2">
+            <Activity className="w-4 h-4 text-accent" />
+            Recent Activity
+          </h2>
+          <Link href="/reports" className="text-xs font-medium transition-colors hover:opacity-80 text-accent">
             View Reports →
           </Link>
         </div>
-        <div className="p-5 text-sm text-text-muted">
-          Activity data loads from your shifts and leads. Connect your database to see live data.
+        <div className="divide-y divide-border">
+          {loading ? (
+            <div className="p-5 flex items-center justify-center">
+              <Loader2 className="w-5 h-5 animate-spin text-accent" />
+            </div>
+          ) : recentActivity.length === 0 ? (
+            <div className="p-5 text-sm text-text-muted text-center">
+              No recent activity. Start logging shifts and working leads to see activity here.
+            </div>
+          ) : (
+            recentActivity.map((activity) => (
+              <div key={activity.id} className="px-5 py-3 flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="w-4 h-4 text-accent" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-text-primary truncate">{activity.description || activity.type}</p>
+                  <p className="text-xs text-text-muted">
+                    {new Date(activity.createdAt).toLocaleDateString()} at{" "}
+                    {new Date(activity.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </GlassCard>
     </div>

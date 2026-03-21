@@ -107,7 +107,7 @@ export default function EditableCell({
         return val ? (
           <a
             href={`mailto:${val}`}
-            className="text-amber hover:text-amber-light transition-colors"
+            className="text-accent hover:text-accent-light transition-colors"
             onClick={(e) => e.stopPropagation()}
           >
             {val}
@@ -161,7 +161,7 @@ export default function EditableCell({
             </Button>
           </PopoverTrigger>
           <PopoverContent
-            className="w-64 bg-surface border-amber/20"
+            className="w-64 bg-surface border-accent/20"
             onClick={(e: any) => e.stopPropagation()}
           >
             <div className="space-y-2">
@@ -176,7 +176,7 @@ export default function EditableCell({
                       className={cn(
                         "cursor-pointer text-xs",
                         isSelected
-                          ? "bg-amber/20 text-amber border-amber/30"
+                          ? "bg-accent/20 text-accent border-accent/30"
                           : "border-border text-text-secondary hover:bg-elevated"
                       )}
                       onClick={() => {
@@ -227,7 +227,7 @@ export default function EditableCell({
               {displayValue || <SelectValue placeholder={placeholder} />}
             </div>
           </SelectTrigger>
-          <SelectContent className="bg-surface border-amber/20 min-w-[160px]">
+          <SelectContent className="bg-surface border-accent/20 min-w-[160px]">
             {options.map((option) => (
               <SelectItem
                 key={option.value}
@@ -260,7 +260,7 @@ export default function EditableCell({
             handleSave();
           }}
           onClick={(e) => e.stopPropagation()}
-          className="h-6 text-xs border-amber/30 focus:border-amber px-1"
+          className="h-6 text-xs border-accent/30 focus:border-accent px-1"
           placeholder={placeholder}
           step={type === "currency" ? "0.01" : undefined}
           min={type === "currency" ? "0" : undefined}
@@ -313,7 +313,7 @@ export default function EditableCell({
       <div className="flex items-center gap-1 overflow-hidden">
         <div className="flex items-center gap-1 min-w-0 overflow-hidden">
           {type === "currency" && <DollarSign className="w-3 h-3 text-success shrink-0" />}
-          {type === "email" && <Mail className="w-3 h-3 text-amber shrink-0" />}
+          {type === "email" && <Mail className="w-3 h-3 text-accent shrink-0" />}
           {type === "tel" && <Phone className="w-3 h-3 text-cyan shrink-0" />}
           <span className="truncate">{formatDisplayValue(value)}</span>
         </div>

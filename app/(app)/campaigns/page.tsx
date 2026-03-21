@@ -17,7 +17,7 @@ export default function CampaignsPage() {
           <h1 className="text-2xl font-bold text-text-primary" style={{ fontFamily: "var(--font-display)" }}>Campaigns</h1>
           <p className="text-sm text-text-muted">Email campaigns and marketing automation</p>
         </div>
-        <button className="px-3 py-2 rounded-lg text-xs font-medium bg-amber/20 text-amber border border-amber/30 hover:bg-amber/30 cursor-pointer flex items-center gap-1">
+        <button className="px-3 py-2 rounded-lg text-xs font-medium bg-accent/20 text-accent border border-accent/30 hover:bg-accent/30 cursor-pointer flex items-center gap-1">
           <Plus className="w-3.5 h-3.5" /> New Campaign
         </button>
       </div>
@@ -50,7 +50,7 @@ export default function CampaignsPage() {
                     <div className="text-[10px] text-text-muted">Open Rate</div>
                   </div>
                   <div>
-                    <div className="text-sm font-bold text-amber">{campaign.clickRate}%</div>
+                    <div className="text-sm font-bold text-accent">{campaign.clickRate}%</div>
                     <div className="text-[10px] text-text-muted">Click Rate</div>
                   </div>
                 </div>

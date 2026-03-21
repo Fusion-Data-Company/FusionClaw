@@ -71,7 +71,7 @@ export default function TodayPage() {
           className={`px-4 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer ${
             shiftStarted
               ? "bg-success/20 text-success border border-success/30"
-              : "bg-amber/20 text-amber border border-amber/30 hover:bg-amber/30"
+              : "bg-accent/20 text-accent border border-accent/30 hover:bg-accent/30"
           }`}
         >
           <Clock className="w-4 h-4 inline mr-2" />
@@ -87,10 +87,10 @@ export default function TodayPage() {
         variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
       >
         {[
-          { label: "Streak", value: "5 days", icon: Flame, color: "text-amber" },
+          { label: "Streak", value: "5 days", icon: Flame, color: "text-accent" },
           { label: "Attendance", value: "96%", icon: CheckCircle, color: "text-success" },
           { label: "Proposals (30d)", value: "47", icon: Target, color: "text-cyan" },
-          { label: "Completion", value: `${completionPercent}%`, icon: FileText, color: "text-amber-light" },
+          { label: "Completion", value: `${completionPercent}%`, icon: FileText, color: "text-accent-light" },
         ].map((stat) => (
           <motion.div
             key={stat.label}
@@ -169,7 +169,7 @@ export default function TodayPage() {
                   </span>
                   <button
                     onClick={() => updateMetric(metric.field, 1)}
-                    className="w-6 h-6 rounded bg-amber/20 border border-amber/30 text-amber hover:bg-amber/30 flex items-center justify-center text-xs cursor-pointer"
+                    className="w-6 h-6 rounded bg-accent/20 border border-accent/30 text-accent hover:bg-accent/30 flex items-center justify-center text-xs cursor-pointer"
                   >
                     +
                   </button>

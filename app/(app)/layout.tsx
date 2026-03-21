@@ -145,7 +145,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-border">
           {!sidebarCollapsed && (
-            <span className="text-lg font-bold text-amber" style={{ fontFamily: "var(--font-display)" }}>
+            <span className="text-lg font-bold text-accent" style={{ fontFamily: "var(--font-display)" }}>
               FusionClaw
             </span>
           )}
@@ -182,7 +182,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                       }`}
                       style={{
                         background: isActive ? "rgba(59,130,246,0.08)" : undefined,
-                        color: isActive ? "var(--color-amber)" : "var(--color-text-secondary)",
+                        color: isActive ? "var(--color-accent)" : "var(--color-text-secondary)",
                         borderLeft: isActive
                           ? "2px solid rgba(59,130,246,0.5)"
                           : "2px solid transparent",
@@ -202,7 +202,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Bottom */}
         {!sidebarCollapsed && (
           <div className="p-4 border-t border-border">
-            <div className="w-8 h-8 rounded-full bg-amber/20 flex items-center justify-center"><User className="w-4 h-4 text-amber" /></div>
+            <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center"><User className="w-4 h-4 text-accent" /></div>
           </div>
         )}
       </aside>
@@ -228,7 +228,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 placeholder="Search leads, tasks, content..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-9 pl-9 pr-4 rounded-lg text-sm outline-none transition-all bg-surface border border-border text-text-primary placeholder:text-text-muted focus:border-amber/30"
+                className="w-full h-9 pl-9 pr-4 rounded-lg text-sm outline-none transition-all bg-surface border border-border text-text-primary placeholder:text-text-muted focus:border-accent/30"
               />
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
             </div>
@@ -247,7 +247,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </button>
 
             <div className="hidden md:block">
-              <div className="w-8 h-8 rounded-full bg-amber/20 flex items-center justify-center"><User className="w-4 h-4 text-amber" /></div>
+              <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center"><User className="w-4 h-4 text-accent" /></div>
             </div>
           </div>
         </header>

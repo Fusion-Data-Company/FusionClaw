@@ -59,7 +59,7 @@ export default function StudioPage() {
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder="Describe the image you want to create..."
                 rows={4}
-                className="w-full px-3 py-2 rounded-lg text-sm bg-surface border border-border text-text-primary placeholder:text-text-muted focus:border-amber/30 outline-none resize-none"
+                className="w-full px-3 py-2 rounded-lg text-sm bg-surface border border-border text-text-primary placeholder:text-text-muted focus:border-accent/30 outline-none resize-none"
               />
             </div>
 
@@ -72,7 +72,7 @@ export default function StudioPage() {
                     onClick={() => setModel(m.id)}
                     className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-all cursor-pointer ${
                       model === m.id
-                        ? "bg-amber/20 text-amber border border-amber/30"
+                        ? "bg-accent/20 text-accent border border-accent/30"
                         : "bg-surface text-text-secondary border border-border hover:border-border-med"
                     }`}
                   >
@@ -92,7 +92,7 @@ export default function StudioPage() {
                     onClick={() => setAspectRatio(ar)}
                     className={`px-2.5 py-1 rounded text-xs font-medium cursor-pointer ${
                       aspectRatio === ar
-                        ? "bg-amber/20 text-amber border border-amber/30"
+                        ? "bg-accent/20 text-accent border border-accent/30"
                         : "bg-surface text-text-muted border border-border"
                     }`}
                   >
@@ -105,7 +105,7 @@ export default function StudioPage() {
             <button
               onClick={handleGenerate}
               disabled={generating || !prompt.trim()}
-              className="w-full py-2.5 rounded-lg text-sm font-bold bg-amber text-bg hover:bg-amber-light disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2 transition-colors"
+              className="w-full py-2.5 rounded-lg text-sm font-bold bg-accent text-bg hover:bg-accent-light disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2 transition-colors"
             >
               {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
               {generating ? "Generating..." : "Generate"}
@@ -122,7 +122,7 @@ export default function StudioPage() {
                   <img src={img.url} alt={`Generated ${i + 1}`} className="w-full rounded-lg" />
                   <div className="flex items-center justify-between mt-2">
                     <span className="text-xs text-text-muted">{img.width}x{img.height}</span>
-                    <a href={img.url} download className="text-xs text-amber hover:text-amber-light flex items-center gap-1">
+                    <a href={img.url} download className="text-xs text-accent hover:text-accent-light flex items-center gap-1">
                       <Download className="w-3 h-3" /> Download
                     </a>
                   </div>
