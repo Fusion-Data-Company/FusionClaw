@@ -566,3 +566,8 @@ export const cronJobsRelations = relations(cronJobs, ({ one, many }) => ({
 export const cronJobRunsRelations = relations(cronJobRuns, ({ one }) => ({
   cronJob: one(cronJobs, { fields: [cronJobRuns.cronJobId], references: [cronJobs.id] }),
 }));
+
+export const tasksRelations = relations(tasks, ({ one }) => ({
+  completedByUser: one(users, { fields: [tasks.completedBy], references: [users.id] }),
+  assignedByUser: one(users, { fields: [tasks.assignedBy], references: [users.id] }),
+}));
