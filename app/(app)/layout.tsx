@@ -27,9 +27,26 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
+  Table,
+  Columns,
+  ChevronDown,
+  ChevronUp,
+  ClipboardCheck,
 } from "lucide-react";
 
-const NAV_SECTIONS = [
+interface NavItem {
+  name: string;
+  href: string;
+  icon: React.ElementType;
+}
+
+interface NavSection {
+  label: string;
+  collapsible?: boolean;
+  items: NavItem[];
+}
+
+const NAV_SECTIONS: NavSection[] = [
   {
     label: "COMMAND",
     items: [
@@ -42,6 +59,20 @@ const NAV_SECTIONS = [
     items: [
       { name: "Leads Database", href: "/leads", icon: Database },
       { name: "Pipeline", href: "/pipeline", icon: Kanban },
+      { name: "Leads Pro", href: "/leads-pro", icon: Table },
+      { name: "Pipeline Pro", href: "/pipeline-pro", icon: Columns },
+    ],
+  },
+  {
+    label: "MAT OPS",
+    collapsible: true,
+    items: [
+      { name: "Today", href: "/mat-ops/today", icon: CalendarCheck },
+      { name: "Chat", href: "/mat-ops/chat", icon: MessageSquare },
+      { name: "Tasks", href: "/mat-ops/tasks", icon: ListTodo },
+      { name: "Admin", href: "/mat-ops/admin", icon: LayoutDashboard },
+      { name: "Knowledge", href: "/mat-ops/knowledge", icon: BookOpen },
+      { name: "Reports", href: "/mat-ops/reports", icon: FileBarChart },
     ],
   },
   {
@@ -120,6 +151,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
+
+  const toggleSection = (label: string) => {
+    setCollapsedSections(prev => {
+      const next = new Set(prev);
+      if (next.has(label)) {
+        next.delete(label);
+      } else {
+        next.add(label);
+      }
+      return next;
+    });
+  };
 
   return (
     <div className="flex min-h-screen bg-bg">
@@ -159,44 +203,66 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
         {/* Nav sections */}
         <nav className="flex-1 py-4 px-2 space-y-6 overflow-y-auto">
-          {NAV_SECTIONS.map((section) => (
-            <div key={section.label}>
-              {!sidebarCollapsed && (
-                <div className="px-3 mb-2 text-[10px] font-bold uppercase tracking-widest text-text-muted">
-                  {section.label}
-                </div>
-              )}
-              <div className="space-y-0.5">
-                {section.items.map((item) => {
-                  const isActive =
-                    pathname === item.href ||
-                    (item.href !== "/dashboard" && pathname.startsWith(item.href));
-                  const Icon = item.icon;
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                        isActive ? "" : "hover:bg-elevated"
-                      }`}
-                      style={{
-                        background: isActive ? "rgba(59,130,246,0.08)" : undefined,
-                        color: isActive ? "var(--color-accent)" : "var(--color-text-secondary)",
-                        borderLeft: isActive
-                          ? "2px solid rgba(59,130,246,0.5)"
-                          : "2px solid transparent",
-                      }}
-                      title={sidebarCollapsed ? item.name : undefined}
-                    >
-                      <Icon className="w-4 h-4 shrink-0" />
-                      {!sidebarCollapsed && <span>{item.name}</span>}
-                    </Link>
-                  );
-                })}
+          {NAV_SECTIONS.map((section) => {
+            const isCollapsed = collapsedSections.has(section.label);
+            const hasActiveItem = section.items.some(
+              item => pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))
+            );
+
+            return (
+              <div key={section.label}>
+                {!sidebarCollapsed && (
+                  <div
+                    className={`px-3 mb-2 text-[10px] font-bold uppercase tracking-widest text-text-muted flex items-center justify-between ${
+                      section.collapsible ? "cursor-pointer hover:text-text-secondary" : ""
+                    }`}
+                    onClick={() => section.collapsible && toggleSection(section.label)}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      {section.label === "MAT OPS" && <ClipboardCheck className="w-3 h-3" />}
+                      {section.label}
+                    </span>
+                    {section.collapsible && (
+                      <span className="text-text-disabled">
+                        {isCollapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                      </span>
+                    )}
+                  </div>
+                )}
+                {(!section.collapsible || !isCollapsed || hasActiveItem) && (
+                  <div className="space-y-0.5">
+                    {section.items.map((item) => {
+                      const isActive =
+                        pathname === item.href ||
+                        (item.href !== "/dashboard" && pathname.startsWith(item.href));
+                      const Icon = item.icon;
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                            isActive ? "" : "hover:bg-elevated"
+                          }`}
+                          style={{
+                            background: isActive ? "rgba(59,130,246,0.08)" : undefined,
+                            color: isActive ? "var(--color-accent)" : "var(--color-text-secondary)",
+                            borderLeft: isActive
+                              ? "2px solid rgba(59,130,246,0.5)"
+                              : "2px solid transparent",
+                          }}
+                          title={sidebarCollapsed ? item.name : undefined}
+                        >
+                          <Icon className="w-4 h-4 shrink-0" />
+                          {!sidebarCollapsed && <span>{item.name}</span>}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </nav>
 
         {/* Bottom */}

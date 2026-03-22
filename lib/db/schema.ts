@@ -85,6 +85,7 @@ export const shifts = pgTable("shifts", {
   trackerUpdated: boolean("tracker_updated").default(false).notNull(),
   notes: text("notes"),
   completionPercent: integer("completion_percent").default(0).notNull(),
+  reportSnapshot: text("report_snapshot"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => [
@@ -165,6 +166,23 @@ export const knowledgeBase = pgTable("knowledge_base", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+// ─── Email Outreach (from mat-ops) ──────────────────────────────────────────
+
+export const emailOutreach = pgTable("email_outreach", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  shiftId: uuid("shift_id").references(() => shifts.id, { onDelete: "cascade" }).notNull(),
+  userId: uuid("user_id").references(() => users.id).notNull(),
+  recipient: varchar("recipient", { length: 500 }).notNull(),
+  subject: varchar("subject", { length: 500 }),
+  sentAt: timestamp("sent_at").notNull(),
+  quantity: integer("quantity").default(1).notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_email_outreach_shift").on(table.shiftId),
+  index("idx_email_outreach_user").on(table.userId),
+]);
 
 // ─── Leads (from lead-annex, minus enrichment) ─────────────────────────────
 
@@ -501,6 +519,12 @@ export const shiftsRelations = relations(shifts, ({ one, many }) => ({
   user: one(users, { fields: [shifts.userId], references: [users.id] }),
   checklistItems: many(checklistItems),
   uploads: many(uploads),
+  emailOutreach: many(emailOutreach),
+}));
+
+export const emailOutreachRelations = relations(emailOutreach, ({ one }) => ({
+  shift: one(shifts, { fields: [emailOutreach.shiftId], references: [shifts.id] }),
+  user: one(users, { fields: [emailOutreach.userId], references: [users.id] }),
 }));
 
 export const checklistItemsRelations = relations(checklistItems, ({ one, many }) => ({
