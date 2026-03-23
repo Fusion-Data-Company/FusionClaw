@@ -55,6 +55,7 @@ interface Lead {
   website?: string | null;
   address?: string | null;
   status?: string | null;
+  contactType?: string | null;
   priority?: string | null;
   dealValue?: number | null;
   aiQualityScore?: number | null;
@@ -517,6 +518,7 @@ export default function PipelinePro({ isReadOnly = false }: PipelineProProps) {
               website: lead.website,
               address: lead.address,
               status: lead.status || "new",
+              contactType: lead.contactType || "lead",
               priority: lead.priority || "medium",
               dealValue: lead.dealValue ? parseFloat(lead.dealValue) : undefined,
               nextFollowUpDate: lead.nextFollowUpDate,
@@ -544,6 +546,12 @@ export default function PipelinePro({ isReadOnly = false }: PipelineProProps) {
       grouped[stage.id] = [];
     });
     leadsData.forEach(lead => {
+      // Non-lead contacts (vendor, supplier, consultant, other) go to the won/completed column
+      const ct = (lead as any).contactType || "lead";
+      if (ct !== "lead") {
+        grouped["won"].push(lead);
+        return;
+      }
       const status = lead.status || "new";
       if (grouped[status]) {
         grouped[status].push(lead);

@@ -12,7 +12,7 @@ import {
   date,
   pgEnum,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { relations, type InferSelectModel } from "drizzle-orm";
 
 // ─── Enums ──────────────────────────────────────────────────────────────────
 
@@ -23,6 +23,7 @@ export const checkpointEnum = pgEnum("checkpoint", ["AM8", "PM12", "PM4"]);
 export const platformEnum = pgEnum("platform", ["FACEBOOK", "LINKEDIN", "INSTAGRAM", "YOUTUBE", "BLOG"]);
 export const uploadCategoryEnum = pgEnum("upload_category", ["SOCIAL", "BLOG", "OUTREACH", "EMAIL"]);
 export const taskPriorityEnum = pgEnum("task_priority", ["LOW", "MEDIUM", "HIGH", "URGENT"]);
+export const contactTypeEnum = pgEnum("contact_type", ["lead", "vendor", "supplier", "consultant", "other"]);
 export const leadStatusEnum = pgEnum("lead_status", [
   "new", "contacted", "qualified", "proposal", "negotiation",
   "closed", "won", "lost", "inactive", "assigned", "in_call",
@@ -190,6 +191,7 @@ export const leads = pgTable("leads", {
   id: uuid("id").defaultRandom().primaryKey(),
   company: varchar("company", { length: 255 }).notNull(),
   type: varchar("type", { length: 255 }),
+  contactType: contactTypeEnum("contact_type").default("lead").notNull(),
   website: varchar("website", { length: 500 }),
   contact: varchar("contact", { length: 255 }),
   jobTitle: varchar("job_title", { length: 255 }),
@@ -304,6 +306,8 @@ export const projects = pgTable("projects", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export type ContentProject = InferSelectModel<typeof projects>;
+
 // ─── Content (from content-command-center) ──────────────────────────────────
 
 export const content = pgTable("content", {
@@ -342,6 +346,8 @@ export const brandProfiles = pgTable("brand_profiles", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export type BrandProfile = InferSelectModel<typeof brandProfiles>;
+
 // ─── Studio Generations (from content-command-center) ───────────────────────
 
 export const studioGenerations = pgTable("studio_generations", {
@@ -353,6 +359,8 @@ export const studioGenerations = pgTable("studio_generations", {
   resultImageUrls: jsonb("result_image_urls").$type<string[]>().default([]),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+export type StudioGeneration = InferSelectModel<typeof studioGenerations>;
 
 // ─── Gallery Items (from content-command-center) ────────────────────────────
 

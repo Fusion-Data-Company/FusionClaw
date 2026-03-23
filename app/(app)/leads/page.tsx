@@ -3,27 +3,34 @@
 import { useState } from "react";
 import { TanStackLeadsTable } from "@/components/leads";
 import { MagneticElement } from "@/components/effects/EliteEffects";
-import { Search, Download, Upload, Plus } from "lucide-react";
+import { Search, Download, Upload, Plus, Contact } from "lucide-react";
 
-export default function LeadsPage() {
+type ContactFilter = "all" | "lead" | "vendor" | "supplier" | "consultant" | "other";
+
+export default function ContactsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [contactTypeFilter, setContactTypeFilter] = useState<ContactFilter>("all");
   const [selectedLeads, setSelectedLeads] = useState<(number | string)[]>([]);
 
   const handleLeadSelect = (leadId: number | string) => {
-    console.log("Selected lead:", leadId);
-    // TODO: Open lead detail panel
+    console.log("Selected contact:", leadId);
   };
 
   return (
     <div className="space-y-4 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between shrink-0">
-        <div>
-          <h1 className="text-2xl font-bold text-text-primary" style={{ fontFamily: "var(--font-display)" }}>
-            Leads Database
-          </h1>
-          <p className="text-sm text-text-muted">Manage your sales pipeline with TanStack Table + Virtual</p>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.4)]">
+            <Contact className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-text-primary" style={{ fontFamily: "var(--font-display)" }}>
+              Contacts
+            </h1>
+            <p className="text-sm text-text-muted">All contacts, leads, vendors & partners</p>
+          </div>
         </div>
         <div className="flex gap-2">
           <MagneticElement strength={0.2} radius={80}>
@@ -38,23 +45,46 @@ export default function LeadsPage() {
           </MagneticElement>
           <MagneticElement strength={0.3} radius={100}>
             <button className="px-3 py-2 rounded-lg text-xs font-medium bg-accent/20 text-accent border border-accent/30 hover:bg-accent/30 cursor-pointer flex items-center gap-1 transition-all hover:shadow-[0_0_15px_rgba(59,130,246,0.3)]">
-              <Plus className="w-3.5 h-3.5" /> Add Lead
+              <Plus className="w-3.5 h-3.5" /> Add Contact
             </button>
           </MagneticElement>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="flex gap-3 shrink-0">
+      <div className="flex gap-3 shrink-0 flex-wrap">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
           <input
             type="text"
-            placeholder="Search leads..."
+            placeholder="Search contacts..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full h-9 pl-9 pr-4 rounded-lg text-sm bg-surface border border-border text-text-primary placeholder:text-text-muted focus:border-accent/30 outline-none"
           />
+        </div>
+        {/* Contact Type Filter Tabs */}
+        <div className="flex rounded-lg border border-border overflow-hidden">
+          {([
+            { value: "all" as ContactFilter, label: "All" },
+            { value: "lead" as ContactFilter, label: "Leads" },
+            { value: "vendor" as ContactFilter, label: "Vendors" },
+            { value: "supplier" as ContactFilter, label: "Suppliers" },
+            { value: "consultant" as ContactFilter, label: "Consultants" },
+            { value: "other" as ContactFilter, label: "Other" },
+          ]).map((tab) => (
+            <button
+              key={tab.value}
+              onClick={() => setContactTypeFilter(tab.value)}
+              className={`px-3 py-1.5 text-xs font-medium transition-all cursor-pointer ${
+                contactTypeFilter === tab.value
+                  ? "bg-accent/20 text-accent"
+                  : "bg-surface text-text-muted hover:text-text-secondary hover:bg-elevated"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
         <select
           value={statusFilter}
@@ -77,6 +107,7 @@ export default function LeadsPage() {
         <TanStackLeadsTable
           searchTerm={search}
           statusFilter={statusFilter}
+          contactTypeFilter={contactTypeFilter}
           selectedLeads={selectedLeads}
           onSelectionChange={setSelectedLeads}
           onLeadSelect={handleLeadSelect}

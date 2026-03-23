@@ -71,6 +71,7 @@ interface Lead {
   id: number | string;
   company: string;
   type: string;
+  contactType: string;
   contact: string;
   jobTitle?: string;
   phone: string;
@@ -99,6 +100,7 @@ interface Lead {
 interface TanStackLeadsTableProps {
   searchTerm?: string;
   statusFilter?: string;
+  contactTypeFilter?: string;
   selectedLeads?: (number | string)[];
   onSelectionChange?: (leadIds: (number | string)[]) => void;
   onLeadSelect?: (leadId: number | string) => void;
@@ -111,6 +113,7 @@ const DEMO_LEADS: Lead[] = [
     id: 1,
     company: "Acme Construction Co.",
     type: "Contractor",
+    contactType: "lead",
     contact: "John Smith",
     jobTitle: "Owner",
     phone: "(702) 555-0123",
@@ -218,6 +221,15 @@ function XIcon({ className }: { className?: string }) {
   );
 }
 
+// Contact type badge colors
+const CONTACT_TYPE_CONFIG: Record<string, { bg: string; text: string; border: string }> = {
+  lead: { bg: "bg-blue-500/20", text: "text-blue-300", border: "border-blue-500/30" },
+  vendor: { bg: "bg-amber-500/20", text: "text-amber-300", border: "border-amber-500/30" },
+  supplier: { bg: "bg-emerald-500/20", text: "text-emerald-300", border: "border-emerald-500/30" },
+  consultant: { bg: "bg-violet-500/20", text: "text-violet-300", border: "border-violet-500/30" },
+  other: { bg: "bg-slate-500/20", text: "text-slate-300", border: "border-slate-500/30" },
+};
+
 // Column definitions
 const createColumns = (
   updateLead: (leadId: number | string, field: string, value: any) => void,
@@ -300,6 +312,28 @@ const createColumns = (
       </div>
     ),
     size: 200,
+  },
+  // Contact Type
+  {
+    accessorKey: "contactType",
+    header: () => <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted">Type</span>,
+    cell: ({ row }) => {
+      const ct = row.original.contactType || "lead";
+      const config = CONTACT_TYPE_CONFIG[ct] || CONTACT_TYPE_CONFIG.other;
+      return (
+        <span
+          className={cn(
+            "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border",
+            config.bg,
+            config.text,
+            config.border
+          )}
+        >
+          {ct}
+        </span>
+      );
+    },
+    size: 100,
   },
   // Email
   {
@@ -667,9 +701,11 @@ const createColumns = (
   },
 ];
 
+
 export default function TanStackLeadsTable({
   searchTerm = "",
   statusFilter = "all",
+  contactTypeFilter = "all",
   selectedLeads = [],
   onSelectionChange,
   onLeadSelect,
@@ -694,6 +730,7 @@ export default function TanStackLeadsTable({
               id: lead.id,
               company: lead.company || "",
               type: lead.type || "",
+              contactType: lead.contactType || "lead",
               contact: lead.contact || "",
               jobTitle: lead.jobTitle,
               phone: lead.phone || "",
@@ -797,8 +834,11 @@ export default function TanStackLeadsTable({
     if (statusFilter && statusFilter !== "all") {
       result = result.filter((l) => l.status === statusFilter);
     }
+    if (contactTypeFilter && contactTypeFilter !== "all") {
+      result = result.filter((l) => l.contactType === contactTypeFilter);
+    }
     return result;
-  }, [leadsData, globalFilter, statusFilter]);
+  }, [leadsData, globalFilter, statusFilter, contactTypeFilter]);
 
   // Memoized columns
   const columns = useMemo(

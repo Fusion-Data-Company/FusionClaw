@@ -27,11 +27,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
-  Table,
-  Columns,
   ChevronDown,
   ChevronUp,
   ClipboardCheck,
+  Contact,
 } from "lucide-react";
 
 interface NavItem {
@@ -55,18 +54,17 @@ const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    label: "LEADS",
+    label: "CONTACTS",
     items: [
-      { name: "Leads Database", href: "/leads", icon: Database },
-      { name: "Pipeline", href: "/pipeline", icon: Kanban },
-      { name: "Leads Pro", href: "/leads-pro", icon: Table },
-      { name: "Pipeline Pro", href: "/pipeline-pro", icon: Columns },
+      { name: "Contacts", href: "/leads", icon: Contact },
+      { name: "Pipeline", href: "/leads/pipeline", icon: Kanban },
     ],
   },
   {
-    label: "MAT OPS",
+    label: "STAFF MANAGEMENT",
     collapsible: true,
     items: [
+      { name: "Employees", href: "/employees", icon: Users },
       { name: "Today", href: "/mat-ops/today", icon: CalendarCheck },
       { name: "Chat", href: "/mat-ops/chat", icon: MessageSquare },
       { name: "Tasks", href: "/mat-ops/tasks", icon: ListTodo },
@@ -87,7 +85,6 @@ const NAV_SECTIONS: NavSection[] = [
     label: "OPERATIONS",
     items: [
       { name: "Tasks", href: "/tasks", icon: ListTodo },
-      { name: "Employees", href: "/employees", icon: Users },
       { name: "Reports", href: "/reports", icon: FileBarChart },
     ],
   },
@@ -219,7 +216,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     onClick={() => section.collapsible && toggleSection(section.label)}
                   >
                     <span className="flex items-center gap-1.5">
-                      {section.label === "MAT OPS" && <ClipboardCheck className="w-3 h-3" />}
+                      {section.label === "STAFF MANAGEMENT" && <ClipboardCheck className="w-3 h-3" />}
                       {section.label}
                     </span>
                     {section.collapsible && (

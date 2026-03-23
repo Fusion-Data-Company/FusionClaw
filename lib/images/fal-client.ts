@@ -5,8 +5,17 @@ fal.config({
 });
 
 export type AspectRatio =
-  | "auto" | "21:9" | "16:9" | "3:2" | "4:3" | "5:4"
-  | "1:1" | "4:5" | "3:4" | "2:3" | "9:16";
+  | "auto"
+  | "21:9"
+  | "16:9"
+  | "3:2"
+  | "4:3"
+  | "5:4"
+  | "1:1"
+  | "4:5"
+  | "3:4"
+  | "2:3"
+  | "9:16";
 
 export type Resolution = "1K" | "2K" | "4K";
 
@@ -40,17 +49,8 @@ export async function generateImage(
 
   const model = params.model || "fal-ai/nano-banana-pro";
 
-  const sizeMap: Record<string, string> = {
-    "16:9": "landscape_16_9",
-    "4:3": "landscape_4_3",
-    "1:1": "square_hd",
-    "3:4": "portrait_4_3",
-    "9:16": "portrait_16_9",
-    "3:2": "landscape_16_9",
-    "21:9": "landscape_16_9",
-  };
-
   if (model === "fal-ai/nano-banana-pro") {
+    // Nano Banana Pro uses different params than FLUX models
     const ratio = params.aspectRatio === "auto" ? "16:9" : (params.aspectRatio || "16:9");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = await (fal as any).subscribe(model, {
@@ -77,6 +77,17 @@ export async function generateImage(
     }));
   }
 
+  const sizeMap: Record<string, string> = {
+    "16:9": "landscape_16_9",
+    "4:3": "landscape_4_3",
+    "1:1": "square_hd",
+    "3:4": "portrait_4_3",
+    "9:16": "portrait_16_9",
+    "3:2": "landscape_16_9",
+    "21:9": "landscape_16_9",
+  };
+
+  // FLUX.2 Pro — does NOT support num_images, always generates 1
   if (model === "fal-ai/flux-2-pro") {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = await (fal as any).subscribe(model, {
@@ -100,7 +111,7 @@ export async function generateImage(
     }));
   }
 
-  // FLUX Schnell
+  // FLUX Schnell — supports num_images
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const result = await (fal as any).subscribe(model, {
     input: {
