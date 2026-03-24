@@ -56,6 +56,23 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
+    // Security: file size limit (10MB)
+    const MAX_FILE_SIZE = 10 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json({ error: "File too large (max 10MB)" }, { status: 413 });
+    }
+
+    // Security: allowed MIME types only
+    const ALLOWED_TYPES = [
+      "image/png", "image/jpeg", "image/gif", "image/svg+xml", "image/webp",
+      "video/mp4", "video/webm",
+      "application/pdf",
+      "font/woff", "font/woff2", "font/ttf", "font/otf",
+    ];
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return NextResponse.json({ error: `File type not allowed: ${file.type}` }, { status: 415 });
+    }
+
     const uniqueId = nanoid(8);
     const safeName = name.replace(/[^a-zA-Z0-9._-]/g, "_");
     const pathname = `branding/${uniqueId}-${safeName}`;
