@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { GlassCard } from "@/components/primitives";
 import {
   Settings,
@@ -78,8 +78,54 @@ export default function SettingsPage() {
     slackNotifications: false,
   });
 
+  const [saving, setSaving] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  // Load settings from DB on mount
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data && !data.error) {
+          setSettings((prev) => ({
+            ...prev,
+            chatModel: data.chatModel || prev.chatModel,
+            chatTemperature: parseFloat(data.chatTemperature) || prev.chatTemperature,
+            chatMaxTokens: data.chatMaxTokens || prev.chatMaxTokens,
+            defaultImageModel: data.defaultImageModel || prev.defaultImageModel,
+          }));
+        }
+        setLoaded(true);
+      })
+      .catch(() => setLoaded(true));
+  }, []);
+
+  // Debounced save to DB
+  const saveTimeout = useRef<NodeJS.Timeout | null>(null);
+  const saveToDb = useCallback((partial: Partial<SettingsState>) => {
+    if (saveTimeout.current) clearTimeout(saveTimeout.current);
+    saveTimeout.current = setTimeout(async () => {
+      setSaving(true);
+      try {
+        const dbFields: Record<string, unknown> = {};
+        if ("chatModel" in partial) dbFields.chatModel = partial.chatModel;
+        if ("chatTemperature" in partial) dbFields.chatTemperature = String(partial.chatTemperature);
+        if ("chatMaxTokens" in partial) dbFields.chatMaxTokens = partial.chatMaxTokens;
+        if ("defaultImageModel" in partial) dbFields.defaultImageModel = partial.defaultImageModel;
+        if (Object.keys(dbFields).length > 0) {
+          await fetch("/api/settings", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(dbFields),
+          });
+        }
+      } catch { /* silent */ } finally { setSaving(false); }
+    }, 800);
+  }, []);
+
   const update = (partial: Partial<SettingsState>) => {
     setSettings((prev) => ({ ...prev, ...partial }));
+    saveToDb(partial);
   };
 
   const tempLabel = TEMP_LABELS.reduce((prev, curr) =>

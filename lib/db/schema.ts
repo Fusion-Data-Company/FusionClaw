@@ -52,6 +52,18 @@ export const dncReasonEnum = pgEnum("dnc_reason", [
   "not_interested", "wrong_number", "do_not_call", "hostile", "bad_number", "disconnected",
 ]);
 
+// Finance Enums
+export const invoiceStatusEnum = pgEnum("invoice_status", [
+  "draft", "sent", "paid", "overdue", "cancelled",
+]);
+export const expenseCategoryEnum = pgEnum("expense_category", [
+  "office", "software", "marketing", "travel", "equipment",
+  "contractor", "utilities", "insurance", "taxes", "other",
+]);
+export const recurringFrequencyEnum = pgEnum("recurring_frequency", [
+  "weekly", "biweekly", "monthly", "quarterly", "yearly",
+]);
+
 // ─── Users (from mat-ops) ───────────────────────────────────────────────────
 
 export const users = pgTable("users", {
@@ -515,6 +527,58 @@ export const cronJobRuns = pgTable("cron_job_runs", {
   index("idx_cron_job_runs_started").on(table.startedAt),
 ]);
 
+// ─── Invoices (Finance) ─────────────────────────────────────────────────────
+
+export const invoices = pgTable("invoices", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  invoiceNumber: varchar("invoice_number", { length: 50 }).unique().notNull(),
+  leadId: uuid("lead_id").references(() => leads.id, { onDelete: "set null" }),
+  clientName: varchar("client_name", { length: 255 }).notNull(),
+  clientEmail: varchar("client_email", { length: 255 }),
+  items: jsonb("items").$type<Array<{ description: string; qty: number; rate: number; amount: number }>>().default([]),
+  subtotal: decimal("subtotal", { precision: 12, scale: 2 }).default("0").notNull(),
+  taxRate: decimal("tax_rate", { precision: 5, scale: 4 }).default("0"),
+  taxAmount: decimal("tax_amount", { precision: 12, scale: 2 }).default("0"),
+  total: decimal("total", { precision: 12, scale: 2 }).default("0").notNull(),
+  status: invoiceStatusEnum("status").default("draft").notNull(),
+  dueDate: date("due_date").notNull(),
+  paidDate: timestamp("paid_date"),
+  paidAmount: decimal("paid_amount", { precision: 12, scale: 2 }),
+  notes: text("notes"),
+  createdBy: uuid("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_invoices_status").on(table.status),
+  index("idx_invoices_due_date").on(table.dueDate),
+  index("idx_invoices_lead").on(table.leadId),
+]);
+
+export type Invoice = InferSelectModel<typeof invoices>;
+
+// ─── Expenses (Finance) ─────────────────────────────────────────────────────
+
+export const expenses = pgTable("expenses", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  category: expenseCategoryEnum("category").notNull(),
+  vendor: varchar("vendor", { length: 255 }).notNull(),
+  description: text("description"),
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  date: date("date").notNull(),
+  receiptUrl: text("receipt_url"),
+  isRecurring: boolean("is_recurring").default(false).notNull(),
+  recurringFrequency: recurringFrequencyEnum("recurring_frequency"),
+  taxDeductible: boolean("tax_deductible").default(true).notNull(),
+  notes: text("notes"),
+  createdBy: uuid("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_expenses_category").on(table.category),
+  index("idx_expenses_date").on(table.date),
+]);
+
+export type Expense = InferSelectModel<typeof expenses>;
+
 // ─── Relations ──────────────────────────────────────────────────────────────
 
 export const usersRelations = relations(users, ({ many }) => ({
@@ -581,4 +645,13 @@ export const tasksRelations = relations(tasks, ({ one }) => ({
   completedByUser: one(users, { fields: [tasks.completedBy], references: [users.id], relationName: "completedBy" }),
   assignedByUser: one(users, { fields: [tasks.assignedBy], references: [users.id], relationName: "assignedBy" }),
   assignedToUser: one(users, { fields: [tasks.assignedTo], references: [users.id], relationName: "assignedTo" }),
+}));
+
+export const invoicesRelations = relations(invoices, ({ one }) => ({
+  lead: one(leads, { fields: [invoices.leadId], references: [leads.id] }),
+  createdByUser: one(users, { fields: [invoices.createdBy], references: [users.id] }),
+}));
+
+export const expensesRelations = relations(expenses, ({ one }) => ({
+  createdByUser: one(users, { fields: [expenses.createdBy], references: [users.id] }),
 }));

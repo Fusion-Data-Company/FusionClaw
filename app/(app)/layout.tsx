@@ -31,6 +31,9 @@ import {
   Contact,
   Bot,
   FolderHeart,
+  Receipt,
+  CreditCard,
+  TrendingUp,
 } from "lucide-react";
 
 interface NavItem {
@@ -57,6 +60,14 @@ const NAV_SECTIONS: NavSection[] = [
       { name: "Tasks", href: "/tasks", icon: ListTodo, iconColor: "text-rose-400", iconBg: "bg-rose-500/20", glowColor: "rgba(244,63,94,0.25)" },
       { name: "Employees", href: "/employees", icon: Users, iconColor: "text-amber-400", iconBg: "bg-amber-500/20", glowColor: "rgba(245,158,11,0.25)" },
       { name: "Reports", href: "/reports", icon: FileBarChart, iconColor: "text-pink-400", iconBg: "bg-pink-500/20", glowColor: "rgba(236,72,153,0.25)" },
+    ],
+  },
+  {
+    label: "FINANCE",
+    items: [
+      { name: "Invoices", href: "/invoices", icon: Receipt, iconColor: "text-green-400", iconBg: "bg-green-500/20", glowColor: "rgba(74,222,128,0.25)" },
+      { name: "Expenses", href: "/expenses", icon: CreditCard, iconColor: "text-orange-400", iconBg: "bg-orange-500/20", glowColor: "rgba(251,146,60,0.25)" },
+      { name: "Financials", href: "/financials", icon: TrendingUp, iconColor: "text-emerald-400", iconBg: "bg-emerald-500/20", glowColor: "rgba(52,211,153,0.25)" },
     ],
   },
   {

@@ -21,6 +21,9 @@ const PAGES = [
   { path: "/settings", text: "AI Configuration" },
   { path: "/agents", text: "OpenClaw" },
   { path: "/branding", text: "No Brand Assets Yet" },
+  { path: "/invoices", text: "Invoices" },
+  { path: "/expenses", text: "Expenses" },
+  { path: "/financials", text: "Financials" },
 ];
 
 test.describe("Page Smoke Tests", () => {

@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
-import { leads, tasks, campaigns, users, knowledgeBase, studioGenerations } from "@/lib/db/schema";
-import { eq, sql, and } from "drizzle-orm";
+import { leads, tasks, campaigns, users, knowledgeBase, studioGenerations, invoices, expenses } from "@/lib/db/schema";
+import { eq, sql, and, ne } from "drizzle-orm";
 
 /**
  * Build a real-time business snapshot from the database.
@@ -21,6 +21,8 @@ async function getBusinessContext(): Promise<string> {
       recentLeads,
       recentTasks,
       recentCampaigns,
+      invoiceStatsResult,
+      expenseStatsResult,
     ] = await Promise.all([
       // Lead counts by status
       db
@@ -112,6 +114,26 @@ async function getBusinessContext(): Promise<string> {
         .from(campaigns)
         .orderBy(sql`${campaigns.createdAt} desc`)
         .limit(5),
+
+      // Invoice stats
+      db
+        .select({
+          total: sql<number>`count(*)`,
+          totalRevenue: sql<string>`coalesce(sum(case when status = 'paid' then paid_amount::numeric else 0 end), 0)`,
+          totalOutstanding: sql<string>`coalesce(sum(case when status not in ('paid', 'cancelled') then total::numeric else 0 end), 0)`,
+          overdueCount: sql<number>`count(*) filter (where status not in ('paid', 'cancelled') and due_date < current_date)`,
+          paidCount: sql<number>`count(*) filter (where status = 'paid')`,
+        })
+        .from(invoices),
+
+      // Expense stats (current year)
+      db
+        .select({
+          total: sql<number>`count(*)`,
+          totalAmount: sql<string>`coalesce(sum(amount::numeric), 0)`,
+          monthlyAmount: sql<string>`coalesce(sum(case when extract(month from date::date) = extract(month from current_date) and extract(year from date::date) = extract(year from current_date) then amount::numeric else 0 end), 0)`,
+        })
+        .from(expenses),
     ]);
 
     const ls = leadStats[0];
@@ -120,6 +142,8 @@ async function getBusinessContext(): Promise<string> {
     const es = employeeStats[0];
     const kb = kbStats[0];
     const gs = galleryStats[0];
+    const invS = invoiceStatsResult[0];
+    const expS = expenseStatsResult[0];
 
     let context = `
 === CURRENT BUSINESS STATE (live from database) ===
@@ -163,6 +187,14 @@ KNOWLEDGE BASE:
 
 CONTENT STUDIO:
 - ${gs?.total || 0} image generations
+
+FINANCE:
+- Invoices: ${invS?.total || 0} total (${invS?.paidCount || 0} paid)
+- Revenue collected: $${Number(invS?.totalRevenue || 0).toLocaleString()}
+- Outstanding invoices: $${Number(invS?.totalOutstanding || 0).toLocaleString()}
+- Overdue invoices: ${invS?.overdueCount || 0}
+- Expenses: ${expS?.total || 0} total, $${Number(expS?.totalAmount || 0).toLocaleString()} YTD
+- This month's expenses: $${Number(expS?.monthlyAmount || 0).toLocaleString()}
 
 Today's date: ${new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
 === END BUSINESS STATE ===`;
@@ -214,6 +246,7 @@ Your role is to be the owner's right-hand operator. You have full real-time awar
 - Team members and employee data
 - Knowledge base articles
 - Content studio generations
+- Invoices, expenses, revenue, and P&L financials
 
 ${businessContext}
 

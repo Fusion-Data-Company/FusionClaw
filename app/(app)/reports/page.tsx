@@ -62,8 +62,11 @@ export default function ReportsPage() {
           <h1 className="text-2xl font-bold text-text-primary" style={{ fontFamily: "var(--font-display)" }}>Reports</h1>
           <p className="text-sm text-text-muted">Weekly shift reports and accountability</p>
         </div>
-        <button className="px-3 py-2 rounded-lg text-xs font-medium bg-surface text-text-secondary border border-border hover:bg-elevated cursor-pointer flex items-center gap-1">
-          <Download className="w-3.5 h-3.5" /> Export
+        <button
+          onClick={() => window.open("/api/reports/export", "_blank")}
+          className="px-3 py-2 rounded-lg text-xs font-medium bg-surface text-text-secondary border border-border hover:bg-elevated cursor-pointer flex items-center gap-1"
+        >
+          <Download className="w-3.5 h-3.5" /> Export CSV
         </button>
       </div>
 

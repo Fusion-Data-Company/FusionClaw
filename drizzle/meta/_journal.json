@@ -8,6 +8,13 @@
       "when": 1774367392397,
       "tag": "0000_rename-clerk-to-auth",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1774390085146,
+      "tag": "0001_spooky_oracle",
+      "breakpoints": true
     }
   ]
 }
