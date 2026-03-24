@@ -73,9 +73,19 @@ export async function createTask(data: NewTask) {
 
 // Update task
 export async function updateTask(id: string, data: Partial<NewTask>) {
+  const updates: Record<string, unknown> = { ...data, updatedAt: new Date() };
+
+  // Auto-set completedAt when completed status changes
+  if (data.completed === true && !data.completedAt) {
+    updates.completedAt = new Date();
+  } else if (data.completed === false) {
+    updates.completedAt = null;
+    updates.completedBy = null;
+  }
+
   const result = await db
     .update(tasks)
-    .set({ ...data, updatedAt: new Date() })
+    .set(updates)
     .where(eq(tasks.id, id))
     .returning();
   revalidatePath("/tasks");

@@ -14,9 +14,16 @@ const SESSION_COOKIE = "fusionclaw_session";
 // Admin auth ID — single admin gateway auth
 const ADMIN_AUTH_ID = "admin_gateway";
 
-// JWT secret derived from GATEWAY_PASSWORD (or a dedicated SESSION_SECRET)
+// JWT secret derived from SESSION_SECRET or GATEWAY_PASSWORD
+// Falls back to dev-only secret in development; throws in production if missing
 function getJwtSecret(): Uint8Array {
-  const secret = process.env.SESSION_SECRET || process.env.GATEWAY_PASSWORD || "fusionclaw-dev-secret";
+  const secret = process.env.SESSION_SECRET || process.env.GATEWAY_PASSWORD;
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("SESSION_SECRET or GATEWAY_PASSWORD must be set in production");
+    }
+    return new TextEncoder().encode("fusionclaw-dev-secret");
+  }
   return new TextEncoder().encode(secret);
 }
 
@@ -83,8 +90,10 @@ export async function getCurrentUser() {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value;
 
-  // If no session, still return admin user for API routes (protected by middleware)
-  const authId = token ? await verifySessionToken(token) : ADMIN_AUTH_ID;
+  // Require a valid session token — middleware protects routes,
+  // but this is defense-in-depth to prevent unauthenticated DB access
+  if (!token) return null;
+  const authId = await verifySessionToken(token);
   if (!authId) return null;
 
   const existing = await db.query.users.findFirst({

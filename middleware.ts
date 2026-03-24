@@ -14,7 +14,13 @@ const STATIC_PATTERNS = [
 ];
 
 function getJwtSecret(): Uint8Array {
-  const secret = process.env.SESSION_SECRET || process.env.GATEWAY_PASSWORD || "fusionclaw-dev-secret";
+  const secret = process.env.SESSION_SECRET || process.env.GATEWAY_PASSWORD;
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("SESSION_SECRET or GATEWAY_PASSWORD must be set in production");
+    }
+    return new TextEncoder().encode("fusionclaw-dev-secret");
+  }
   return new TextEncoder().encode(secret);
 }
 
@@ -25,6 +31,22 @@ async function verifyToken(token: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+/**
+ * Validate MCP API key for agent access to API routes.
+ * Edge-compatible timing-safe comparison using constant-time XOR.
+ */
+function validateMcpApiKey(key: string): boolean {
+  const validKey = process.env.MCP_API_KEY;
+  if (!validKey) return false;
+  if (key.length !== validKey.length) return false;
+  // Constant-time comparison (edge-compatible, no Node crypto needed)
+  let result = 0;
+  for (let i = 0; i < key.length; i++) {
+    result |= key.charCodeAt(i) ^ validKey.charCodeAt(i);
+  }
+  return result === 0;
 }
 
 export async function middleware(request: NextRequest) {
@@ -38,6 +60,17 @@ export async function middleware(request: NextRequest) {
   // Allow public paths
   if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
     return NextResponse.next();
+  }
+
+  // For API routes, also accept MCP API key via Authorization header
+  if (pathname.startsWith("/api/")) {
+    const authHeader = request.headers.get("authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      const apiKey = authHeader.slice(7);
+      if (validateMcpApiKey(apiKey)) {
+        return NextResponse.next();
+      }
+    }
   }
 
   // Check for valid session cookie

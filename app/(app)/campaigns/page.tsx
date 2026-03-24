@@ -11,17 +11,17 @@ import {
 
 interface Campaign {
   id: string;
-  name: string;
+  title: string;
   subject?: string;
   status: "draft" | "scheduled" | "sending" | "completed" | "paused";
   type: "email" | "sms" | "multi-channel";
-  audienceSize: number;
+  recipients: number;
   sentCount: number;
   openRate: number;
   clickRate: number;
   bounceRate: number;
-  scheduledAt?: string;
-  completedAt?: string;
+  scheduledFor?: string;
+  sentAt?: string;
   createdAt: string;
 }
 
@@ -40,11 +40,10 @@ export default function CampaignsPage() {
   const [creating, setCreating] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [newCampaign, setNewCampaign] = useState({
-    name: "",
+    title: "",
     subject: "",
     type: "email" as Campaign["type"],
-    scheduledAt: "",
-    audienceSize: 0,
+    scheduledFor: "",
   });
 
   useEffect(() => {
@@ -64,72 +63,36 @@ export default function CampaignsPage() {
   };
 
   const createCampaign = async () => {
-    if (!newCampaign.name.trim()) return;
+    if (!newCampaign.title.trim()) return;
     setCreating(true);
     try {
       const res = await fetch("/api/campaigns", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: newCampaign.name,
-          subject: newCampaign.subject || newCampaign.name,
+          title: newCampaign.title,
+          subject: newCampaign.subject || newCampaign.title,
           type: newCampaign.type,
-          status: newCampaign.scheduledAt ? "scheduled" : "draft",
-          scheduledAt: newCampaign.scheduledAt || null,
-          audienceSize: newCampaign.audienceSize || 0,
+          status: newCampaign.scheduledFor ? "scheduled" : "draft",
+          scheduledFor: newCampaign.scheduledFor || null,
         }),
       });
       const data = await res.json();
       if (data.campaign) {
         setCampaigns((prev) => [data.campaign, ...prev]);
-      } else {
-        // Local fallback
-        setCampaigns((prev) => [
-          {
-            id: `local_${Date.now()}`,
-            name: newCampaign.name,
-            subject: newCampaign.subject,
-            status: newCampaign.scheduledAt ? "scheduled" : "draft",
-            type: newCampaign.type,
-            audienceSize: newCampaign.audienceSize,
-            sentCount: 0,
-            openRate: 0,
-            clickRate: 0,
-            bounceRate: 0,
-            scheduledAt: newCampaign.scheduledAt,
-            createdAt: new Date().toISOString(),
-          },
-          ...prev,
-        ]);
       }
-      setNewCampaign({ name: "", subject: "", type: "email", scheduledAt: "", audienceSize: 0 });
+      setNewCampaign({ title: "", subject: "", type: "email", scheduledFor: "" });
       setShowCreateModal(false);
     } catch {
-      setCampaigns((prev) => [
-        {
-          id: `local_${Date.now()}`,
-          name: newCampaign.name,
-          subject: newCampaign.subject,
-          status: "draft",
-          type: newCampaign.type,
-          audienceSize: 0,
-          sentCount: 0,
-          openRate: 0,
-          clickRate: 0,
-          bounceRate: 0,
-          createdAt: new Date().toISOString(),
-        },
-        ...prev,
-      ]);
-      setShowCreateModal(false);
+      console.error("Failed to create campaign");
     } finally {
       setCreating(false);
     }
   };
 
-  // Aggregate stats
-  const totalSent = campaigns.reduce((s, c) => s + c.sentCount, 0);
-  const avgOpenRate = campaigns.length > 0 ? campaigns.reduce((s, c) => s + c.openRate, 0) / campaigns.length : 0;
+  // Aggregate stats (handle missing/null values from API)
+  const totalSent = campaigns.reduce((s, c) => s + (c.sentCount || 0), 0);
+  const avgOpenRate = campaigns.length > 0 ? campaigns.reduce((s, c) => s + (c.openRate || 0), 0) / campaigns.length : 0;
   const activeCampaigns = campaigns.filter(c => c.status === "sending" || c.status === "scheduled").length;
 
   if (loading) {
@@ -221,7 +184,7 @@ export default function CampaignsPage() {
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-bold text-text-primary truncate">{campaign.name}</span>
+                      <span className="text-sm font-bold text-text-primary truncate">{campaign.title}</span>
                       <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${statusCfg.bg} ${statusCfg.text} ${statusCfg.border}`}>
                         {campaign.status}
                       </span>
@@ -230,10 +193,10 @@ export default function CampaignsPage() {
                       <div className="text-xs text-text-muted truncate mb-1">{campaign.subject}</div>
                     )}
                     <div className="flex items-center gap-3 text-[10px] text-text-muted">
-                      <span><Users className="w-3 h-3 inline -mt-0.5 mr-0.5" />{campaign.audienceSize} recipients</span>
-                      <span><Mail className="w-3 h-3 inline -mt-0.5 mr-0.5" />{campaign.sentCount} sent</span>
-                      {campaign.scheduledAt && (
-                        <span><Calendar className="w-3 h-3 inline -mt-0.5 mr-0.5" />{new Date(campaign.scheduledAt).toLocaleDateString()}</span>
+                      <span><Users className="w-3 h-3 inline -mt-0.5 mr-0.5" />{(campaign.recipients || 0)} recipients</span>
+                      <span><Mail className="w-3 h-3 inline -mt-0.5 mr-0.5" />{campaign.sentCount || 0} sent</span>
+                      {campaign.scheduledFor && (
+                        <span><Calendar className="w-3 h-3 inline -mt-0.5 mr-0.5" />{new Date(campaign.scheduledFor).toLocaleDateString()}</span>
                       )}
                     </div>
                   </div>
@@ -268,7 +231,7 @@ export default function CampaignsPage() {
           <GlassCard padding="lg" className="w-full max-w-lg max-h-[80vh] overflow-auto" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h2 className="text-lg font-bold text-text-primary">{selectedCampaign.name}</h2>
+                <h2 className="text-lg font-bold text-text-primary">{selectedCampaign.title}</h2>
                 {selectedCampaign.subject && <p className="text-sm text-text-muted">{selectedCampaign.subject}</p>}
               </div>
               <button onClick={() => setSelectedCampaign(null)} className="text-text-muted hover:text-text-primary cursor-pointer">
@@ -277,7 +240,7 @@ export default function CampaignsPage() {
             </div>
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div className="bg-surface rounded-lg p-3 border border-border">
-                <div className="text-lg font-extrabold text-text-primary">{selectedCampaign.audienceSize}</div>
+                <div className="text-lg font-extrabold text-text-primary">{selectedCampaign.recipients || 0}</div>
                 <div className="text-[10px] text-text-muted uppercase">Audience Size</div>
               </div>
               <div className="bg-surface rounded-lg p-3 border border-border">
@@ -316,8 +279,8 @@ export default function CampaignsPage() {
                 <label className="text-xs font-bold text-text-muted uppercase tracking-wider mb-1 block">Campaign Name</label>
                 <input
                   type="text"
-                  value={newCampaign.name}
-                  onChange={(e) => setNewCampaign({ ...newCampaign, name: e.target.value })}
+                  value={newCampaign.title}
+                  onChange={(e) => setNewCampaign({ ...newCampaign, title: e.target.value })}
                   className="w-full px-3 py-2 rounded-lg text-sm bg-surface border border-border text-text-primary focus:border-accent/30 outline-none"
                   placeholder="Spring Newsletter"
                   autoFocus
@@ -350,19 +313,19 @@ export default function CampaignsPage() {
                   <label className="text-xs font-bold text-text-muted uppercase tracking-wider mb-1 block">Schedule</label>
                   <input
                     type="datetime-local"
-                    value={newCampaign.scheduledAt}
-                    onChange={(e) => setNewCampaign({ ...newCampaign, scheduledAt: e.target.value })}
+                    value={newCampaign.scheduledFor}
+                    onChange={(e) => setNewCampaign({ ...newCampaign, scheduledFor: e.target.value })}
                     className="w-full px-3 py-2 rounded-lg text-sm bg-surface border border-border text-text-primary focus:border-accent/30 outline-none"
                   />
                 </div>
               </div>
               <button
                 onClick={createCampaign}
-                disabled={creating || !newCampaign.name.trim()}
+                disabled={creating || !newCampaign.title.trim()}
                 className="w-full py-2.5 rounded-lg text-sm font-bold bg-accent text-bg hover:bg-accent-light disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
               >
                 {creating && <Loader2 className="w-4 h-4 animate-spin" />}
-                {newCampaign.scheduledAt ? "Schedule Campaign" : "Save as Draft"}
+                {newCampaign.scheduledFor ? "Schedule Campaign" : "Save as Draft"}
               </button>
             </div>
           </GlassCard>

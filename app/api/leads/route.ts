@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { leads } from "@/lib/db/schema";
-import { eq, ilike, or, asc, desc, sql } from "drizzle-orm";
+import { eq, ilike, or, and, asc, desc, sql, type SQL } from "drizzle-orm";
 
 // GET /api/leads - Get all leads with filtering
 export async function GET(request: NextRequest) {
@@ -14,24 +14,29 @@ export async function GET(request: NextRequest) {
   const sortOrder = (searchParams.get("sortOrder") || "desc") as "asc" | "desc";
 
   try {
-    let query = db.select().from(leads).$dynamic();
+    // Build filter conditions (shared between query and count)
+    const conditions: SQL[] = [];
 
-    // Search filter
     if (search) {
-      query = query.where(
+      conditions.push(
         or(
           ilike(leads.company, `%${search}%`),
           ilike(leads.contact, `%${search}%`),
           ilike(leads.email, `%${search}%`),
           ilike(leads.phone, `%${search}%`)
-        )
+        )!
       );
     }
 
-    // Status filter
     if (status && status !== "all") {
-      query = query.where(eq(leads.status, status as typeof leads.status.enumValues[number]));
+      conditions.push(eq(leads.status, status as typeof leads.status.enumValues[number]));
     }
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    // Main query
+    let query = db.select().from(leads).$dynamic();
+    if (whereClause) query = query.where(whereClause);
 
     // Sorting (whitelist allowed fields)
     const ALLOWED_SORT_FIELDS = [
@@ -46,15 +51,13 @@ export async function GET(request: NextRequest) {
       query = query.orderBy(desc(column as any));
     }
 
-    // Pagination
     query = query.limit(limit).offset(offset);
-
     const result = await query;
 
-    // Get total count
-    const countResult = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(leads);
+    // Count with same filters applied
+    let countQuery = db.select({ count: sql<number>`count(*)` }).from(leads).$dynamic();
+    if (whereClause) countQuery = countQuery.where(whereClause);
+    const countResult = await countQuery;
     const total = Number(countResult[0]?.count || 0);
 
     return NextResponse.json({ leads: result, total });
