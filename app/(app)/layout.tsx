@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { User } from "lucide-react";
 import { RightSidebar } from "@/components/admin/RightSidebar";
 import { BackgroundDecoration } from "@/components/ui/BackgroundDecoration";
@@ -128,10 +128,33 @@ function InternalClock() {
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
+  const [notificationCount, setNotificationCount] = useState(0);
+
+  // Fetch notification count (pending tasks + overdue follow-ups)
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const res = await fetch("/api/dashboard");
+        if (res.ok) {
+          const data = await res.json();
+          setNotificationCount(data.metrics?.pendingTasks || 0);
+        }
+      } catch { /* silent */ }
+    };
+    fetchNotifications();
+  }, [pathname]);
+
+  // Global search handler
+  const handleSearch = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && searchQuery.trim()) {
+      router.push(`/leads?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  }, [searchQuery, router]);
 
   const toggleSection = (label: string) => {
     setCollapsedSections(prev => {
@@ -304,6 +327,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 placeholder="Search leads, tasks, content..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearch}
                 className="w-full h-9 pl-9 pr-4 rounded-lg text-sm outline-none transition-all bg-surface border border-border text-text-primary placeholder:text-text-muted focus:border-accent/30"
               />
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
@@ -315,11 +339,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <InternalClock />
 
             {/* Notification bell */}
-            <button className="relative w-9 h-9 flex items-center justify-center rounded-lg transition-colors cursor-pointer bg-surface border border-border">
+            <button
+              onClick={() => router.push("/tasks")}
+              className="relative w-9 h-9 flex items-center justify-center rounded-lg transition-colors cursor-pointer bg-surface border border-border"
+            >
               <Bell className="w-4 h-4 text-text-secondary" />
-              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center text-white bg-error">
-                3
-              </span>
+              {notificationCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center text-white bg-error">
+                  {notificationCount > 9 ? "9+" : notificationCount}
+                </span>
+              )}
             </button>
 
             <div className="hidden md:block">
