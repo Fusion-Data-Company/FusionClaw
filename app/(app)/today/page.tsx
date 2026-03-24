@@ -51,31 +51,38 @@ export default function TodayPage() {
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [starting, setStarting] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
-  // For demo purposes without full auth, we use local storage for user ID
-  const getUserId = useCallback(() => {
-    if (typeof window === "undefined") return null;
-    let userId = localStorage.getItem("demo_user_id");
-    if (!userId) {
-      userId = crypto.randomUUID();
-      localStorage.setItem("demo_user_id", userId);
+  // Resolve a valid DB user ID on mount via the API
+  const resolveUserId = useCallback(async () => {
+    try {
+      // Ask API for current user — it will find/create one
+      const res = await fetch("/api/shifts/resolve-user");
+      const data = await res.json();
+      if (data.userId) {
+        setUserId(data.userId);
+        return data.userId;
+      }
+    } catch (err) {
+      console.error("Failed to resolve user:", err);
     }
-    return userId;
+    return null;
   }, []);
 
   useEffect(() => {
-    fetchTodayShift();
-  }, []);
+    (async () => {
+      const uid = await resolveUserId();
+      if (uid) {
+        await fetchTodayShift(uid);
+      } else {
+        setLoading(false);
+      }
+    })();
+  }, [resolveUserId]);
 
-  const fetchTodayShift = async () => {
-    const userId = getUserId();
-    if (!userId) {
-      setLoading(false);
-      return;
-    }
-
+  const fetchTodayShift = async (uid: string) => {
     try {
-      const res = await fetch(`/api/shifts?userId=${userId}&today=true`);
+      const res = await fetch(`/api/shifts?userId=${uid}&today=true`);
       const data = await res.json();
       if (data.shift) {
         setShift(data.shift);
@@ -89,7 +96,6 @@ export default function TodayPage() {
   };
 
   const startShift = async () => {
-    const userId = getUserId();
     if (!userId) return;
 
     setStarting(true);
@@ -103,6 +109,12 @@ export default function TodayPage() {
       if (data.shift) {
         setShift(data.shift);
         setChecklist(data.checklistItems || []);
+      } else if (data.error) {
+        console.error("Shift creation error:", data.error);
+        // If shift already exists for today, fetch it
+        if (res.status === 409) {
+          await fetchTodayShift(userId);
+        }
       }
     } catch (err) {
       console.error("Failed to start shift:", err);
@@ -217,7 +229,7 @@ export default function TodayPage() {
         {!shift ? (
           <button
             onClick={startShift}
-            disabled={starting}
+            disabled={starting || !userId}
             className="px-4 py-2 rounded-lg text-sm font-bold bg-accent/20 text-accent border border-accent/30 hover:bg-accent/30 cursor-pointer flex items-center gap-2 disabled:opacity-50"
           >
             {starting ? <Loader2 className="w-4 h-4 animate-spin" /> : <PlayCircle className="w-4 h-4" />}

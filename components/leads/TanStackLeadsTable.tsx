@@ -396,7 +396,7 @@ const createColumns = (
           {lead.website ? (
             <button
               onClick={() => window.open(lead.website, "_blank")}
-              className="text-text-muted hover:text-accent transition-colors"
+              className="text-blue-400 hover:text-blue-300 transition-colors"
               title={lead.website}
             >
               <Globe className="h-4 w-4" />
@@ -407,7 +407,7 @@ const createColumns = (
           {lead.linkedin ? (
             <button
               onClick={() => window.open(lead.linkedin, "_blank")}
-              className="text-text-muted hover:text-blue-400 transition-colors"
+              className="text-[#0A66C2] hover:brightness-125 transition-all"
             >
               <Linkedin className="h-4 w-4" />
             </button>
@@ -417,7 +417,7 @@ const createColumns = (
           {lead.facebook ? (
             <button
               onClick={() => window.open(lead.facebook, "_blank")}
-              className="text-text-muted hover:text-blue-500 transition-colors"
+              className="text-[#1877F2] hover:brightness-125 transition-all"
             >
               <Facebook className="h-4 w-4" />
             </button>
@@ -427,7 +427,7 @@ const createColumns = (
           {lead.instagram ? (
             <button
               onClick={() => window.open(lead.instagram, "_blank")}
-              className="text-text-muted hover:text-pink-400 transition-colors"
+              className="text-[#E4405F] hover:brightness-125 transition-all"
             >
               <Instagram className="h-4 w-4" />
             </button>
@@ -437,7 +437,7 @@ const createColumns = (
           {lead.twitterX ? (
             <button
               onClick={() => window.open(lead.twitterX, "_blank")}
-              className="text-text-muted hover:text-text-primary transition-colors"
+              className="text-text-primary hover:text-white transition-colors"
             >
               <XIcon className="h-4 w-4" />
             </button>
@@ -447,7 +447,7 @@ const createColumns = (
           {lead.youtube ? (
             <button
               onClick={() => window.open(lead.youtube, "_blank")}
-              className="text-text-muted hover:text-red-500 transition-colors"
+              className="text-[#FF0000] hover:brightness-125 transition-all"
             >
               <Youtube className="h-4 w-4" />
             </button>
@@ -457,7 +457,7 @@ const createColumns = (
           {lead.tiktok ? (
             <button
               onClick={() => window.open(lead.tiktok, "_blank")}
-              className="text-text-muted hover:text-cyan transition-colors"
+              className="text-[#00F2EA] hover:brightness-125 transition-all"
             >
               <TikTokIcon className="h-4 w-4" />
             </button>
@@ -487,7 +487,7 @@ const createColumns = (
             onClick={() =>
               window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lead.address!)}`, "_blank")
             }
-            className="h-7 w-7 rounded-md bg-surface border border-border hover:border-error/50 hover:text-error transition-colors flex items-center justify-center"
+            className="h-7 w-7 rounded-md bg-surface border border-border hover:border-emerald-500/50 transition-colors flex items-center justify-center text-[#34A853]"
             title={lead.address}
           >
             <MapPin className="h-4 w-4" />
@@ -775,6 +775,7 @@ export default function TanStackLeadsTable({
   const [rowSelection, setRowSelection] = useState({});
   const [expanded, setExpanded] = useState<ExpandedState>({});
   const [globalFilter, setGlobalFilter] = useState(searchTerm);
+  const [selectedContactId, setSelectedContactId] = useState<string | number | null>(null);
 
   // Helper functions
   const updateLead = useCallback(
@@ -882,7 +883,7 @@ export default function TanStackLeadsTable({
   });
 
   return (
-    <div className={cn("flex flex-col overflow-hidden rounded-lg border border-border bg-surface", className)}>
+    <div className={cn("flex flex-col overflow-hidden rounded-lg border border-border relative", className)} style={{ background: "rgba(13,13,13,0.97)" }}>
       {/* Table Header Bar */}
       <div
         className="flex items-center justify-between gap-4 px-4 py-2 border-b border-border"
@@ -952,14 +953,21 @@ export default function TanStackLeadsTable({
               const row = table.getRowModel().rows[virtualRow.index];
               if (!row) return null;
 
+              const lead = row.original;
+              const isExpanded = row.getIsExpanded();
+
               return (
                 <tr
                   key={row.id}
                   className={cn(
-                    "group hover:bg-elevated/50 hover:shadow-[inset_3px_0_0_rgba(59,130,246,0.5)] transition-colors cursor-pointer",
-                    row.getIsSelected() && "bg-accent/5"
+                    "group hover:bg-elevated hover:shadow-[inset_3px_0_0_rgba(59,130,246,0.5)] transition-colors cursor-pointer bg-surface",
+                    selectedContactId === lead.id && "bg-elevated shadow-[inset_3px_0_0_rgba(59,130,246,0.5)]",
+                    row.getIsSelected() && "bg-accent/10"
                   )}
-                  onClick={() => onLeadSelect?.(row.original.id)}
+                  onClick={() => {
+                    setSelectedContactId(prev => prev === row.original.id ? null : row.original.id);
+                    onLeadSelect?.(row.original.id);
+                  }}
                   style={{
                     height: virtualRow.size,
                     position: "absolute",
@@ -1023,6 +1031,94 @@ export default function TanStackLeadsTable({
           <span className="text-xs text-text-muted">TanStack Table + Virtual</span>
         </div>
       </div>
+
+      {/* Contact Detail Slide-Up Panel */}
+      {selectedContactId !== null && leadsData.filter(l => l.id === selectedContactId).map(lead => (
+        <div
+          key={`detail-${lead.id}`}
+          className="absolute bottom-0 left-0 right-0 z-20 border-t-2 border-accent/40 bg-elevated rounded-b-lg shadow-[0_-4px_24px_rgba(0,0,0,0.5)]"
+          style={{ maxHeight: "45%" }}
+        >
+          <div className="overflow-y-auto px-6 py-4" style={{ maxHeight: "100%" }}>
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <h3 className="text-base font-bold text-text-primary">{lead.contact || "No Name"}</h3>
+                <p className="text-xs text-text-muted">{lead.jobTitle || ""}{lead.jobTitle && lead.company ? " at " : ""}{lead.company}</p>
+              </div>
+              <button
+                onClick={(e) => { e.stopPropagation(); setSelectedContactId(null); }}
+                className="text-xs text-text-muted hover:text-text-primary px-2 py-1 rounded border border-border hover:border-border-med transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+              {lead.phone && (
+                <div className="flex items-center gap-2">
+                  <Phone className="w-3.5 h-3.5 text-text-muted shrink-0" />
+                  <span className="text-text-secondary truncate">{lead.phone}</span>
+                </div>
+              )}
+              {lead.altPhone && (
+                <div className="flex items-center gap-2">
+                  <Phone className="w-3.5 h-3.5 text-text-muted shrink-0" />
+                  <span className="text-text-secondary truncate">{lead.altPhone}</span>
+                </div>
+              )}
+              {lead.email && (
+                <div className="flex items-center gap-2">
+                  <Mail className="w-3.5 h-3.5 text-text-muted shrink-0" />
+                  <a href={`mailto:${lead.email}`} className="text-accent truncate hover:underline" onClick={e => e.stopPropagation()}>{lead.email}</a>
+                </div>
+              )}
+              {lead.email2 && (
+                <div className="flex items-center gap-2">
+                  <Mail className="w-3.5 h-3.5 text-text-muted shrink-0" />
+                  <a href={`mailto:${lead.email2}`} className="text-accent truncate hover:underline" onClick={e => e.stopPropagation()}>{lead.email2}</a>
+                </div>
+              )}
+              {lead.website && (
+                <div className="flex items-center gap-2">
+                  <Globe className="w-3.5 h-3.5 text-text-muted shrink-0" />
+                  <a href={lead.website.startsWith("http") ? lead.website : `https://${lead.website}`} target="_blank" rel="noopener noreferrer" className="text-accent truncate hover:underline" onClick={e => e.stopPropagation()}>{lead.website}</a>
+                </div>
+              )}
+              {lead.address && (
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-3.5 h-3.5 text-[#34A853] shrink-0" />
+                  <span className="text-text-secondary truncate">{lead.address}</span>
+                </div>
+              )}
+              {lead.dealValue != null && lead.dealValue > 0 && (
+                <div className="flex items-center gap-2">
+                  <DollarSign className="w-3.5 h-3.5 text-text-muted shrink-0" />
+                  <span className="text-emerald-400 font-semibold">${lead.dealValue.toLocaleString()}</span>
+                </div>
+              )}
+              {lead.source && (
+                <div className="flex items-center gap-2">
+                  <Target className="w-3.5 h-3.5 text-text-muted shrink-0" />
+                  <span className="text-text-secondary">{lead.source}</span>
+                </div>
+              )}
+            </div>
+            {(lead.linkedin || lead.facebook || lead.instagram || lead.twitterX || lead.youtube || lead.tiktok) && (
+              <div className="flex items-center gap-3 mt-3 pt-3 border-t border-border">
+                {lead.linkedin && <a href={lead.linkedin} target="_blank" rel="noopener noreferrer" className="text-[#0A66C2] hover:brightness-125 transition-all" onClick={e => e.stopPropagation()}><Linkedin className="w-4 h-4" /></a>}
+                {lead.facebook && <a href={lead.facebook} target="_blank" rel="noopener noreferrer" className="text-[#1877F2] hover:brightness-125 transition-all" onClick={e => e.stopPropagation()}><Facebook className="w-4 h-4" /></a>}
+                {lead.instagram && <a href={lead.instagram} target="_blank" rel="noopener noreferrer" className="text-[#E4405F] hover:brightness-125 transition-all" onClick={e => e.stopPropagation()}><Instagram className="w-4 h-4" /></a>}
+                {lead.youtube && <a href={lead.youtube} target="_blank" rel="noopener noreferrer" className="text-[#FF0000] hover:brightness-125 transition-all" onClick={e => e.stopPropagation()}><Youtube className="w-4 h-4" /></a>}
+              </div>
+            )}
+            {lead.notes && (
+              <div className="mt-3 pt-3 border-t border-border">
+                <p className="text-[10px] font-semibold text-text-muted uppercase tracking-wider mb-1">Notes</p>
+                <p className="text-sm text-text-secondary">{lead.notes}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

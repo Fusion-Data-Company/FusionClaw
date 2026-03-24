@@ -39,8 +39,8 @@
   --color-info:    #60A5FA;
 
   /* Glass */
-  --glass-bg:      rgba(20,20,20,0.6);
-  --glass-bg-hover: rgba(30,30,30,0.7);
+  --glass-bg:      rgba(13,13,13,0.95);
+  --glass-bg-hover: rgba(26,26,26,0.95);
   --glass-border:  rgba(59,130,246,0.10);
   --glass-blur:    20px;
   --glass-glow:    0 4px 24px rgba(59,130,246,0.06);

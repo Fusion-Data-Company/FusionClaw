@@ -21,7 +21,7 @@ export async function GET() {
     return NextResponse.json({ articles: formattedArticles });
   } catch (err) {
     console.error("Knowledge base fetch error:", err);
-    return NextResponse.json({ error: "Failed to fetch articles", details: String(err) }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch articles" }, { status: 500 });
   }
 }
 
@@ -45,6 +45,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ article: newArticle });
   } catch (err) {
     console.error("Knowledge base create error:", err);
-    return NextResponse.json({ error: "Failed to create article", details: String(err) }, { status: 500 });
+    return NextResponse.json({ error: "Failed to create article" }, { status: 500 });
   }
 }

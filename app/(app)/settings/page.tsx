@@ -12,7 +12,6 @@ import {
   CheckCircle2,
   XCircle,
   AlertTriangle,
-  Globe,
   Bell,
   Shield,
 } from "lucide-react";
@@ -107,7 +106,7 @@ export default function SettingsPage() {
             { label: "OpenRouter", desc: "AI Generation", connected: true },
             { label: "fal.ai", desc: "Image Generation", connected: true },
             { label: "Neon DB", desc: "PostgreSQL", connected: true },
-            { label: "Clerk", desc: "Authentication", connected: true },
+            { label: "MCP Server", desc: "Agent Access", connected: true },
           ].map((svc) => (
             <GlassCard key={svc.label} padding="md">
               <div className="flex items-center gap-2 mb-1">

@@ -33,7 +33,7 @@ export async function GET() {
     return NextResponse.json({ campaigns: formattedCampaigns });
   } catch (err) {
     console.error("Campaigns fetch error:", err);
-    return NextResponse.json({ error: "Failed to fetch campaigns", details: String(err) }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch campaigns" }, { status: 500 });
   }
 }
 
@@ -61,6 +61,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ campaign: newCampaign });
   } catch (err) {
     console.error("Campaign create error:", err);
-    return NextResponse.json({ error: "Failed to create campaign", details: String(err) }, { status: 500 });
+    return NextResponse.json({ error: "Failed to create campaign" }, { status: 500 });
   }
 }

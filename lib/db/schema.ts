@@ -56,14 +56,14 @@ export const dncReasonEnum = pgEnum("dnc_reason", [
 
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
-  clerkId: varchar("clerk_id", { length: 255 }).unique().notNull(),
+  authId: varchar("auth_id", { length: 255 }).unique().notNull(),
   email: varchar("email", { length: 255 }).notNull(),
   name: varchar("name", { length: 255 }),
   role: userRoleEnum("role").default("employee").notNull(),
   avatarUrl: varchar("avatar_url", { length: 500 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
-  index("idx_users_clerk_id").on(table.clerkId),
+  index("idx_users_auth_id").on(table.authId),
 ]);
 
 // ─── Shifts (from mat-ops) ──────────────────────────────────────────────────
@@ -139,11 +139,13 @@ export const tasks = pgTable("tasks", {
   completedAt: timestamp("completed_at"),
   completedBy: uuid("completed_by").references(() => users.id),
   assignedBy: uuid("assigned_by").references(() => users.id),
+  assignedTo: uuid("assigned_to").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => [
   index("idx_tasks_due").on(table.dueDate),
   index("idx_tasks_completed").on(table.completed),
+  index("idx_tasks_assigned_to").on(table.assignedTo),
 ]);
 
 // ─── Chat Messages (from mat-ops) ──────────────────────────────────────────
@@ -576,6 +578,7 @@ export const cronJobRunsRelations = relations(cronJobRuns, ({ one }) => ({
 }));
 
 export const tasksRelations = relations(tasks, ({ one }) => ({
-  completedByUser: one(users, { fields: [tasks.completedBy], references: [users.id] }),
-  assignedByUser: one(users, { fields: [tasks.assignedBy], references: [users.id] }),
+  completedByUser: one(users, { fields: [tasks.completedBy], references: [users.id], relationName: "completedBy" }),
+  assignedByUser: one(users, { fields: [tasks.assignedBy], references: [users.id], relationName: "assignedBy" }),
+  assignedToUser: one(users, { fields: [tasks.assignedTo], references: [users.id], relationName: "assignedTo" }),
 }));

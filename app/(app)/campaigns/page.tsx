@@ -2,28 +2,50 @@
 
 import { useState, useEffect } from "react";
 import { GlassCard } from "@/components/primitives";
-import { Megaphone, Plus, Loader2, Mail, Edit2, Trash2 } from "lucide-react";
+import { SpotlightCard } from "@/components/effects/EliteEffects";
+import { motion } from "framer-motion";
+import {
+  Send, Plus, Mail, Users, BarChart3, Clock, CheckCircle, XCircle,
+  Loader2, X, Calendar, Eye, Trash2, TrendingUp, Edit, Target, Zap,
+} from "lucide-react";
 
 interface Campaign {
   id: string;
-  title: string;
-  type: string;
-  status: "draft" | "scheduled" | "sent" | "cancelled";
-  subject: string | null;
-  recipients: number;
+  name: string;
+  subject?: string;
+  status: "draft" | "scheduled" | "sending" | "completed" | "paused";
+  type: "email" | "sms" | "multi-channel";
+  audienceSize: number;
+  sentCount: number;
   openRate: number;
   clickRate: number;
-  scheduledFor: string | null;
-  sentAt: string | null;
+  bounceRate: number;
+  scheduledAt?: string;
+  completedAt?: string;
   createdAt: string;
 }
+
+const STATUS_CONFIG: Record<string, { bg: string; text: string; border: string; icon: React.ComponentType<any> }> = {
+  draft: { bg: "bg-slate-500/10", text: "text-slate-300", border: "border-slate-500/30", icon: Edit },
+  scheduled: { bg: "bg-amber-500/10", text: "text-amber-300", border: "border-amber-500/30", icon: Clock },
+  sending: { bg: "bg-blue-500/10", text: "text-blue-300", border: "border-blue-500/30", icon: Loader2 },
+  completed: { bg: "bg-emerald-500/10", text: "text-emerald-300", border: "border-emerald-500/30", icon: CheckCircle },
+  paused: { bg: "bg-red-500/10", text: "text-red-300", border: "border-red-500/30", icon: XCircle },
+};
 
 export default function CampaignsPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [newCampaign, setNewCampaign] = useState({ title: "", subject: "", type: "email" });
+  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
+  const [newCampaign, setNewCampaign] = useState({
+    name: "",
+    subject: "",
+    type: "email" as Campaign["type"],
+    scheduledAt: "",
+    audienceSize: 0,
+  });
 
   useEffect(() => {
     fetchCampaigns();
@@ -34,51 +56,88 @@ export default function CampaignsPage() {
       const res = await fetch("/api/campaigns");
       const data = await res.json();
       setCampaigns(data.campaigns || []);
-    } catch (err) {
-      console.error("Failed to fetch campaigns:", err);
+    } catch {
+      console.log("Campaigns API not available — using empty state");
     } finally {
       setLoading(false);
     }
   };
 
   const createCampaign = async () => {
-    if (!newCampaign.title.trim()) return;
-
+    if (!newCampaign.name.trim()) return;
     setCreating(true);
     try {
       const res = await fetch("/api/campaigns", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newCampaign),
+        body: JSON.stringify({
+          name: newCampaign.name,
+          subject: newCampaign.subject || newCampaign.name,
+          type: newCampaign.type,
+          status: newCampaign.scheduledAt ? "scheduled" : "draft",
+          scheduledAt: newCampaign.scheduledAt || null,
+          audienceSize: newCampaign.audienceSize || 0,
+        }),
       });
       const data = await res.json();
       if (data.campaign) {
-        setCampaigns((prev) => [{ ...data.campaign, recipients: 0, openRate: 0, clickRate: 0, sentAt: null }, ...prev]);
-        setNewCampaign({ title: "", subject: "", type: "email" });
-        setShowModal(false);
+        setCampaigns((prev) => [data.campaign, ...prev]);
+      } else {
+        // Local fallback
+        setCampaigns((prev) => [
+          {
+            id: `local_${Date.now()}`,
+            name: newCampaign.name,
+            subject: newCampaign.subject,
+            status: newCampaign.scheduledAt ? "scheduled" : "draft",
+            type: newCampaign.type,
+            audienceSize: newCampaign.audienceSize,
+            sentCount: 0,
+            openRate: 0,
+            clickRate: 0,
+            bounceRate: 0,
+            scheduledAt: newCampaign.scheduledAt,
+            createdAt: new Date().toISOString(),
+          },
+          ...prev,
+        ]);
       }
-    } catch (err) {
-      console.error("Failed to create campaign:", err);
+      setNewCampaign({ name: "", subject: "", type: "email", scheduledAt: "", audienceSize: 0 });
+      setShowCreateModal(false);
+    } catch {
+      setCampaigns((prev) => [
+        {
+          id: `local_${Date.now()}`,
+          name: newCampaign.name,
+          subject: newCampaign.subject,
+          status: "draft",
+          type: newCampaign.type,
+          audienceSize: 0,
+          sentCount: 0,
+          openRate: 0,
+          clickRate: 0,
+          bounceRate: 0,
+          createdAt: new Date().toISOString(),
+        },
+        ...prev,
+      ]);
+      setShowCreateModal(false);
     } finally {
       setCreating(false);
     }
   };
 
-  const deleteCampaign = async (id: string) => {
-    try {
-      await fetch(`/api/campaigns/${id}`, { method: "DELETE" });
-      setCampaigns((prev) => prev.filter((c) => c.id !== id));
-    } catch (err) {
-      console.error("Failed to delete campaign:", err);
-    }
-  };
+  // Aggregate stats
+  const totalSent = campaigns.reduce((s, c) => s + c.sentCount, 0);
+  const avgOpenRate = campaigns.length > 0 ? campaigns.reduce((s, c) => s + c.openRate, 0) / campaigns.length : 0;
+  const activeCampaigns = campaigns.filter(c => c.status === "sending" || c.status === "scheduled").length;
 
   if (loading) {
     return (
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-text-primary" style={{ fontFamily: "var(--font-display)" }}>Campaigns</h1>
-          <p className="text-sm text-text-muted">Loading campaigns...</p>
+          <p className="text-sm text-text-muted">Loading...</p>
         </div>
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-8 h-8 animate-spin text-accent" />
@@ -89,147 +148,222 @@ export default function CampaignsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-text-primary" style={{ fontFamily: "var(--font-display)" }}>Campaigns</h1>
-          <p className="text-sm text-text-muted">Email campaigns and marketing automation</p>
+          <p className="text-sm text-text-muted">{campaigns.length} campaigns</p>
         </div>
         <button
-          onClick={() => setShowModal(true)}
-          className="px-3 py-2 rounded-lg text-xs font-medium bg-accent/20 text-accent border border-accent/30 hover:bg-accent/30 cursor-pointer flex items-center gap-1"
+          onClick={() => setShowCreateModal(true)}
+          className="px-4 py-2 rounded-lg text-xs font-medium bg-accent/20 text-accent border border-accent/30 hover:bg-accent/30 cursor-pointer flex items-center gap-2"
         >
           <Plus className="w-3.5 h-3.5" /> New Campaign
         </button>
       </div>
 
+      {/* Campaign Stats */}
+      <motion.div
+        className="grid grid-cols-2 md:grid-cols-4 gap-4"
+        initial="hidden"
+        animate="visible"
+        variants={{ visible: { transition: { staggerChildren: 0.08 } } }}
+      >
+        {[
+          { label: "Total Campaigns", value: campaigns.length, icon: Target, color: "text-blue-400", bg: "bg-blue-500/10" },
+          { label: "Active", value: activeCampaigns, icon: Zap, color: "text-emerald-400", bg: "bg-emerald-500/10" },
+          { label: "Total Sent", value: totalSent.toLocaleString(), icon: Send, color: "text-violet-400", bg: "bg-violet-500/10" },
+          { label: "Avg Open Rate", value: `${avgOpenRate.toFixed(1)}%`, icon: TrendingUp, color: "text-amber-400", bg: "bg-amber-500/10" },
+        ].map((stat) => (
+          <motion.div
+            key={stat.label}
+            variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
+          >
+            <SpotlightCard className="p-4">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center`}>
+                  <stat.icon className={`w-5 h-5 ${stat.color}`} />
+                </div>
+                <div>
+                  <div className="text-xl font-extrabold text-text-primary">{stat.value}</div>
+                  <div className="text-[10px] uppercase tracking-wider font-semibold text-text-muted">{stat.label}</div>
+                </div>
+              </div>
+            </SpotlightCard>
+          </motion.div>
+        ))}
+      </motion.div>
+
+      {/* Campaign List */}
       {campaigns.length === 0 ? (
         <GlassCard padding="lg" className="text-center">
-          <Megaphone className="w-12 h-12 text-text-muted mx-auto mb-4" />
+          <Send className="w-12 h-12 text-text-muted mx-auto mb-4" />
           <h2 className="text-lg font-bold text-text-primary mb-2">No Campaigns Yet</h2>
-          <p className="text-sm text-text-muted">
-            Create your first email campaign to start reaching your audience.
-          </p>
+          <p className="text-sm text-text-muted mb-4">Create your first email campaign to start engaging your audience.</p>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="px-4 py-2 rounded-lg text-sm font-bold bg-accent/20 text-accent border border-accent/30 hover:bg-accent/30 cursor-pointer inline-flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" /> Create First Campaign
+          </button>
         </GlassCard>
       ) : (
-        <div className="space-y-4">
-          {campaigns.map((campaign) => (
-            <GlassCard key={campaign.id} variant="interactive" padding="md">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h3 className="text-sm font-bold text-text-primary">{campaign.title}</h3>
-                  {campaign.subject && (
-                    <p className="text-xs text-text-muted mt-0.5 line-clamp-1">{campaign.subject}</p>
-                  )}
-                  <div className="flex items-center gap-3 mt-2">
-                    <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${
-                      campaign.status === "sent" ? "bg-success/10 text-success border-success/30" :
-                      campaign.status === "scheduled" ? "bg-info/10 text-info border-info/30" :
-                      campaign.status === "cancelled" ? "bg-error/10 text-error border-error/30" :
-                      "bg-warning/10 text-warning border-warning/30"
-                    }`}>
-                      {campaign.status}
-                    </span>
-                    {campaign.sentAt && <span className="text-xs text-text-muted">{campaign.sentAt}</span>}
-                    {campaign.scheduledFor && campaign.status === "scheduled" && (
-                      <span className="text-xs text-text-muted">
-                        Scheduled: {new Date(campaign.scheduledFor).toLocaleDateString()}
+        <GlassCard padding="none">
+          <div className="divide-y divide-border">
+            {campaigns.map((campaign) => {
+              const statusCfg = STATUS_CONFIG[campaign.status] || STATUS_CONFIG.draft;
+              const StatusIcon = statusCfg.icon;
+              return (
+                <div
+                  key={campaign.id}
+                  className="flex items-center gap-4 px-5 py-4 hover:bg-elevated/50 transition-colors cursor-pointer"
+                  onClick={() => setSelectedCampaign(campaign)}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-sm font-bold text-text-primary truncate">{campaign.name}</span>
+                      <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${statusCfg.bg} ${statusCfg.text} ${statusCfg.border}`}>
+                        {campaign.status}
                       </span>
+                    </div>
+                    {campaign.subject && (
+                      <div className="text-xs text-text-muted truncate mb-1">{campaign.subject}</div>
                     )}
+                    <div className="flex items-center gap-3 text-[10px] text-text-muted">
+                      <span><Users className="w-3 h-3 inline -mt-0.5 mr-0.5" />{campaign.audienceSize} recipients</span>
+                      <span><Mail className="w-3 h-3 inline -mt-0.5 mr-0.5" />{campaign.sentCount} sent</span>
+                      {campaign.scheduledAt && (
+                        <span><Calendar className="w-3 h-3 inline -mt-0.5 mr-0.5" />{new Date(campaign.scheduledAt).toLocaleDateString()}</span>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  {campaign.status === "sent" && (
-                    <div className="flex gap-4 text-center">
+                  {/* Performance Bars */}
+                  {campaign.sentCount > 0 && (
+                    <div className="hidden md:flex items-center gap-4 text-center">
                       <div>
-                        <div className="text-sm font-bold text-text-primary">{campaign.recipients.toLocaleString()}</div>
-                        <div className="text-[10px] text-text-muted">Recipients</div>
+                        <div className="text-sm font-bold text-emerald-400">{campaign.openRate}%</div>
+                        <div className="text-[9px] text-text-muted uppercase">Opens</div>
                       </div>
                       <div>
-                        <div className="text-sm font-bold text-success">{campaign.openRate}%</div>
-                        <div className="text-[10px] text-text-muted">Open Rate</div>
+                        <div className="text-sm font-bold text-blue-400">{campaign.clickRate}%</div>
+                        <div className="text-[9px] text-text-muted uppercase">Clicks</div>
                       </div>
                       <div>
-                        <div className="text-sm font-bold text-accent">{campaign.clickRate}%</div>
-                        <div className="text-[10px] text-text-muted">Click Rate</div>
+                        <div className="text-sm font-bold text-red-400">{campaign.bounceRate}%</div>
+                        <div className="text-[9px] text-text-muted uppercase">Bounce</div>
                       </div>
                     </div>
                   )}
-                  <div className="flex items-center gap-1">
-                    <button
-                      className="w-7 h-7 flex items-center justify-center rounded-lg bg-surface border border-border text-text-muted hover:text-text-primary cursor-pointer"
-                      title="Edit"
-                    >
-                      <Edit2 className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => deleteCampaign(campaign.id)}
-                      className="w-7 h-7 flex items-center justify-center rounded-lg bg-surface border border-border text-text-muted hover:text-error cursor-pointer"
-                      title="Delete"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                  <Eye className="w-4 h-4 text-text-muted shrink-0" />
                 </div>
+              );
+            })}
+          </div>
+        </GlassCard>
+      )}
+
+      {/* Campaign Detail Modal */}
+      {selectedCampaign && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setSelectedCampaign(null)}>
+          <GlassCard padding="lg" className="w-full max-w-lg max-h-[80vh] overflow-auto" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h2 className="text-lg font-bold text-text-primary">{selectedCampaign.name}</h2>
+                {selectedCampaign.subject && <p className="text-sm text-text-muted">{selectedCampaign.subject}</p>}
               </div>
-            </GlassCard>
-          ))}
+              <button onClick={() => setSelectedCampaign(null)} className="text-text-muted hover:text-text-primary cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="bg-surface rounded-lg p-3 border border-border">
+                <div className="text-lg font-extrabold text-text-primary">{selectedCampaign.audienceSize}</div>
+                <div className="text-[10px] text-text-muted uppercase">Audience Size</div>
+              </div>
+              <div className="bg-surface rounded-lg p-3 border border-border">
+                <div className="text-lg font-extrabold text-text-primary">{selectedCampaign.sentCount}</div>
+                <div className="text-[10px] text-text-muted uppercase">Emails Sent</div>
+              </div>
+              <div className="bg-surface rounded-lg p-3 border border-border">
+                <div className="text-lg font-extrabold text-emerald-400">{selectedCampaign.openRate}%</div>
+                <div className="text-[10px] text-text-muted uppercase">Open Rate</div>
+              </div>
+              <div className="bg-surface rounded-lg p-3 border border-border">
+                <div className="text-lg font-extrabold text-blue-400">{selectedCampaign.clickRate}%</div>
+                <div className="text-[10px] text-text-muted uppercase">Click Rate</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-text-muted">
+              <Calendar className="w-3.5 h-3.5" />
+              Created: {new Date(selectedCampaign.createdAt).toLocaleDateString()}
+            </div>
+          </GlassCard>
         </div>
       )}
 
-      {/* Create Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={() => setShowModal(false)}>
+      {/* Create Campaign Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowCreateModal(false)}>
           <GlassCard padding="lg" className="w-full max-w-md" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-            <h2 className="text-lg font-bold text-text-primary mb-4">New Campaign</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-text-primary">New Campaign</h2>
+              <button onClick={() => setShowCreateModal(false)} className="text-text-muted hover:text-text-primary cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
             <div className="space-y-4">
               <div>
-                <label className="text-xs font-medium text-text-secondary block mb-1">Campaign Name</label>
+                <label className="text-xs font-bold text-text-muted uppercase tracking-wider mb-1 block">Campaign Name</label>
                 <input
                   type="text"
-                  value={newCampaign.title}
-                  onChange={(e) => setNewCampaign((prev) => ({ ...prev, title: e.target.value }))}
-                  placeholder="Spring Outreach 2026"
-                  className="w-full h-9 px-3 rounded-lg text-sm bg-surface border border-border text-text-primary placeholder:text-text-muted focus:border-accent/30 outline-none"
+                  value={newCampaign.name}
+                  onChange={(e) => setNewCampaign({ ...newCampaign, name: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg text-sm bg-surface border border-border text-text-primary focus:border-accent/30 outline-none"
+                  placeholder="Spring Newsletter"
+                  autoFocus
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-text-secondary block mb-1">Email Subject</label>
+                <label className="text-xs font-bold text-text-muted uppercase tracking-wider mb-1 block">Subject Line</label>
                 <input
                   type="text"
                   value={newCampaign.subject}
-                  onChange={(e) => setNewCampaign((prev) => ({ ...prev, subject: e.target.value }))}
-                  placeholder="Don't miss our special offer..."
-                  className="w-full h-9 px-3 rounded-lg text-sm bg-surface border border-border text-text-primary placeholder:text-text-muted focus:border-accent/30 outline-none"
+                  onChange={(e) => setNewCampaign({ ...newCampaign, subject: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg text-sm bg-surface border border-border text-text-primary focus:border-accent/30 outline-none"
+                  placeholder="You won't want to miss this..."
                 />
               </div>
-              <div>
-                <label className="text-xs font-medium text-text-secondary block mb-1">Type</label>
-                <select
-                  value={newCampaign.type}
-                  onChange={(e) => setNewCampaign((prev) => ({ ...prev, type: e.target.value }))}
-                  className="w-full h-9 px-3 rounded-lg text-sm bg-surface border border-border text-text-secondary outline-none cursor-pointer"
-                >
-                  <option value="email">Email</option>
-                  <option value="newsletter">Newsletter</option>
-                  <option value="drip">Drip Campaign</option>
-                </select>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-text-muted uppercase tracking-wider mb-1 block">Type</label>
+                  <select
+                    value={newCampaign.type}
+                    onChange={(e) => setNewCampaign({ ...newCampaign, type: e.target.value as Campaign["type"] })}
+                    className="w-full px-3 py-2 rounded-lg text-sm bg-surface border border-border text-text-secondary focus:border-accent/30 outline-none cursor-pointer"
+                  >
+                    <option value="email">Email</option>
+                    <option value="sms">SMS</option>
+                    <option value="multi-channel">Multi-channel</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-text-muted uppercase tracking-wider mb-1 block">Schedule</label>
+                  <input
+                    type="datetime-local"
+                    value={newCampaign.scheduledAt}
+                    onChange={(e) => setNewCampaign({ ...newCampaign, scheduledAt: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg text-sm bg-surface border border-border text-text-primary focus:border-accent/30 outline-none"
+                  />
+                </div>
               </div>
-              <div className="flex gap-2 pt-2">
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="flex-1 h-9 rounded-lg text-sm font-medium bg-surface text-text-secondary border border-border hover:bg-elevated cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={createCampaign}
-                  disabled={creating || !newCampaign.title.trim()}
-                  className="flex-1 h-9 rounded-lg text-sm font-medium bg-accent/20 text-accent border border-accent/30 hover:bg-accent/30 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
-                  Create
-                </button>
-              </div>
+              <button
+                onClick={createCampaign}
+                disabled={creating || !newCampaign.name.trim()}
+                className="w-full py-2.5 rounded-lg text-sm font-bold bg-accent text-bg hover:bg-accent-light disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+              >
+                {creating && <Loader2 className="w-4 h-4 animate-spin" />}
+                {newCampaign.scheduledAt ? "Schedule Campaign" : "Save as Draft"}
+              </button>
             </div>
           </GlassCard>
         </div>

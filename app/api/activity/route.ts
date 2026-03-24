@@ -136,6 +136,6 @@ export async function GET() {
     return NextResponse.json({ activities: activities.slice(0, 15) });
   } catch (err) {
     console.error("Activity fetch error:", err);
-    return NextResponse.json({ error: "Failed to fetch activity", details: String(err) }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch activity" }, { status: 500 });
   }
 }

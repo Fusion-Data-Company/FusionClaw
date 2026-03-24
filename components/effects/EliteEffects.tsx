@@ -100,8 +100,9 @@ export function SpotlightCard({ children, className = "", style }: SpotlightCard
       onMouseMove={handleMouseMove}
       style={{
         ...style,
-        background: "rgba(255,255,255,0.02)",
-        border: "1px solid rgba(255,255,255,0.06)",
+        background: "var(--glass-bg, rgba(13,13,13,0.95))",
+        border: "1px solid var(--glass-border, rgba(59,130,246,0.10))",
+        backdropFilter: "blur(var(--glass-blur, 20px))",
       }}>
       {/* Spotlight gradient overlay */}
       <div className="absolute inset-0 pointer-events-none opacity-0 hover:opacity-100 transition-opacity duration-300"

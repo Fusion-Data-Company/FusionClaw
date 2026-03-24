@@ -40,7 +40,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ shifts: result });
   } catch (err) {
     console.error("Shifts fetch error:", err);
-    return NextResponse.json({ error: "Failed to fetch shifts", details: String(err) }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch shifts" }, { status: 500 });
   }
 }
 
@@ -101,6 +101,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ shift: newShift, checklistItems: items });
   } catch (err) {
     console.error("Shift create error:", err);
-    return NextResponse.json({ error: "Failed to create shift", details: String(err) }, { status: 500 });
+    return NextResponse.json({ error: "Failed to create shift" }, { status: 500 });
   }
 }

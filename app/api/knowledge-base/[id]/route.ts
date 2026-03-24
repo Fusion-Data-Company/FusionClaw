@@ -23,7 +23,7 @@ export async function GET(
     return NextResponse.json({ article });
   } catch (err) {
     console.error("Knowledge base fetch error:", err);
-    return NextResponse.json({ error: "Failed to fetch article", details: String(err) }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch article" }, { status: 500 });
   }
 }
 
@@ -55,7 +55,7 @@ export async function PATCH(
     return NextResponse.json({ article: updatedArticle });
   } catch (err) {
     console.error("Knowledge base update error:", err);
-    return NextResponse.json({ error: "Failed to update article", details: String(err) }, { status: 500 });
+    return NextResponse.json({ error: "Failed to update article" }, { status: 500 });
   }
 }
 
@@ -78,6 +78,6 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("Knowledge base delete error:", err);
-    return NextResponse.json({ error: "Failed to delete article", details: String(err) }, { status: 500 });
+    return NextResponse.json({ error: "Failed to delete article" }, { status: 500 });
   }
 }

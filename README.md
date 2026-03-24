@@ -1,36 +1,121 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FusionClaw
 
-## Getting Started
+Business-in-a-box platform with full AI agent integration. Give any MCP-compatible agent (Claude Code, OpenClaw) complete programmatic control over your business operations with a single API key.
 
-First, run the development server:
+## Features
+
+- **CRM & Lead Management** - 37k+ lead pipeline, kanban boards, full lifecycle tracking
+- **Employee Operations** - Shift tracking, task management, accountability reports
+- **Content Studio** - AI-powered content generation with OpenRouter + fal.ai images
+- **Marketing Automation** - Email campaigns, scheduling, analytics
+- **234 MCP Tools** - Complete programmatic access for AI agents
+
+## Quick Start
 
 ```bash
+# Clone the repository
+git clone https://github.com/Fusion-Data-Company/fusionclaw
+cd fusionclaw
+
+# Install dependencies
+npm install
+
+# Run interactive setup
+npm run onboard
+
+# Start the web platform
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Start the MCP server (for AI agents)
+npm run mcp
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Onboarding
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The `npm run onboard` command will:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Prompt for your database URL (Neon PostgreSQL)
+2. Prompt for API keys (OpenRouter, fal.ai)
+3. Generate a secure MCP API key
+4. Create your `.env.local` file
+5. Run database migrations
 
-## Learn More
+## MCP Server
 
-To learn more about Next.js, take a look at the following resources:
+The MCP server provides **234 tools** for complete platform control:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Category | Count | Description |
+|----------|-------|-------------|
+| CRUD | 208 | Full database access (26 tables × 8 operations) |
+| Query | 4 | Custom queries, aggregations, raw SQL |
+| Analytics | 7 | Dashboard metrics, pipeline, forecasting |
+| AI | 5 | Chat, image generation, humanization |
+| System | 10 | Settings, cron jobs, health checks |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Connect to Claude Code
 
-## Deploy on Vercel
+Add to `~/.claude/mcp_servers.json`:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```json
+{
+  "fusionclaw": {
+    "command": "node",
+    "args": ["/path/to/fusionclaw/mcp-server/dist/index.js"],
+    "env": {
+      "MCP_API_KEY": "your-api-key",
+      "DATABASE_URL": "your-database-url",
+      "OPENROUTER_API_KEY": "your-openrouter-key",
+      "FAL_KEY": "your-fal-key"
+    }
+  }
+}
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start Next.js development server |
+| `npm run build` | Build for production |
+| `npm run onboard` | Interactive setup wizard |
+| `npm run mcp` | Start MCP server |
+| `npm run mcp:build` | Build MCP server |
+| `npm run db:push` | Push schema to database |
+| `npm run db:seed` | Seed demo data |
+| `npm run key:rotate` | Rotate MCP API key |
+
+## Tech Stack
+
+- **Framework:** Next.js 16 (App Router, Turbopack)
+- **Database:** Neon PostgreSQL + Drizzle ORM
+- **Styling:** Tailwind CSS v4
+- **UI:** Radix UI, Framer Motion
+- **Tables:** TanStack Table + Virtual
+- **AI:** OpenRouter, fal.ai
+- **MCP:** Model Context Protocol SDK
+
+## Documentation
+
+- [MCP Tools Reference](./docs/mcp-tools.md) - Complete list of 234 tools
+- [Claude Code Setup](./docs/claude-code-setup.md) - Integration guide
+
+## Environment Variables
+
+```bash
+# Database
+DATABASE_URL=postgresql://...
+
+# AI Services
+OPENROUTER_API_KEY=sk-or-v1-...
+FAL_KEY=...
+
+# MCP Server
+MCP_API_KEY=fusionclaw_sk_live_...
+
+# App
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+## License
+
+Private - Fusion Data Company

@@ -26,7 +26,7 @@ export async function GET() {
     return NextResponse.json({ items: formattedItems });
   } catch (err) {
     console.error("AI Queue fetch error:", err);
-    return NextResponse.json({ error: "Failed to fetch queue items", details: String(err) }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch queue items" }, { status: 500 });
   }
 }
 
@@ -52,6 +52,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ item: newItem });
   } catch (err) {
     console.error("AI Queue create error:", err);
-    return NextResponse.json({ error: "Failed to create queue item", details: String(err) }, { status: 500 });
+    return NextResponse.json({ error: "Failed to create queue item" }, { status: 500 });
   }
 }

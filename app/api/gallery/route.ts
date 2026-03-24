@@ -30,6 +30,6 @@ export async function GET() {
     return NextResponse.json({ items: galleryItems });
   } catch (err) {
     console.error("Gallery fetch error:", err);
-    return NextResponse.json({ error: "Failed to fetch gallery", details: String(err) }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch gallery" }, { status: 500 });
   }
 }

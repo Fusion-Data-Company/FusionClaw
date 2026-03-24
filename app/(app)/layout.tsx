@@ -5,10 +5,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { User } from "lucide-react";
 import { RightSidebar } from "@/components/admin/RightSidebar";
+import { BackgroundDecoration } from "@/components/ui/BackgroundDecoration";
 import {
   LayoutDashboard,
   CalendarCheck,
-  Database,
   Kanban,
   Palette,
   Images,
@@ -28,15 +28,18 @@ import {
   ChevronRight,
   Clock,
   ChevronDown,
-  ChevronUp,
-  ClipboardCheck,
   Contact,
+  Bot,
+  FolderHeart,
 } from "lucide-react";
 
 interface NavItem {
   name: string;
   href: string;
   icon: React.ElementType;
+  iconColor: string;     // tailwind text color for the icon
+  iconBg: string;        // tailwind bg for the icon badge
+  glowColor?: string;    // CSS box-shadow color
 }
 
 interface NavSection {
@@ -49,59 +52,39 @@ const NAV_SECTIONS: NavSection[] = [
   {
     label: "COMMAND",
     items: [
-      { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-      { name: "Today", href: "/today", icon: CalendarCheck },
+      { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, iconColor: "text-blue-400", iconBg: "bg-blue-500/20", glowColor: "rgba(59,130,246,0.25)" },
+      { name: "Today", href: "/today", icon: CalendarCheck, iconColor: "text-emerald-400", iconBg: "bg-emerald-500/20", glowColor: "rgba(16,185,129,0.25)" },
+      { name: "Tasks", href: "/tasks", icon: ListTodo, iconColor: "text-rose-400", iconBg: "bg-rose-500/20", glowColor: "rgba(244,63,94,0.25)" },
+      { name: "Employees", href: "/employees", icon: Users, iconColor: "text-amber-400", iconBg: "bg-amber-500/20", glowColor: "rgba(245,158,11,0.25)" },
+      { name: "Reports", href: "/reports", icon: FileBarChart, iconColor: "text-pink-400", iconBg: "bg-pink-500/20", glowColor: "rgba(236,72,153,0.25)" },
     ],
   },
   {
     label: "CONTACTS",
     items: [
-      { name: "Contacts", href: "/leads", icon: Contact },
-      { name: "Pipeline", href: "/leads/pipeline", icon: Kanban },
-    ],
-  },
-  {
-    label: "STAFF MANAGEMENT",
-    collapsible: true,
-    items: [
-      { name: "Employees", href: "/employees", icon: Users },
-      { name: "Today", href: "/mat-ops/today", icon: CalendarCheck },
-      { name: "Chat", href: "/mat-ops/chat", icon: MessageSquare },
-      { name: "Tasks", href: "/mat-ops/tasks", icon: ListTodo },
-      { name: "Admin", href: "/mat-ops/admin", icon: LayoutDashboard },
-      { name: "Knowledge", href: "/mat-ops/knowledge", icon: BookOpen },
-      { name: "Reports", href: "/mat-ops/reports", icon: FileBarChart },
-    ],
-  },
-  {
-    label: "CONTENT",
-    items: [
-      { name: "Studio", href: "/studio", icon: Palette },
-      { name: "Gallery", href: "/gallery", icon: Images },
-      { name: "Publishing Hub", href: "/publishing", icon: Send },
-    ],
-  },
-  {
-    label: "OPERATIONS",
-    items: [
-      { name: "Tasks", href: "/tasks", icon: ListTodo },
-      { name: "Reports", href: "/reports", icon: FileBarChart },
+      { name: "Contacts", href: "/leads", icon: Contact, iconColor: "text-cyan-400", iconBg: "bg-cyan-500/20", glowColor: "rgba(34,211,238,0.25)" },
+      { name: "Pipeline", href: "/leads/pipeline", icon: Kanban, iconColor: "text-violet-400", iconBg: "bg-violet-500/20", glowColor: "rgba(139,92,246,0.25)" },
     ],
   },
   {
     label: "MARKETING",
     items: [
-      { name: "Campaigns", href: "/campaigns", icon: Megaphone },
-      { name: "AI Queue", href: "/ai-queue", icon: Sparkles },
+      { name: "Campaigns", href: "/campaigns", icon: Megaphone, iconColor: "text-red-400", iconBg: "bg-red-500/20", glowColor: "rgba(248,113,113,0.25)" },
+      { name: "AI Queue", href: "/ai-queue", icon: Sparkles, iconColor: "text-yellow-400", iconBg: "bg-yellow-500/20", glowColor: "rgba(250,204,21,0.25)" },
+      { name: "Studio", href: "/studio", icon: Palette, iconColor: "text-fuchsia-400", iconBg: "bg-fuchsia-500/20", glowColor: "rgba(232,121,249,0.25)" },
+      { name: "Gallery", href: "/gallery", icon: Images, iconColor: "text-indigo-400", iconBg: "bg-indigo-500/20", glowColor: "rgba(129,140,248,0.25)" },
+      { name: "Publishing Hub", href: "/publishing", icon: Send, iconColor: "text-sky-400", iconBg: "bg-sky-500/20", glowColor: "rgba(56,189,248,0.25)" },
     ],
   },
   {
     label: "SYSTEM",
     items: [
-      { name: "Cron Jobs", href: "/cron-jobs", icon: Clock },
-      { name: "Knowledge Base", href: "/knowledge-base", icon: BookOpen },
-      { name: "Chat", href: "/chat", icon: MessageSquare },
-      { name: "Settings", href: "/settings", icon: Settings },
+      { name: "Knowledge Base", href: "/knowledge-base", icon: BookOpen, iconColor: "text-teal-400", iconBg: "bg-teal-500/20" },
+      { name: "Assistant", href: "/chat", icon: MessageSquare, iconColor: "text-purple-400", iconBg: "bg-purple-500/20" },
+      { name: "Agent Connections", href: "/agents", icon: Bot, iconColor: "text-orange-400", iconBg: "bg-orange-500/20", glowColor: "rgba(251,146,60,0.25)" },
+      { name: "Cron Jobs", href: "/cron-jobs", icon: Clock, iconColor: "text-lime-400", iconBg: "bg-lime-500/20" },
+      { name: "Branding Library", href: "/branding", icon: FolderHeart, iconColor: "text-pink-400", iconBg: "bg-pink-500/20", glowColor: "rgba(236,72,153,0.25)" },
+      { name: "Settings", href: "/settings", icon: Settings, iconColor: "text-slate-400", iconBg: "bg-slate-500/20" },
     ],
   },
 ];
@@ -164,6 +147,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen bg-bg">
+      <BackgroundDecoration />
       {/* Mobile Menu Backdrop */}
       {mobileMenuOpen && (
         <div
@@ -183,23 +167,35 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         `}
         style={{ borderRight: "1px solid rgba(59,130,246,0.08)" }}
       >
-        {/* Logo */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-border">
-          {!sidebarCollapsed && (
-            <span className="text-lg font-bold text-accent" style={{ fontFamily: "var(--font-display)" }}>
-              FusionClaw
-            </span>
-          )}
+        {/* Logo with Crab */}
+        <div className="h-16 flex items-center justify-between px-3 border-b border-border">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0"
+              style={{ boxShadow: "0 0 12px rgba(59,130,246,0.15)" }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/fusionclaw-logo.png"
+                alt="FusionClaw"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            {!sidebarCollapsed && (
+              <span className="text-lg font-extrabold bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent" style={{ fontFamily: "var(--font-display)" }}>
+                FusionClaw
+              </span>
+            )}
+          </div>
           <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="w-7 h-7 flex items-center justify-center rounded-md transition-colors text-text-muted hover:text-text-primary cursor-pointer"
+            className="w-6 h-6 flex items-center justify-center rounded-md transition-colors text-text-muted hover:text-text-primary cursor-pointer"
           >
-            {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            {sidebarCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
           </button>
         </div>
 
         {/* Nav sections */}
-        <nav className="flex-1 py-4 px-2 space-y-6 overflow-y-auto">
+        <nav className="flex-1 py-4 px-2 space-y-5 overflow-y-auto">
           {NAV_SECTIONS.map((section) => {
             const isCollapsed = collapsedSections.has(section.label);
             const hasActiveItem = section.items.some(
@@ -210,15 +206,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <div key={section.label}>
                 {!sidebarCollapsed && (
                   <div
-                    className={`px-3 mb-2 text-[10px] font-bold uppercase tracking-widest text-text-muted flex items-center justify-between ${
+                    className={`px-3 mb-2 text-[9px] font-extrabold uppercase tracking-[0.15em] flex items-center justify-between ${
                       section.collapsible ? "cursor-pointer hover:text-text-secondary" : ""
                     }`}
+                    style={{ color: "var(--color-text-muted)" }}
                     onClick={() => section.collapsible && toggleSection(section.label)}
                   >
-                    <span className="flex items-center gap-1.5">
-                      {section.label === "STAFF MANAGEMENT" && <ClipboardCheck className="w-3 h-3" />}
-                      {section.label}
-                    </span>
+                    <span>{section.label}</span>
                     {section.collapsible && (
                       <span className="text-text-disabled">
                         {isCollapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
@@ -238,8 +232,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                           key={item.href}
                           href={item.href}
                           onClick={() => setMobileMenuOpen(false)}
-                          className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                            isActive ? "" : "hover:bg-elevated"
+                          className={`group flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 ${
+                            isActive
+                              ? ""
+                              : "hover:bg-elevated/60"
                           }`}
                           style={{
                             background: isActive ? "rgba(59,130,246,0.08)" : undefined,
@@ -250,7 +246,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                           }}
                           title={sidebarCollapsed ? item.name : undefined}
                         >
-                          <Icon className="w-4 h-4 shrink-0" />
+                          <div
+                            className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-all ${
+                              isActive
+                                ? `${item.iconBg} border border-current/20`
+                                : `${item.iconBg} group-hover:scale-110`
+                            }`}
+                            style={isActive && item.glowColor ? { boxShadow: `0 0 8px ${item.glowColor}` } : undefined}
+                          >
+                            <Icon className={`w-3.5 h-3.5 ${isActive ? item.iconColor : item.iconColor} transition-colors`} />
+                          </div>
                           {!sidebarCollapsed && <span>{item.name}</span>}
                         </Link>
                       );
@@ -265,7 +270,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Bottom */}
         {!sidebarCollapsed && (
           <div className="p-4 border-t border-border">
-            <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center"><User className="w-4 h-4 text-accent" /></div>
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent/30 to-blue-500/20 flex items-center justify-center border border-accent/20">
+                <User className="w-4 h-4 text-accent" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-xs font-bold text-text-primary truncate">Admin</div>
+                <div className="text-[10px] text-text-muted truncate">rob@fusiondataco.com</div>
+              </div>
+            </div>
           </div>
         )}
       </aside>
@@ -310,7 +323,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </button>
 
             <div className="hidden md:block">
-              <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center"><User className="w-4 h-4 text-accent" /></div>
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent/30 to-blue-500/20 flex items-center justify-center border border-accent/20">
+                <User className="w-4 h-4 text-accent" />
+              </div>
             </div>
           </div>
         </header>

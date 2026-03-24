@@ -122,9 +122,15 @@ export default function KnowledgeBasePage() {
         <GlassCard padding="lg" className="text-center">
           <BookOpen className="w-12 h-12 text-text-muted mx-auto mb-4" />
           <h2 className="text-lg font-bold text-text-primary mb-2">No Articles Yet</h2>
-          <p className="text-sm text-text-muted">
+          <p className="text-sm text-text-muted mb-4">
             Build your knowledge base by adding articles about your products, services, and processes.
           </p>
+          <button
+            onClick={() => setShowModal(true)}
+            className="px-4 py-2 rounded-lg text-sm font-bold bg-accent/20 text-accent border border-accent/30 hover:bg-accent/30 cursor-pointer inline-flex items-center gap-2 transition-all hover:shadow-[0_0_15px_rgba(59,130,246,0.3)]"
+          >
+            <Plus className="w-4 h-4" /> Add Your First Article
+          </button>
         </GlassCard>
       ) : filtered.length === 0 ? (
         <GlassCard padding="lg" className="text-center">

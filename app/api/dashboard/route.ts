@@ -11,6 +11,6 @@ export async function GET() {
     return NextResponse.json({ metrics, recentActivity });
   } catch (err) {
     console.error("Dashboard fetch error:", err);
-    return NextResponse.json({ error: "Failed to fetch dashboard data", details: String(err) }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch dashboard data" }, { status: 500 });
   }
 }

@@ -37,7 +37,7 @@ export async function PATCH(
     return NextResponse.json({ item: updatedItem });
   } catch (err) {
     console.error("AI Queue update error:", err);
-    return NextResponse.json({ error: "Failed to update queue item", details: String(err) }, { status: 500 });
+    return NextResponse.json({ error: "Failed to update queue item" }, { status: 500 });
   }
 }
 
@@ -60,6 +60,6 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("AI Queue delete error:", err);
-    return NextResponse.json({ error: "Failed to delete queue item", details: String(err) }, { status: 500 });
+    return NextResponse.json({ error: "Failed to delete queue item" }, { status: 500 });
   }
 }

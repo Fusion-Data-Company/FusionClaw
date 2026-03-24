@@ -33,8 +33,13 @@ export async function GET(request: NextRequest) {
       query = query.where(eq(leads.status, status as typeof leads.status.enumValues[number]));
     }
 
-    // Sorting
-    const column = leads[sortBy as keyof typeof leads] || leads.createdAt;
+    // Sorting (whitelist allowed fields)
+    const ALLOWED_SORT_FIELDS = [
+      "company", "contact", "email", "status", "priority",
+      "createdAt", "updatedAt", "dealValue", "lastContactDate",
+    ] as const;
+    const safeSortBy = ALLOWED_SORT_FIELDS.includes(sortBy as any) ? sortBy : "createdAt";
+    const column = leads[safeSortBy as keyof typeof leads] || leads.createdAt;
     if (sortOrder === "asc") {
       query = query.orderBy(asc(column as any));
     } else {

@@ -42,6 +42,6 @@ export async function POST(req: Request) {
     });
   } catch (err) {
     console.error("Studio generation error:", err);
-    return NextResponse.json({ error: "Image generation failed", details: String(err) }, { status: 500 });
+    return NextResponse.json({ error: "Image generation failed" }, { status: 500 });
   }
 }

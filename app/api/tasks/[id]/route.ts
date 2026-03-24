@@ -16,7 +16,7 @@ export async function GET(
     return NextResponse.json({ task });
   } catch (err) {
     console.error("Task fetch error:", err);
-    return NextResponse.json({ error: "Failed to fetch task", details: String(err) }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch task" }, { status: 500 });
   }
 }
 
@@ -38,7 +38,7 @@ export async function PATCH(
     return NextResponse.json({ task });
   } catch (err) {
     console.error("Task update error:", err);
-    return NextResponse.json({ error: "Failed to update task", details: String(err) }, { status: 500 });
+    return NextResponse.json({ error: "Failed to update task" }, { status: 500 });
   }
 }
 
@@ -52,6 +52,6 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("Task delete error:", err);
-    return NextResponse.json({ error: "Failed to delete task", details: String(err) }, { status: 500 });
+    return NextResponse.json({ error: "Failed to delete task" }, { status: 500 });
   }
 }

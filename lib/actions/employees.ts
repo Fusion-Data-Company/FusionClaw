@@ -18,9 +18,9 @@ export async function getEmployee(id: string) {
   return result[0] || null;
 }
 
-// Get employee by Clerk ID
-export async function getEmployeeByClerkId(clerkId: string) {
-  const result = await db.select().from(users).where(eq(users.clerkId, clerkId)).limit(1);
+// Get employee by auth ID
+export async function getEmployeeByAuthId(authId: string) {
+  const result = await db.select().from(users).where(eq(users.authId, authId)).limit(1);
   return result[0] || null;
 }
 

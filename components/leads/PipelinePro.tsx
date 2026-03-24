@@ -23,6 +23,7 @@ import {
   DraggableStateSnapshot,
 } from "@hello-pangea/dnd";
 import { Button } from "@/components/ui/button";
+import { GlassCard } from "@/components/primitives/GlassCard";
 import { Badge } from "@/components/ui/badge";
 import {
   Phone,
@@ -157,7 +158,7 @@ function PipelineCard({ lead, stage, isDragging, onView, provided }: PipelineCar
       onClick={() => onView(lead)}
       className={cn(
         "group relative rounded-xl overflow-hidden cursor-pointer select-none transition-all duration-300 ease-out",
-        "bg-gradient-to-br from-surface/90 to-bg/80 backdrop-blur-md",
+        "bg-gradient-to-br from-surface to-bg backdrop-blur-md",
         "border border-border hover:border-opacity-60",
         isDragging ? `shadow-2xl ring-2 ${stage.dropGlow} scale-[1.04] rotate-[1.5deg] z-50` : "hover:shadow-xl hover:translate-y-[-2px]"
       )}
@@ -398,7 +399,7 @@ function PipelineColumn({ stage, leads, isCollapsed, onToggle, onSelectLead, isR
 
   if (isCollapsed) {
     return (
-      <div className="flex flex-col items-center py-3 cursor-pointer" onClick={onToggle} title={`${stage.title} (${leads.length})`}>
+      <div className="flex flex-col items-center py-3 cursor-pointer w-[48px] shrink-0" onClick={onToggle} title={`${stage.title} (${leads.length})`}>
         <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${stage.gradient} flex items-center justify-center mb-2`} style={{ boxShadow: `0 0 10px ${stage.glowColor}` }}>
           <StageIcon className="w-4 h-4 text-white" />
         </div>
@@ -411,9 +412,9 @@ function PipelineColumn({ stage, leads, isCollapsed, onToggle, onSelectLead, isR
   }
 
   return (
-    <div className="flex flex-col min-w-0">
+    <div className="flex flex-col min-w-[280px] w-[280px] shrink-0">
       {/* Column Header */}
-      <div className={`rounded-xl border ${stage.borderColor} bg-surface/60 backdrop-blur-sm p-3 mb-3`}>
+      <div className={`rounded-xl border ${stage.borderColor} bg-[var(--glass-bg)] backdrop-blur-sm p-3 mb-3`}>
         <div className="flex items-center justify-between mb-1.5">
           <div className="flex items-center gap-2 min-w-0">
             <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${stage.gradient} flex items-center justify-center flex-shrink-0`} style={{ boxShadow: `0 0 10px ${stage.glowColor}` }}>
@@ -651,7 +652,7 @@ export default function PipelinePro({ isReadOnly = false }: PipelineProProps) {
     <div className="space-y-5">
       {/* Pipeline Summary */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="relative overflow-hidden rounded-xl border border-border bg-surface/80 backdrop-blur-sm p-4">
+        <GlassCard className="relative overflow-hidden p-4">
           <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-500/10 to-transparent rounded-bl-full" />
           <div className="flex items-center gap-3 mb-2">
             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-[0_0_12px_rgba(59,130,246,0.3)]">
@@ -663,9 +664,9 @@ export default function PipelinePro({ isReadOnly = false }: PipelineProProps) {
             </div>
           </div>
           <p className="text-xs text-text-muted">{metrics.total} leads total</p>
-        </div>
+        </GlassCard>
 
-        <div className="relative overflow-hidden rounded-xl border border-border bg-surface/80 backdrop-blur-sm p-4">
+        <GlassCard className="relative overflow-hidden p-4">
           <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-cyan-500/10 to-transparent rounded-bl-full" />
           <div className="flex items-center gap-3 mb-2">
             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-cyan-400 to-teal-500 flex items-center justify-center shadow-[0_0_12px_rgba(6,182,212,0.3)]">
@@ -677,9 +678,9 @@ export default function PipelinePro({ isReadOnly = false }: PipelineProProps) {
             </div>
           </div>
           <p className="text-xs text-text-muted">In progress opportunities</p>
-        </div>
+        </GlassCard>
 
-        <div className="relative overflow-hidden rounded-xl border border-border bg-surface/80 backdrop-blur-sm p-4">
+        <GlassCard className="relative overflow-hidden p-4">
           <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-emerald-500/10 to-transparent rounded-bl-full" />
           <div className="flex items-center gap-3 mb-2">
             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center shadow-[0_0_12px_rgba(16,185,129,0.3)]">
@@ -691,9 +692,9 @@ export default function PipelinePro({ isReadOnly = false }: PipelineProProps) {
             </div>
           </div>
           <p className="text-xs text-text-muted">{(leadsByStage["won"] || []).length} won / {(leadsByStage["lost"] || []).length} lost</p>
-        </div>
+        </GlassCard>
 
-        <div className="relative overflow-hidden rounded-xl border border-border bg-surface/80 backdrop-blur-sm p-4">
+        <GlassCard className="relative overflow-hidden p-4">
           <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-amber-500/10 to-transparent rounded-bl-full" />
           <div className="flex items-center gap-3 mb-2">
             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-[0_0_12px_rgba(245,158,11,0.3)]">
@@ -705,17 +706,13 @@ export default function PipelinePro({ isReadOnly = false }: PipelineProProps) {
             </div>
           </div>
           <p className="text-xs text-text-muted">Closed deals</p>
-        </div>
+        </GlassCard>
       </div>
 
       {/* Kanban Board */}
       <DragDropContext onDragEnd={handleDragEnd}>
-        <div
-          className="grid gap-4"
-          style={{
-            gridTemplateColumns: PIPELINE_STAGES.map(s => collapsedColumns.has(s.id) ? "48px" : "1fr").join(" "),
-          }}
-        >
+        <div className="flex gap-4 overflow-x-auto pb-4 -mx-2 px-2">
+
           {PIPELINE_STAGES.map(stage => (
             <PipelineColumn
               key={stage.id}

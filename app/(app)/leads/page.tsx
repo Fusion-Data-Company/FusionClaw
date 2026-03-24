@@ -34,17 +34,17 @@ export default function ContactsPage() {
         </div>
         <div className="flex gap-2">
           <MagneticElement strength={0.2} radius={80}>
-            <button className="px-3 py-2 rounded-lg text-xs font-medium bg-surface text-text-secondary border border-border hover:bg-elevated cursor-pointer flex items-center gap-1 transition-all hover:border-accent/30">
+            <button className="px-3 py-2 rounded-lg text-xs font-medium bg-surface-2 text-text-secondary border border-border-med hover:bg-elevated cursor-pointer flex items-center gap-1 transition-all hover:border-accent/30">
               <Upload className="w-3.5 h-3.5" /> Import
             </button>
           </MagneticElement>
           <MagneticElement strength={0.2} radius={80}>
-            <button className="px-3 py-2 rounded-lg text-xs font-medium bg-surface text-text-secondary border border-border hover:bg-elevated cursor-pointer flex items-center gap-1 transition-all hover:border-accent/30">
+            <button className="px-3 py-2 rounded-lg text-xs font-medium bg-surface-2 text-text-secondary border border-border-med hover:bg-elevated cursor-pointer flex items-center gap-1 transition-all hover:border-accent/30">
               <Download className="w-3.5 h-3.5" /> Export
             </button>
           </MagneticElement>
           <MagneticElement strength={0.3} radius={100}>
-            <button className="px-3 py-2 rounded-lg text-xs font-medium bg-accent/20 text-accent border border-accent/30 hover:bg-accent/30 cursor-pointer flex items-center gap-1 transition-all hover:shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+            <button className="px-4 py-2 rounded-lg text-xs font-semibold bg-blue-600 text-white border border-blue-500/50 hover:bg-blue-500 cursor-pointer flex items-center gap-1.5 transition-all hover:shadow-[0_0_15px_rgba(59,130,246,0.4)]">
               <Plus className="w-3.5 h-3.5" /> Add Contact
             </button>
           </MagneticElement>

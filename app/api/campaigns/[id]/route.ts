@@ -41,7 +41,7 @@ export async function PATCH(
     return NextResponse.json({ campaign: updatedCampaign });
   } catch (err) {
     console.error("Campaign update error:", err);
-    return NextResponse.json({ error: "Failed to update campaign", details: String(err) }, { status: 500 });
+    return NextResponse.json({ error: "Failed to update campaign" }, { status: 500 });
   }
 }
 
@@ -64,6 +64,6 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("Campaign delete error:", err);
-    return NextResponse.json({ error: "Failed to delete campaign", details: String(err) }, { status: 500 });
+    return NextResponse.json({ error: "Failed to delete campaign" }, { status: 500 });
   }
 }

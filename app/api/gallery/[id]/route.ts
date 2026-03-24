@@ -22,6 +22,6 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("Gallery delete error:", err);
-    return NextResponse.json({ error: "Failed to delete", details: String(err) }, { status: 500 });
+    return NextResponse.json({ error: "Failed to delete" }, { status: 500 });
   }
 }

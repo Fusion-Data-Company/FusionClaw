@@ -58,6 +58,6 @@ export async function GET() {
     return NextResponse.json({ weeks, weeklyStats });
   } catch (err) {
     console.error("Reports fetch error:", err);
-    return NextResponse.json({ error: "Failed to fetch reports", details: String(err) }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch reports" }, { status: 500 });
   }
 }

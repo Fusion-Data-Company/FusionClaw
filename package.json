@@ -1,16 +1,21 @@
 {
-  "name": "awesome-hypatia",
-  "version": "0.1.0",
+  "name": "fusionclaw",
+  "version": "1.0.0",
   "private": true,
+  "description": "Business-in-a-box SaaS platform with MCP agent access",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "onboard": "npx tsx scripts/onboard.ts",
+    "mcp": "node mcp-server/dist/index.js",
+    "mcp:build": "cd mcp-server && npm run build",
+    "db:push": "drizzle-kit push",
+    "db:seed": "npx tsx scripts/seed.ts",
+    "key:rotate": "npx tsx scripts/generate-key.ts"
   },
   "dependencies": {
-    "@clerk/nextjs": "^7.0.6",
-    "@clerk/themes": "^2.4.57",
     "@fal-ai/client": "^1.9.4",
     "@hello-pangea/dnd": "^18.0.1",
     "@neondatabase/serverless": "^1.0.2",
@@ -37,6 +42,7 @@
     "dompurify": "^3.3.3",
     "drizzle-orm": "^0.45.1",
     "framer-motion": "^12.38.0",
+    "jose": "^6.2.2",
     "lucide-react": "^0.577.0",
     "marked": "^17.0.5",
     "nanoid": "^5.1.7",
@@ -61,6 +67,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.0",
     "tailwindcss": "^4",
+    "tsx": "^4.19.0",
     "typescript": "^5"
   }
 }

@@ -92,6 +92,6 @@ Rewrite the content to:
       headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", Connection: "keep-alive" },
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: "Internal server error", details: String(err) }), { status: 500 });
+    return new Response(JSON.stringify({ error: "Internal server error" }), { status: 500 });
   }
 }

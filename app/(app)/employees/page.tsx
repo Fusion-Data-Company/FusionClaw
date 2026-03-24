@@ -9,8 +9,7 @@ import {
   Plus,
   Loader2,
   Users,
-  ChevronDown,
-  Copy,
+  X,
 } from "lucide-react";
 
 interface Employee {
@@ -19,8 +18,6 @@ interface Employee {
   email: string;
   role: "admin" | "employee";
   avatarUrl: string | null;
-  isClone?: boolean;
-  cloneIndex?: number;
   stats?: {
     shiftsLast30Days: number;
     avgCompletion: number;
@@ -33,6 +30,9 @@ export default function EmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeEmployeeId, setActiveEmployeeId] = useState<string | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [newEmployee, setNewEmployee] = useState({ name: "", email: "", role: "employee" as "admin" | "employee" });
 
   useEffect(() => {
     fetchEmployees();
@@ -49,56 +49,33 @@ export default function EmployeesPage() {
       }
     } catch (err) {
       console.error("Failed to fetch employees:", err);
-      // Use Mat as default demo employee
-      const defaultMat: Employee = {
-        id: "default-mat",
-        name: "Mat",
-        email: "mat@fusiondataco.com",
-        role: "employee",
-        avatarUrl: null,
-        stats: {
-          shiftsLast30Days: 22,
-          avgCompletion: 87,
-          tasksCompleted: 156,
-          streak: 12,
-        },
-      };
-      setEmployees([defaultMat]);
-      setActiveEmployeeId(defaultMat.id);
     } finally {
       setLoading(false);
     }
   };
 
-  // Clone the first employee (Mat) or active employee
-  const handleAddStaffMember = () => {
-    const sourceEmployee =
-      employees.find((e) => e.id === activeEmployeeId) || employees[0];
-    if (!sourceEmployee) return;
+  const handleAddStaffMember = async () => {
+    if (!newEmployee.name.trim() || !newEmployee.email.trim()) return;
+    setCreating(true);
 
-    const existingClones = employees.filter(
-      (e) => e.isClone && e.name === sourceEmployee.name
-    );
-    const cloneIndex = existingClones.length + 1;
-    const cloneId = `clone-${Date.now()}-${cloneIndex}`;
-
-    const clone: Employee = {
-      ...sourceEmployee,
-      id: cloneId,
-      isClone: true,
-      cloneIndex,
-      stats: sourceEmployee.stats
-        ? { ...sourceEmployee.stats }
-        : {
-            shiftsLast30Days: 0,
-            avgCompletion: 0,
-            tasksCompleted: 0,
-            streak: 0,
-          },
-    };
-
-    setEmployees((prev) => [...prev, clone]);
-    setActiveEmployeeId(cloneId);
+    try {
+      const res = await fetch("/api/employees", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newEmployee),
+      });
+      const data = await res.json();
+      if (data.employee) {
+        setEmployees((prev) => [...prev, data.employee]);
+        setActiveEmployeeId(data.employee.id);
+        setNewEmployee({ name: "", email: "", role: "employee" });
+        setShowAddModal(false);
+      }
+    } catch (err) {
+      console.error("Failed to create employee:", err);
+    } finally {
+      setCreating(false);
+    }
   };
 
   const activeEmployee =
@@ -139,13 +116,77 @@ export default function EmployeesPage() {
           </p>
         </div>
         <button
-          onClick={handleAddStaffMember}
+          onClick={() => setShowAddModal(true)}
           className="px-4 py-2 rounded-lg text-xs font-medium bg-accent/20 text-accent border border-accent/30 hover:bg-accent/30 cursor-pointer flex items-center gap-2 transition-all hover:shadow-[0_0_15px_rgba(59,130,246,0.3)]"
         >
-          <Copy className="w-3.5 h-3.5" />
+          <Plus className="w-3.5 h-3.5" />
           Add Staff Member
         </button>
       </div>
+
+      {/* Add Staff Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowAddModal(false)}>
+          <GlassCard padding="lg" className="w-full max-w-md" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-text-primary">Add Staff Member</h2>
+              <button onClick={() => setShowAddModal(false)} className="text-text-muted hover:text-text-primary cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-text-muted uppercase tracking-wider mb-1 block">Full Name</label>
+                <input
+                  type="text"
+                  value={newEmployee.name}
+                  onChange={(e) => setNewEmployee({ ...newEmployee, name: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg text-sm bg-surface border border-border text-text-primary focus:border-accent/30 outline-none"
+                  placeholder="John Smith"
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-text-muted uppercase tracking-wider mb-1 block">Email</label>
+                <input
+                  type="email"
+                  value={newEmployee.email}
+                  onChange={(e) => setNewEmployee({ ...newEmployee, email: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg text-sm bg-surface border border-border text-text-primary focus:border-accent/30 outline-none"
+                  placeholder="john@company.com"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-text-muted uppercase tracking-wider mb-1 block">Role</label>
+                <select
+                  value={newEmployee.role}
+                  onChange={(e) => setNewEmployee({ ...newEmployee, role: e.target.value as "admin" | "employee" })}
+                  className="w-full px-3 py-2 rounded-lg text-sm bg-surface border border-border text-text-secondary focus:border-accent/30 outline-none cursor-pointer"
+                >
+                  <option value="employee">Employee</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="flex-1 h-10 rounded-lg text-sm font-medium bg-surface text-text-secondary border border-border hover:bg-elevated cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddStaffMember}
+                  disabled={creating || !newEmployee.name.trim() || !newEmployee.email.trim()}
+                  className="flex-1 h-10 rounded-lg text-sm font-bold bg-accent/20 text-accent border border-accent/30 hover:bg-accent/30 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+                >
+                  {creating && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Add Member
+                </button>
+              </div>
+            </div>
+          </GlassCard>
+        </div>
+      )}
 
       {/* Staff Member Selector Tabs */}
       {employees.length > 0 && (
@@ -175,11 +216,6 @@ export default function EmployeesPage() {
                   : emp.email[0].toUpperCase()}
               </div>
               <span>{emp.name || "Unnamed"}</span>
-              {emp.isClone && (
-                <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-cyan-bg text-cyan border border-cyan/30">
-                  #{emp.cloneIndex}
-                </span>
-              )}
             </button>
           ))}
         </div>
@@ -204,11 +240,6 @@ export default function EmployeesPage() {
                   <h2 className="text-xl font-bold text-text-primary">
                     {activeEmployee.name || "Unnamed"}
                   </h2>
-                  {activeEmployee.isClone && (
-                    <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-cyan-bg text-cyan border border-cyan/30">
-                      Clone #{activeEmployee.cloneIndex}
-                    </span>
-                  )}
                   <span
                     className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${
                       activeEmployee.role === "admin"
@@ -257,9 +288,9 @@ export default function EmployeesPage() {
                   bg: "bg-violet-500/10",
                 },
               ].map((stat) => (
-                <div
+                <GlassCard
                   key={stat.label}
-                  className="bg-surface rounded-xl p-4 border border-border"
+                  className="p-4"
                 >
                   <div className="flex items-center gap-2 mb-2">
                     <div
@@ -274,7 +305,7 @@ export default function EmployeesPage() {
                   <div className={`text-2xl font-bold ${stat.color}`}>
                     {stat.value}
                   </div>
-                </div>
+                </GlassCard>
               ))}
             </div>
           </GlassCard>
@@ -285,9 +316,15 @@ export default function EmployeesPage() {
           <h2 className="text-lg font-bold text-text-primary mb-2">
             No Team Members Yet
           </h2>
-          <p className="text-sm text-text-muted">
-            Click &quot;Add Staff Member&quot; to get started.
+          <p className="text-sm text-text-muted mb-4">
+            Add your team to track shifts, assign tasks, and manage accountability.
           </p>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="px-4 py-2 rounded-lg text-sm font-bold bg-accent/20 text-accent border border-accent/30 hover:bg-accent/30 cursor-pointer inline-flex items-center gap-2 transition-all hover:shadow-[0_0_15px_rgba(59,130,246,0.3)]"
+          >
+            <Plus className="w-4 h-4" /> Add Your First Team Member
+          </button>
         </GlassCard>
       )}
     </div>

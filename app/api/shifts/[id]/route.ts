@@ -74,6 +74,6 @@ export async function PATCH(
     return NextResponse.json({ shift: updatedShift });
   } catch (err) {
     console.error("Shift update error:", err);
-    return NextResponse.json({ error: "Failed to update shift", details: String(err) }, { status: 500 });
+    return NextResponse.json({ error: "Failed to update shift" }, { status: 500 });
   }
 }
