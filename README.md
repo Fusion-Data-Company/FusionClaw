@@ -1,82 +1,129 @@
+<div align="center">
+
 # FusionClaw
 
-Business-in-a-box platform with full AI agent integration. Give any MCP-compatible agent (Claude Code, OpenClaw) complete programmatic control over your business operations with a single API key.
+**The AI-native business operating system.**
 
-## Features
+Run your entire business from one dark-mode dashboard — CRM, operations, content, finance — with 234 MCP tools that let any AI agent operate it programmatically.
 
-- **CRM & Lead Management** - 37k+ lead pipeline, kanban boards, full lifecycle tracking
-- **Employee Operations** - Shift tracking, task management, accountability reports
-- **Content Studio** - AI-powered content generation with OpenRouter + fal.ai images
-- **Marketing Automation** - Email campaigns, scheduling, analytics
-- **234 MCP Tools** - Complete programmatic access for AI agents
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript)](https://typescriptlang.org)
+[![Tailwind](https://img.shields.io/badge/Tailwind-v4-06B6D4?logo=tailwindcss)](https://tailwindcss.com)
+[![Drizzle](https://img.shields.io/badge/Drizzle-ORM-C5F74F?logo=drizzle)](https://orm.drizzle.team)
+[![License](https://img.shields.io/badge/License-BSL_1.1-blue)](LICENSE)
+
+[Setup Guide](docs/setup-guide.md) | [Architecture](docs/architecture.md) | [Contributing](CONTRIBUTING.md) | [Changelog](CHANGELOG.md)
+
+</div>
+
+---
+
+## What is FusionClaw?
+
+FusionClaw is a unified business platform built for small business owners and agencies who want one tool instead of ten. It merges CRM, employee ops, content creation, marketing, and bookkeeping into a single Next.js application — and exposes everything through MCP so AI agents like Claude Code can run your business alongside you.
+
+### Key capabilities
+
+- **CRM & Pipeline** — 37k+ row TanStack Virtual table, drag-and-drop kanban, full lead lifecycle
+- **Employee Ops** — Shift tracking, daily checklists, task management, accountability reports
+- **Content Studio** — OpenRouter streaming chat, fal.ai image generation (3 models), WordPress publishing
+- **Marketing** — Email campaigns, AI content queue with approval workflow
+- **Finance** — Invoices with line items, expense tracking (10 categories), P&L dashboard with tax estimates
+- **234 MCP Tools** — Give any MCP-compatible agent full programmatic control with a single API key
+- **AI Chat Agent** — Built-in assistant with real-time context about your entire business
 
 ## Quick Start
 
 ```bash
-# Clone the repository
-git clone https://github.com/Fusion-Data-Company/fusionclaw
-cd fusionclaw
-
-# Install dependencies
+git clone https://github.com/Fusion-Data-Company/FusionClaw.git
+cd FusionClaw
 npm install
-
-# Run interactive setup
-npm run onboard
-
-# Start the web platform
-npm run dev
-
-# Start the MCP server (for AI agents)
-npm run mcp
+npm run onboard    # interactive setup: DB, API keys, MCP key
+npm run dev        # http://localhost:3000
 ```
 
-## Onboarding
+> The `onboard` command creates your `.env.local`, pushes the database schema, and generates a secure MCP API key. See the [Setup Guide](docs/setup-guide.md) for manual configuration.
 
-The `npm run onboard` command will:
+## Modules
 
-1. Prompt for your database URL (Neon PostgreSQL)
-2. Prompt for API keys (OpenRouter, fal.ai)
-3. Generate a secure MCP API key
-4. Create your `.env.local` file
-5. Run database migrations
+| Module | Pages | Description |
+|--------|-------|-------------|
+| **Command** | Dashboard, Today, Tasks, Employees, Reports | Daily operations hub with shift tracking and accountability |
+| **Finance** | Invoices, Expenses, Financials | Bookkeeping with P&L charts, tax estimates, overdue alerts |
+| **Contacts** | Leads Database, Pipeline | CRM with 37k+ row virtual table and kanban pipeline |
+| **Marketing** | Campaigns, AI Queue, Studio, Gallery, Publishing | Content creation and distribution pipeline |
+| **System** | Knowledge Base, Chat, Agents, Cron Jobs, Branding, Settings | AI assistant, automation, and platform configuration |
 
-## MCP Server
+## MCP Server — 234 Tools
 
-The MCP server provides **234 tools** for complete platform control:
-
-| Category | Count | Description |
-|----------|-------|-------------|
-| CRUD | 208 | Full database access (26 tables × 8 operations) |
-| Query | 4 | Custom queries, aggregations, raw SQL |
-| Analytics | 7 | Dashboard metrics, pipeline, forecasting |
-| AI | 5 | Chat, image generation, humanization |
-| System | 10 | Settings, cron jobs, health checks |
-
-### Connect to Claude Code
-
-Add to `~/.claude/mcp_servers.json`:
+The built-in MCP server gives AI agents complete programmatic access to your business:
 
 ```json
 {
   "fusionclaw": {
     "command": "node",
-    "args": ["/path/to/fusionclaw/mcp-server/dist/index.js"],
+    "args": ["./mcp-server/dist/index.js"],
     "env": {
-      "MCP_API_KEY": "your-api-key",
-      "DATABASE_URL": "your-database-url",
-      "OPENROUTER_API_KEY": "your-openrouter-key",
-      "FAL_KEY": "your-fal-key"
+      "MCP_API_KEY": "your-key",
+      "DATABASE_URL": "your-db-url"
     }
   }
 }
+```
+
+| Category | Tools | Examples |
+|----------|-------|---------|
+| CRUD | 208 | `leads_list`, `invoices_create`, `tasks_update`, `expenses_delete` |
+| Query | 4 | `query_custom`, `query_aggregate`, `query_raw_sql` |
+| Analytics | 7 | `dashboard_metrics`, `pipeline_summary`, `revenue_forecast` |
+| AI | 5 | `chat_send`, `image_generate`, `content_humanize` |
+| System | 10 | `settings_get`, `cron_trigger`, `health_check` |
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 16 (App Router, Turbopack) |
+| Database | Neon PostgreSQL + Drizzle ORM |
+| Styling | Tailwind CSS v4 (dark mode only) |
+| Components | Radix UI, Framer Motion |
+| Tables | TanStack Table v8 + TanStack Virtual |
+| Drag & Drop | @hello-pangea/dnd |
+| Charts | Recharts |
+| AI Text | OpenRouter API (streaming SSE) |
+| AI Images | fal.ai (Flux, Nano Banana) |
+| Storage | Vercel Blob |
+| Agent Protocol | Model Context Protocol SDK |
+| Testing | Playwright (47+ E2E and API tests) |
+| Deployment | Vercel |
+
+## Project Structure
+
+```
+app/
+  (app)/             23 authenticated pages
+  api/               35+ REST API endpoints
+components/
+  primitives/        GlassCard, base components
+  effects/           SpotlightCard, animations
+  leads/             TanStack table, pipeline, editable cells
+lib/
+  actions/           13 server action modules
+  db/                Drizzle schema (33 tables)
+  validations/       Zod schemas for all mutations
+  images/            fal.ai client
+  openrouter/        AI prompt templates
+mcp-server/          234-tool MCP server (separate build)
+tests/               Playwright E2E and API tests
+docs/                Setup guide, architecture, MCP reference
 ```
 
 ## Scripts
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start Next.js development server |
-| `npm run build` | Build for production |
+| `npm run dev` | Start dev server (Turbopack) |
+| `npm run build` | Production build |
 | `npm run onboard` | Interactive setup wizard |
 | `npm run mcp` | Start MCP server |
 | `npm run mcp:build` | Build MCP server |
@@ -84,38 +131,28 @@ Add to `~/.claude/mcp_servers.json`:
 | `npm run db:seed` | Seed demo data |
 | `npm run key:rotate` | Rotate MCP API key |
 
-## Tech Stack
-
-- **Framework:** Next.js 16 (App Router, Turbopack)
-- **Database:** Neon PostgreSQL + Drizzle ORM
-- **Styling:** Tailwind CSS v4
-- **UI:** Radix UI, Framer Motion
-- **Tables:** TanStack Table + Virtual
-- **AI:** OpenRouter, fal.ai
-- **MCP:** Model Context Protocol SDK
-
 ## Documentation
 
-- [MCP Tools Reference](./docs/mcp-tools.md) - Complete list of 234 tools
-- [Claude Code Setup](./docs/claude-code-setup.md) - Integration guide
+| Document | Description |
+|----------|-------------|
+| [Setup Guide](docs/setup-guide.md) | Installation, configuration, deployment |
+| [Architecture](docs/architecture.md) | System design, data flow, schema overview |
+| [Contributing](CONTRIBUTING.md) | How to contribute, code style, PR process |
+| [Changelog](CHANGELOG.md) | Version history and release notes |
+| [Security](SECURITY.md) | Vulnerability reporting policy |
 
-## Environment Variables
+## Contributing
 
-```bash
-# Database
-DATABASE_URL=postgresql://...
-
-# AI Services
-OPENROUTER_API_KEY=sk-or-v1-...
-FAL_KEY=...
-
-# MCP Server
-MCP_API_KEY=fusionclaw_sk_live_...
-
-# App
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-```
+We welcome contributions. Please read our [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md) before submitting a PR.
 
 ## License
 
-Private - Fusion Data Company
+[Business Source License 1.1](LICENSE) — Free for non-competitive use. Converts to Apache 2.0 on 2030-01-01.
+
+---
+
+<div align="center">
+
+Built by [Fusion Data Company](https://fusiondataco.com)
+
+</div>
