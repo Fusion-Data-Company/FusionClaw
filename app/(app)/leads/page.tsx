@@ -3,9 +3,10 @@
 import { useState, useCallback } from "react";
 import { TanStackLeadsTable } from "@/components/leads";
 import { MagneticElement } from "@/components/effects/EliteEffects";
-import { Search, Download, Upload, Plus, Contact } from "lucide-react";
+import { Search, Download, Upload, Plus, Contact, Zap } from "lucide-react";
 import ImportModal from "./import-modal";
 import AddContactModal from "./add-contact-modal";
+import EnrichModal from "./enrich-modal";
 import Papa from "papaparse";
 import { toast } from "sonner";
 
@@ -18,6 +19,7 @@ export default function ContactsPage() {
   const [selectedLeads, setSelectedLeads] = useState<(number | string)[]>([]);
   const [importOpen, setImportOpen] = useState(false);
   const [addContactOpen, setAddContactOpen] = useState(false);
+  const [enrichOpen, setEnrichOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const handleLeadSelect = (leadId: number | string) => {
@@ -96,6 +98,15 @@ export default function ContactsPage() {
               className="px-3 py-2 rounded-lg text-xs font-medium bg-surface-2 text-text-secondary border border-border-med hover:bg-elevated cursor-pointer flex items-center gap-1 transition-all hover:border-accent/30"
             >
               <Upload className="w-3.5 h-3.5" /> Import
+            </button>
+          </MagneticElement>
+          <MagneticElement strength={0.2} radius={80}>
+            <button
+              onClick={() => setEnrichOpen(true)}
+              disabled={selectedLeads.length === 0}
+              className="px-3 py-2 rounded-lg text-xs font-medium bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 cursor-pointer flex items-center gap-1 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <Zap className="w-3.5 h-3.5" /> Enrich {selectedLeads.length > 0 ? `(${selectedLeads.length})` : ""}
             </button>
           </MagneticElement>
           <MagneticElement strength={0.2} radius={80}>
@@ -185,6 +196,12 @@ export default function ContactsPage() {
       {/* Modals */}
       <ImportModal open={importOpen} onClose={() => setImportOpen(false)} onImportComplete={refreshTable} />
       <AddContactModal open={addContactOpen} onClose={() => setAddContactOpen(false)} onContactAdded={refreshTable} />
+      <EnrichModal
+        open={enrichOpen}
+        onClose={() => setEnrichOpen(false)}
+        selectedLeadIds={selectedLeads.map(String)}
+        onEnrichComplete={refreshTable}
+      />
     </div>
   );
 }

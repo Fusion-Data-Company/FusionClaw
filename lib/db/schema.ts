@@ -675,3 +675,83 @@ export const googleIntegrations = pgTable("google_integrations", {
 export const googleIntegrationsRelations = relations(googleIntegrations, ({ one }) => ({
   user: one(users, { fields: [googleIntegrations.userId], references: [users.id] }),
 }));
+
+// ─── API Key Vault ────────────────────────────────────────────────────────
+
+export const vaultStatusEnum = pgEnum("vault_status", ["active", "revoked", "expired", "error"]);
+
+export const apiVault = pgTable("api_vault", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  provider: varchar("provider", { length: 100 }).notNull(),
+  label: varchar("label", { length: 255 }).notNull(),
+  encryptedKey: text("encrypted_key").notNull(),
+  encryptedSecret: text("encrypted_secret"),
+  baseUrl: varchar("base_url", { length: 500 }),
+  scopes: jsonb("scopes").$type<string[]>().default([]),
+  status: vaultStatusEnum("status").default("active").notNull(),
+  lastUsedAt: timestamp("last_used_at"),
+  lastError: text("last_error"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_api_vault_user").on(table.userId),
+  index("idx_api_vault_provider").on(table.provider),
+]);
+
+export const apiVaultRelations = relations(apiVault, ({ one }) => ({
+  user: one(users, { fields: [apiVault.userId], references: [users.id] }),
+}));
+
+// ─── Enrichment Jobs ──────────────────────────────────────────────────────
+
+export const enrichmentJobStatusEnum = pgEnum("enrichment_job_status", [
+  "pending", "running", "completed", "failed",
+]);
+
+export const enrichmentJobs = pgTable("enrichment_jobs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  status: enrichmentJobStatusEnum("status").default("pending").notNull(),
+  provider: varchar("provider", { length: 100 }).notNull(),
+  totalLeads: integer("total_leads").default(0).notNull(),
+  enrichedCount: integer("enriched_count").default(0).notNull(),
+  skippedCount: integer("skipped_count").default(0).notNull(),
+  failedCount: integer("failed_count").default(0).notNull(),
+  fieldsTargeted: jsonb("fields_targeted").$type<string[]>().default([]),
+  results: jsonb("results"),
+  error: text("error"),
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  createdBy: uuid("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_enrichment_jobs_status").on(table.status),
+]);
+
+export const enrichmentJobsRelations = relations(enrichmentJobs, ({ one, many }) => ({
+  createdByUser: one(users, { fields: [enrichmentJobs.createdBy], references: [users.id] }),
+  logs: many(enrichmentLogs),
+}));
+
+// ─── Enrichment Logs (Audit Trail) ────────────────────────────────────────
+
+export const enrichmentLogs = pgTable("enrichment_logs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  jobId: uuid("job_id").references(() => enrichmentJobs.id, { onDelete: "cascade" }).notNull(),
+  leadId: uuid("lead_id").references(() => leads.id, { onDelete: "cascade" }).notNull(),
+  provider: varchar("provider", { length: 100 }).notNull(),
+  fieldName: varchar("field_name", { length: 100 }).notNull(),
+  oldValue: text("old_value"),
+  newValue: text("new_value"),
+  confidence: decimal("confidence", { precision: 3, scale: 2 }),
+  source: varchar("source", { length: 255 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_enrichment_logs_job").on(table.jobId),
+  index("idx_enrichment_logs_lead").on(table.leadId),
+]);
+
+export const enrichmentLogsRelations = relations(enrichmentLogs, ({ one }) => ({
+  job: one(enrichmentJobs, { fields: [enrichmentLogs.jobId], references: [enrichmentJobs.id] }),
+  lead: one(leads, { fields: [enrichmentLogs.leadId], references: [leads.id] }),
+}));

@@ -16,6 +16,7 @@ import {
   Shield,
 } from "lucide-react";
 import { GoogleConnectCard } from "@/components/google/google-connect-card";
+import { ProviderCard, PROVIDERS, type VaultEntry } from "@/components/vault/provider-card";
 
 const AI_MODELS = [
   { value: "perplexity/sonar", label: "Perplexity Sonar", provider: "Perplexity", tier: "mid" },
@@ -81,6 +82,46 @@ export default function SettingsPage() {
 
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [vaultEntries, setVaultEntries] = useState<VaultEntry[]>([]);
+
+  // Load vault entries
+  useEffect(() => {
+    fetch("/api/vault").then(r => r.json()).then(d => setVaultEntries(d.providers || [])).catch(() => {});
+  }, []);
+
+  const handleVaultSave = async (provider: string, key: string, label: string) => {
+    const res = await fetch("/api/vault", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ provider, key, label }),
+    });
+    if (!res.ok) throw new Error("Failed to save");
+    const data = await res.json();
+    setVaultEntries(prev => {
+      const existing = prev.findIndex(p => p.provider === provider);
+      if (existing >= 0) {
+        const updated = [...prev];
+        updated[existing] = data.entry;
+        return updated;
+      }
+      return [...prev, data.entry];
+    });
+  };
+
+  const handleVaultDelete = async (id: string) => {
+    const res = await fetch(`/api/vault/${id}`, { method: "DELETE" });
+    if (!res.ok) throw new Error("Failed to delete");
+    setVaultEntries(prev => prev.filter(p => p.id !== id));
+  };
+
+  const handleVaultTest = async (id: string) => {
+    const res = await fetch(`/api/vault/${id}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "test" }),
+    });
+    return res.json();
+  };
 
   // Load settings from DB on mount
   useEffect(() => {
@@ -175,6 +216,26 @@ export default function SettingsPage() {
 
       {/* Google Workspace Integration */}
       <GoogleConnectCard />
+
+      {/* Enrichment Providers — API Key Vault */}
+      <div>
+        <h2 className="text-xs font-medium uppercase tracking-wider text-text-muted mb-3">Enrichment Providers</h2>
+        <p className="text-[11px] text-text-disabled mb-4">
+          Connect data providers to enrich your leads with real B2B data. Keys are encrypted with AES-256-GCM and never exposed.
+        </p>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          {PROVIDERS.map((config) => (
+            <ProviderCard
+              key={config.id}
+              config={config}
+              entry={vaultEntries.find((v) => v.provider === config.id)}
+              onSave={handleVaultSave}
+              onDelete={handleVaultDelete}
+              onTest={handleVaultTest}
+            />
+          ))}
+        </div>
+      </div>
 
       {/* AI Configuration */}
       <GlassCard padding="lg">
