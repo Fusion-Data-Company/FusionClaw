@@ -19,8 +19,46 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FusionClaw",
-  description: "Business-in-a-box SaaS platform",
+  title: "FusionClaw — The AI-Native Business Operating System",
+  description:
+    "Complete business in a box for business owners who are afraid of connecting an unrestricted agent to their business. FusionClaw gives your agent guardrails and context control for operations and gives your agent all the tools a solo entrepreneur needs.",
+  metadataBase: new URL("https://fusionclaw.vercel.app"),
+  openGraph: {
+    title: "FusionClaw — The AI-Native Business Operating System",
+    description:
+      "Complete business in a box for business owners who are afraid of connecting an unrestricted agent to their business. FusionClaw gives your agent guardrails and context control for operations and gives your agent all the tools a solo entrepreneur needs.",
+    url: "https://fusionclaw.vercel.app",
+    siteName: "FusionClaw",
+    images: [
+      {
+        url: "/hustle-mascot-bg.jpg",
+        width: 1920,
+        height: 768,
+        alt: "FusionClaw — All Hustle No Luck",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "FusionClaw — The AI-Native Business Operating System",
+    description:
+      "Complete business in a box for business owners who are afraid of connecting an unrestricted agent to their business. FusionClaw gives your agent guardrails and context control for operations.",
+    images: ["/hustle-mascot-bg.jpg"],
+  },
+  keywords: [
+    "business operating system",
+    "AI agent",
+    "MCP tools",
+    "CRM",
+    "self-hosted",
+    "open source",
+    "small business",
+    "solo entrepreneur",
+    "Next.js",
+    "guardrails",
+  ],
 };
 
 export default function RootLayout({
