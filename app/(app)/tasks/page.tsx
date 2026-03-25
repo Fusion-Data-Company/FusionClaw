@@ -3,7 +3,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { GlassCard } from "@/components/primitives";
 import { SpotlightCard } from "@/components/effects/EliteEffects";
-import { Plus, CheckCircle, Circle, Calendar, Flag, Loader2, X, List, Columns3, User, ListTodo } from "lucide-react";
+import { Plus, CheckCircle, Circle, Calendar, Flag, Loader2, X, List, Columns3, User, ListTodo, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface Task {
   id: string;
@@ -159,6 +160,22 @@ export default function TasksPage() {
       console.error("Failed to create task:", err);
     } finally {
       setCreating(false);
+    }
+  };
+
+  const deleteTask = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this task?")) return;
+    try {
+      const res = await fetch(`/api/tasks/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setTasks((prev) => prev.filter((t) => t.id !== id));
+        toast.success("Task deleted");
+      } else {
+        toast.error("Failed to delete task");
+      }
+    } catch (err) {
+      console.error("Failed to delete task:", err);
+      toast.error("Failed to delete task");
     }
   };
 
@@ -361,7 +378,16 @@ export default function TasksPage() {
                             )}
                           </button>
                           <div className="flex-1 min-w-0">
-                            <div className="text-sm font-semibold text-text-primary truncate">{task.title}</div>
+                            <div className="flex items-center justify-between gap-1">
+                              <div className="text-sm font-semibold text-text-primary truncate">{task.title}</div>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); deleteTask(task.id); }}
+                                className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-text-muted hover:text-error cursor-pointer p-0.5"
+                                title="Delete task"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                             {task.description && (
                               <div className="text-[11px] text-text-muted mt-0.5 line-clamp-2">{task.description}</div>
                             )}
@@ -422,7 +448,7 @@ export default function TasksPage() {
                     </div>
                   ) : (
                     activeTasks.map((task) => (
-                      <div key={task.id} className="flex items-start gap-3 px-5 py-4 hover:bg-elevated/50 transition-colors">
+                      <div key={task.id} className="flex items-start gap-3 px-5 py-4 hover:bg-elevated/50 transition-colors group">
                         <button onClick={() => toggleTask(task.id)} className="mt-0.5 cursor-pointer">
                           <Circle className="w-5 h-5 text-text-muted hover:text-accent" />
                         </button>
@@ -443,6 +469,13 @@ export default function TasksPage() {
                             )}
                           </div>
                         </div>
+                        <button
+                          onClick={() => deleteTask(task.id)}
+                          className="mt-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-text-muted hover:text-error cursor-pointer p-1"
+                          title="Delete task"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     ))
                   )}
@@ -460,7 +493,7 @@ export default function TasksPage() {
                   {showCompleted && (
                     <div className="divide-y divide-border">
                       {completedTasks.map((task) => (
-                        <div key={task.id} className="flex items-start gap-3 px-5 py-3 opacity-60">
+                        <div key={task.id} className="flex items-start gap-3 px-5 py-3 opacity-60 group hover:opacity-80 transition-opacity">
                           <button onClick={() => toggleTask(task.id)} className="mt-0.5 cursor-pointer">
                             <CheckCircle className="w-5 h-5 text-success" />
                           </button>
@@ -473,6 +506,13 @@ export default function TasksPage() {
                               </span>
                             )}
                           </div>
+                          <button
+                            onClick={() => deleteTask(task.id)}
+                            className="mt-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-text-muted hover:text-error cursor-pointer p-1"
+                            title="Delete task"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       ))}
                     </div>

@@ -10,7 +10,9 @@ import {
   Loader2,
   Users,
   X,
+  Trash2,
 } from "lucide-react";
+import { toast } from "sonner";
 
 interface Employee {
   id: string;
@@ -75,6 +77,32 @@ export default function EmployeesPage() {
       console.error("Failed to create employee:", err);
     } finally {
       setCreating(false);
+    }
+  };
+
+  const deleteEmployee = async (id: string) => {
+    const emp = employees.find((e) => e.id === id);
+    if (emp?.role === "admin") {
+      toast.error("Cannot delete admin users");
+      return;
+    }
+    if (!window.confirm(`Are you sure you want to delete ${emp?.name || "this employee"}?`)) return;
+    try {
+      const res = await fetch(`/api/employees/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setEmployees((prev) => prev.filter((e) => e.id !== id));
+        if (activeEmployeeId === id) {
+          const remaining = employees.filter((e) => e.id !== id);
+          setActiveEmployeeId(remaining.length > 0 ? remaining[0].id : null);
+        }
+        toast.success("Employee deleted");
+      } else {
+        const data = await res.json();
+        toast.error(data.error || "Failed to delete employee");
+      }
+    } catch (err) {
+      console.error("Failed to delete employee:", err);
+      toast.error("Failed to delete employee");
     }
   };
 
@@ -192,31 +220,41 @@ export default function EmployeesPage() {
       {employees.length > 0 && (
         <div className="flex gap-2 flex-wrap">
           {employees.map((emp) => (
-            <button
-              key={emp.id}
-              onClick={() => setActiveEmployeeId(emp.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer border ${
-                activeEmployeeId === emp.id
-                  ? "bg-accent/15 text-accent border-accent/40 shadow-[0_0_12px_rgba(59,130,246,0.2)]"
-                  : "bg-surface text-text-secondary border-border hover:bg-elevated hover:border-accent/20"
-              }`}
-            >
-              <div
-                className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold ${
+            <div key={emp.id} className="flex items-center gap-0.5 group/tab">
+              <button
+                onClick={() => setActiveEmployeeId(emp.id)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer border ${
                   activeEmployeeId === emp.id
-                    ? "bg-accent/30 text-accent"
-                    : "bg-surface-2 text-text-muted"
+                    ? "bg-accent/15 text-accent border-accent/40 shadow-[0_0_12px_rgba(59,130,246,0.2)]"
+                    : "bg-surface text-text-secondary border-border hover:bg-elevated hover:border-accent/20"
                 }`}
               >
-                {emp.name
-                  ? emp.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                  : emp.email[0].toUpperCase()}
-              </div>
-              <span>{emp.name || "Unnamed"}</span>
-            </button>
+                <div
+                  className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold ${
+                    activeEmployeeId === emp.id
+                      ? "bg-accent/30 text-accent"
+                      : "bg-surface-2 text-text-muted"
+                  }`}
+                >
+                  {emp.name
+                    ? emp.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                    : emp.email[0].toUpperCase()}
+                </div>
+                <span>{emp.name || "Unnamed"}</span>
+              </button>
+              {emp.role !== "admin" && (
+                <button
+                  onClick={() => deleteEmployee(emp.id)}
+                  className="opacity-0 group-hover/tab:opacity-100 transition-opacity p-1 text-text-muted hover:text-error cursor-pointer"
+                  title="Delete employee"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
           ))}
         </div>
       )}

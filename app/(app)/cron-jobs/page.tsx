@@ -34,6 +34,7 @@ import {
   GripVertical,
   Save,
 } from "lucide-react";
+import { toast } from "sonner";
 
 // Types
 interface CronJob {
@@ -880,9 +881,19 @@ export default function CronJobsPage() {
     setShowEditModal(true);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this cron job?")) {
-      setJobs((prev) => prev.filter((j) => j.id !== id));
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this cron job?")) return;
+    try {
+      const res = await fetch(`/api/cron-jobs/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setJobs((prev) => prev.filter((j) => j.id !== id));
+        toast.success("Cron job deleted");
+      } else {
+        toast.error("Failed to delete cron job");
+      }
+    } catch (err) {
+      console.error("Failed to delete cron job:", err);
+      toast.error("Failed to delete cron job");
     }
   };
 

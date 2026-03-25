@@ -8,6 +8,7 @@ import {
   Send, Plus, Mail, Users, BarChart3, Clock, CheckCircle, XCircle,
   Loader2, X, Calendar, Eye, Trash2, TrendingUp, Edit, Target, Zap,
 } from "lucide-react";
+import { toast } from "sonner";
 
 interface Campaign {
   id: string;
@@ -87,6 +88,23 @@ export default function CampaignsPage() {
       console.error("Failed to create campaign");
     } finally {
       setCreating(false);
+    }
+  };
+
+  const deleteCampaign = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm("Are you sure you want to delete this campaign?")) return;
+    try {
+      const res = await fetch(`/api/campaigns/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setCampaigns((prev) => prev.filter((c) => c.id !== id));
+        toast.success("Campaign deleted");
+      } else {
+        toast.error("Failed to delete campaign");
+      }
+    } catch (err) {
+      console.error("Failed to delete campaign:", err);
+      toast.error("Failed to delete campaign");
     }
   };
 
@@ -218,6 +236,13 @@ export default function CampaignsPage() {
                     </div>
                   )}
                   <Eye className="w-4 h-4 text-text-muted shrink-0" />
+                  <button
+                    onClick={(e) => deleteCampaign(campaign.id, e)}
+                    className="shrink-0 text-text-muted hover:text-error transition-colors cursor-pointer p-1"
+                    title="Delete campaign"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               );
             })}

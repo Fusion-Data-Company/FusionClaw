@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { GlassCard } from "@/components/primitives";
-import { Sparkles, CheckCircle, XCircle, Clock, Eye, Loader2, Inbox } from "lucide-react";
+import { Sparkles, CheckCircle, XCircle, Clock, Eye, Loader2, Inbox, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface QueueItem {
   id: string;
@@ -65,6 +66,23 @@ export default function AIQueuePage() {
       console.error("Failed to update item:", err);
     } finally {
       setUpdating(null);
+    }
+  };
+
+  const deleteQueueItem = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this queue item?")) return;
+    try {
+      const res = await fetch(`/api/ai-queue/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setItems((prev) => prev.filter((item) => item.id !== id));
+        if (selectedItem?.id === id) setSelectedItem(null);
+        toast.success("Queue item deleted");
+      } else {
+        toast.error("Failed to delete queue item");
+      }
+    } catch (err) {
+      console.error("Failed to delete queue item:", err);
+      toast.error("Failed to delete queue item");
     }
   };
 
@@ -146,6 +164,13 @@ export default function AIQueuePage() {
                         </button>
                       </>
                     )}
+                    <button
+                      onClick={() => deleteQueueItem(item.id)}
+                      className="w-7 h-7 flex items-center justify-center rounded-lg bg-surface border border-border text-text-muted hover:text-error hover:border-error/30 cursor-pointer"
+                      title="Delete item"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
               );
