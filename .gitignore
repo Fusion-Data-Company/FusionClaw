@@ -48,3 +48,5 @@ next-env.d.ts
 
 # mcp server build output
 mcp-server/dist/
+mcp-server/.next/
+test-results/
