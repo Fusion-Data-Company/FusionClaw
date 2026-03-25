@@ -19,14 +19,14 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FusionClaw — The AI-Native Business Operating System",
+  title: "FusionClaw — Connect Your OpenClaw or Claude Agent Safely to Your Business",
   description:
-    "Complete business in a box for business owners who are afraid of connecting an unrestricted agent to their business. FusionClaw gives your agent guardrails and context control for operations and gives your agent all the tools a solo entrepreneur needs.",
+    "New to AI agents? FusionClaw gives your OpenClaw or Claude agent guardrails, context control, and every tool a solo entrepreneur needs — CRM, ops, finance, marketing — without exposing your entire business to an unrestricted agent.",
   metadataBase: new URL("https://fusionclaw.vercel.app"),
   openGraph: {
-    title: "FusionClaw — The AI-Native Business Operating System",
+    title: "FusionClaw — Connect Your OpenClaw or Claude Agent Safely to Your Business",
     description:
-      "Complete business in a box for business owners who are afraid of connecting an unrestricted agent to their business. FusionClaw gives your agent guardrails and context control for operations and gives your agent all the tools a solo entrepreneur needs.",
+      "New to AI agents? FusionClaw gives your OpenClaw or Claude agent guardrails, context control, and every tool a solo entrepreneur needs — CRM, ops, finance, marketing — without exposing your entire business to an unrestricted agent.",
     url: "https://fusionclaw.vercel.app",
     siteName: "FusionClaw",
     images: [
@@ -42,9 +42,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "FusionClaw — The AI-Native Business Operating System",
+    title: "FusionClaw — Connect Your OpenClaw or Claude Agent Safely to Your Business",
     description:
-      "Complete business in a box for business owners who are afraid of connecting an unrestricted agent to their business. FusionClaw gives your agent guardrails and context control for operations.",
+      "New to AI agents? FusionClaw gives your OpenClaw or Claude agent guardrails, context control, and every tool a solo entrepreneur needs — without exposing your entire business to an unrestricted agent.",
     images: ["/hustle-mascot-bg.jpg"],
   },
   keywords: [

@@ -160,19 +160,20 @@ export default function LandingPage() {
           </div>
 
           <h1
-            className="text-5xl font-extrabold tracking-tight sm:text-7xl"
+            className="text-4xl font-extrabold tracking-tight sm:text-6xl"
             style={{ fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)" }}
           >
-            <span className="text-white">The AI-Native</span>
+            <span className="text-white">Connect Your OpenClaw or Claude Agent</span>
             <br />
             <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-              Business Operating System
+              Safely to Your Business
             </span>
           </h1>
 
           <p className="mx-auto mt-6 max-w-2xl text-lg text-white/60 leading-relaxed">
-            CRM, operations, content, finance, and marketing in one dark-mode dashboard.
-            234 MCP tools give any AI agent full control over your business with a single API key.
+            New to AI agents? FusionClaw gives your agent guardrails, context control, and every tool
+            a solo entrepreneur needs — CRM, ops, finance, marketing — without exposing your entire
+            business to an unrestricted agent.
           </p>
 
           {/* One-liner install */}
