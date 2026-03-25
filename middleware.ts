@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
 // Paths that don't require authentication
-const PUBLIC_PATHS = ["/login", "/api/auth/login", "/api/auth/logout"];
+const PUBLIC_PATHS = ["/", "/login", "/api/auth/login", "/api/auth/logout"];
 
 // Static asset patterns to skip
 const STATIC_PATTERNS = [
@@ -57,8 +57,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Allow public paths
-  if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
+  // Allow public paths (exact match for "/" so /dashboard etc. still require auth)
+  if (pathname === "/") return NextResponse.next();
+  if (PUBLIC_PATHS.slice(1).some((p) => pathname.startsWith(p))) {
     return NextResponse.next();
   }
 
