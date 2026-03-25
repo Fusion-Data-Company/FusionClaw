@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { GlassCard } from "@/components/primitives";
 import { SpotlightCard } from "@/components/effects/EliteEffects";
+import { toast } from "sonner";
 import {
   Globe, Plus, ExternalLink, Trash2, Loader2, X, CheckCircle, XCircle,
   RefreshCw, Settings, FileText, Wifi, WifiOff, Link as LinkIcon,
@@ -90,35 +91,14 @@ export default function PublishingPage() {
       const data = await res.json();
       if (data.site) {
         setSites((prev) => [...prev, data.site]);
+        toast.success("Site connected");
       } else {
-        // Fallback — add locally
-        setSites((prev) => [
-          ...prev,
-          {
-            id: `local_${Date.now()}`,
-            name: newSite.name,
-            url: newSite.url,
-            platform: newSite.platform,
-            status: "active",
-            postCount: 0,
-          },
-        ]);
+        toast.error(data.error || "Failed to connect site");
       }
       setNewSite({ name: "", url: "", platform: "wordpress", apiKey: "" });
       setShowAddModal(false);
     } catch {
-      // Local fallback
-      setSites((prev) => [
-        ...prev,
-        {
-          id: `local_${Date.now()}`,
-          name: newSite.name,
-          url: newSite.url,
-          platform: newSite.platform,
-          status: "active",
-          postCount: 0,
-        },
-      ]);
+      toast.error("Failed to connect site — try again");
       setNewSite({ name: "", url: "", platform: "wordpress", apiKey: "" });
       setShowAddModal(false);
     } finally {
@@ -126,10 +106,21 @@ export default function PublishingPage() {
     }
   };
 
-  const removeSite = (id: string) => {
-    setSites((prev) => prev.filter((s) => s.id !== id));
-    // Also try API
-    fetch(`/api/publishing/sites/${id}`, { method: "DELETE" }).catch(() => {});
+  const removeSite = async (id: string) => {
+    try {
+      const res = await fetch(`/api/publishing/sites/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || "Failed to disconnect site");
+        return;
+      }
+      setSites((prev) => prev.filter((s) => s.id !== id));
+      toast.success("Site disconnected");
+    } catch {
+      // Remove locally even if API fails (may be a local-only site)
+      setSites((prev) => prev.filter((s) => s.id !== id));
+      toast.success("Site removed");
+    }
   };
 
   if (loading) {

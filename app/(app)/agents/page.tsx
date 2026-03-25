@@ -1,108 +1,272 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { GlassCard } from "@/components/primitives";
 import { SpotlightCard } from "@/components/effects/EliteEffects";
+import { toast } from "sonner";
 import {
   Bot, Cpu, Brain, Zap, Settings, CheckCircle, XCircle, Loader2,
   Plus, X, Key, Globe, Trash2, RefreshCw, Shield,
 } from "lucide-react";
 
+interface VaultEntry {
+  id: string;
+  provider: string;
+  label: string;
+  maskedKey: string;
+  status: string;
+  lastUsedAt: string | null;
+  scopes: string[];
+  baseUrl: string | null;
+  createdAt: string;
+}
+
 interface AgentConnection {
   id: string;
+  vaultId?: string;
   name: string;
   type: "openclaw" | "claude" | "openrouter" | "custom";
   apiEndpoint?: string;
   status: "connected" | "disconnected" | "testing";
   model?: string;
   lastUsed?: string;
+  maskedKey?: string;
   icon: React.ComponentType<any>;
   color: string;
   gradient: string;
 }
 
-const PRESET_AGENTS: AgentConnection[] = [
-  {
-    id: "openclaw",
-    name: "OpenClaw",
-    type: "openclaw",
-    status: "disconnected",
-    apiEndpoint: "",
-    icon: Zap,
-    color: "text-orange-400",
-    gradient: "from-orange-500 to-amber-500",
-  },
-  {
-    id: "claude",
-    name: "Claude Co-Agent",
-    type: "claude",
-    status: "disconnected",
-    model: "claude-sonnet-4-20250514",
-    apiEndpoint: "",
-    icon: Brain,
-    color: "text-purple-400",
-    gradient: "from-purple-500 to-violet-500",
-  },
-  {
-    id: "openrouter",
-    name: "OpenRouter Hub",
-    type: "openrouter",
-    status: "disconnected",
-    apiEndpoint: "https://openrouter.ai/api/v1",
-    icon: Globe,
-    color: "text-cyan-400",
-    gradient: "from-cyan-500 to-blue-500",
-  },
-];
+const AGENT_META: Record<string, { icon: React.ComponentType<any>; color: string; gradient: string; model?: string; endpoint?: string }> = {
+  openclaw: { icon: Zap, color: "text-orange-400", gradient: "from-orange-500 to-amber-500" },
+  claude: { icon: Brain, color: "text-purple-400", gradient: "from-purple-500 to-violet-500", model: "claude-sonnet-4-20250514" },
+  openrouter: { icon: Globe, color: "text-cyan-400", gradient: "from-cyan-500 to-blue-500", endpoint: "https://openrouter.ai/api/v1" },
+  custom: { icon: Cpu, color: "text-emerald-400", gradient: "from-emerald-500 to-green-500" },
+};
+
+const PRESET_TYPES = ["openclaw", "claude", "openrouter"] as const;
+
+function vaultToAgent(entry: VaultEntry): AgentConnection {
+  const meta = AGENT_META[entry.provider] || AGENT_META.custom;
+  return {
+    id: entry.provider,
+    vaultId: entry.id,
+    name: entry.label,
+    type: (PRESET_TYPES.includes(entry.provider as any) ? entry.provider : "custom") as AgentConnection["type"],
+    apiEndpoint: entry.baseUrl || meta.endpoint || "",
+    status: entry.status === "active" ? "connected" : "disconnected",
+    model: meta.model,
+    lastUsed: entry.lastUsedAt || undefined,
+    maskedKey: entry.maskedKey,
+    icon: meta.icon,
+    color: meta.color,
+    gradient: meta.gradient,
+  };
+}
+
+function buildPresetAgents(vaultAgents: AgentConnection[]): AgentConnection[] {
+  const vaultProviders = new Set(vaultAgents.map((a) => a.type));
+  const presets: AgentConnection[] = PRESET_TYPES
+    .filter((t) => !vaultProviders.has(t))
+    .map((type) => {
+      const meta = AGENT_META[type];
+      return {
+        id: type,
+        name: type === "openclaw" ? "OpenClaw" : type === "claude" ? "Claude Co-Agent" : "OpenRouter Hub",
+        type,
+        apiEndpoint: meta.endpoint || "",
+        status: "disconnected" as const,
+        model: meta.model,
+        icon: meta.icon,
+        color: meta.color,
+        gradient: meta.gradient,
+      };
+    });
+  return [...vaultAgents, ...presets];
+}
 
 export default function AgentsPage() {
-  const [agents, setAgents] = useState<AgentConnection[]>(PRESET_AGENTS);
+  const [agents, setAgents] = useState<AgentConnection[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [testingId, setTestingId] = useState<string | null>(null);
   const [configuring, setConfiguring] = useState<string | null>(null);
   const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
+  const [savingId, setSavingId] = useState<string | null>(null);
   const [newAgent, setNewAgent] = useState({ name: "", endpoint: "", apiKey: "" });
 
-  const testConnection = async (id: string) => {
-    setTestingId(id);
-    // Simulate test
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    const key = apiKeys[id];
-    setAgents(prev =>
-      prev.map(a => a.id === id ? { ...a, status: key ? "connected" : "disconnected" } : a)
-    );
-    setTestingId(null);
+  const fetchAgents = useCallback(async () => {
+    try {
+      const res = await fetch("/api/vault");
+      const data = await res.json();
+      const agentProviders = ["openclaw", "claude", "openrouter", "custom"];
+      const vaultAgents: AgentConnection[] = (data.providers || [])
+        .filter((e: VaultEntry) => agentProviders.includes(e.provider) && e.status !== "revoked")
+        .map(vaultToAgent);
+      setAgents(buildPresetAgents(vaultAgents));
+    } catch {
+      // Vault unavailable — show presets only
+      setAgents(buildPresetAgents([]));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAgents();
+  }, [fetchAgents]);
+
+  const saveApiKey = async (agent: AgentConnection, key: string) => {
+    if (!key.trim()) return;
+    setSavingId(agent.id);
+    try {
+      if (agent.vaultId) {
+        // Update existing vault entry
+        const res = await fetch(`/api/vault/${agent.vaultId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ key, status: "active" }),
+        });
+        if (!res.ok) throw new Error("Failed to update key");
+        toast.success(`${agent.name} key updated`);
+      } else {
+        // Create new vault entry
+        const res = await fetch("/api/vault", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            provider: agent.type,
+            label: agent.name,
+            key,
+            baseUrl: agent.apiEndpoint || undefined,
+          }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          toast.error(data.error || "Failed to save key");
+          return;
+        }
+        toast.success(`${agent.name} key saved`);
+      }
+      setApiKeys((prev) => ({ ...prev, [agent.id]: "" }));
+      await fetchAgents();
+    } catch {
+      toast.error("Failed to save API key");
+    } finally {
+      setSavingId(null);
+    }
   };
 
-  const saveApiKey = (id: string, key: string) => {
-    setApiKeys(prev => ({ ...prev, [id]: key }));
-    // In production, this would save to encrypted storage via API
+  const testConnection = async (agent: AgentConnection) => {
+    if (!agent.vaultId) {
+      toast.error("Save an API key first");
+      return;
+    }
+    setTestingId(agent.id);
+    try {
+      const res = await fetch(`/api/vault/${agent.vaultId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "test" }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(data.message || "Connection verified");
+        setAgents((prev) =>
+          prev.map((a) => (a.id === agent.id ? { ...a, status: "connected" } : a)),
+        );
+      } else {
+        toast.error(data.message || "Connection test failed");
+        setAgents((prev) =>
+          prev.map((a) => (a.id === agent.id ? { ...a, status: "disconnected" } : a)),
+        );
+      }
+    } catch {
+      toast.error("Connection test failed");
+    } finally {
+      setTestingId(null);
+    }
   };
 
-  const addCustomAgent = () => {
+  const removeAgent = async (agent: AgentConnection) => {
+    if (agent.vaultId) {
+      try {
+        const res = await fetch(`/api/vault/${agent.vaultId}`, { method: "DELETE" });
+        if (!res.ok) {
+          toast.error("Failed to remove agent");
+          return;
+        }
+        toast.success(`${agent.name} removed`);
+      } catch {
+        toast.error("Failed to remove agent");
+        return;
+      }
+    }
+    await fetchAgents();
+  };
+
+  const addCustomAgent = async () => {
     if (!newAgent.name.trim() || !newAgent.endpoint.trim()) return;
-    const id = `custom_${Date.now()}`;
-    setAgents(prev => [
-      ...prev,
-      {
-        id,
-        name: newAgent.name,
-        type: "custom",
-        apiEndpoint: newAgent.endpoint,
-        status: "disconnected",
-        icon: Cpu,
-        color: "text-emerald-400",
-        gradient: "from-emerald-500 to-green-500",
-      },
-    ]);
-    if (newAgent.apiKey) saveApiKey(id, newAgent.apiKey);
-    setNewAgent({ name: "", endpoint: "", apiKey: "" });
-    setShowAddModal(false);
+    setSavingId("new");
+    try {
+      if (newAgent.apiKey.trim()) {
+        const res = await fetch("/api/vault", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            provider: "custom",
+            label: newAgent.name.trim(),
+            key: newAgent.apiKey.trim(),
+            baseUrl: newAgent.endpoint.trim(),
+          }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          toast.error(data.error || "Failed to add agent");
+          return;
+        }
+        toast.success("Custom agent added");
+      } else {
+        // No key — just add to local state for now; user can configure later
+        setAgents((prev) => [
+          ...prev,
+          {
+            id: `custom_${Date.now()}`,
+            name: newAgent.name.trim(),
+            type: "custom",
+            apiEndpoint: newAgent.endpoint.trim(),
+            status: "disconnected",
+            icon: Cpu,
+            color: "text-emerald-400",
+            gradient: "from-emerald-500 to-green-500",
+          },
+        ]);
+        toast.success("Custom agent added — save an API key to persist");
+      }
+      setNewAgent({ name: "", endpoint: "", apiKey: "" });
+      setShowAddModal(false);
+      await fetchAgents();
+    } catch {
+      toast.error("Failed to add agent");
+    } finally {
+      setSavingId(null);
+    }
   };
 
-  const removeAgent = (id: string) => {
-    setAgents(prev => prev.filter(a => a.id !== id));
-  };
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-text-primary" style={{ fontFamily: "var(--font-display)" }}>
+            Agent Connections
+          </h1>
+          <p className="text-sm text-text-muted">Loading...</p>
+        </div>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-accent" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -130,7 +294,7 @@ export default function AgentsPage() {
           const AgentIcon = agent.icon;
           const isExpanded = configuring === agent.id;
           return (
-            <SpotlightCard key={agent.id} className="p-0 overflow-hidden">
+            <SpotlightCard key={agent.vaultId || agent.id} className="p-0 overflow-hidden">
               <div className="p-4">
                 {/* Agent Header */}
                 <div className="flex items-start justify-between mb-3">
@@ -156,6 +320,9 @@ export default function AgentsPage() {
                         }`}>
                           {agent.status}
                         </span>
+                        {agent.maskedKey && (
+                          <span className="text-[10px] text-text-disabled ml-1">{agent.maskedKey}</span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -169,7 +336,7 @@ export default function AgentsPage() {
                     </button>
                     {agent.type === "custom" && (
                       <button
-                        onClick={() => removeAgent(agent.id)}
+                        onClick={() => removeAgent(agent)}
                         className="w-7 h-7 rounded-lg bg-surface border border-border flex items-center justify-center text-text-muted hover:text-error cursor-pointer"
                         title="Remove"
                       >
@@ -202,15 +369,23 @@ export default function AgentsPage() {
                     <input
                       type="password"
                       value={apiKeys[agent.id] || ""}
-                      onChange={(e) => saveApiKey(agent.id, e.target.value)}
+                      onChange={(e) => setApiKeys((prev) => ({ ...prev, [agent.id]: e.target.value }))}
                       className="w-full px-3 py-1.5 rounded-lg text-xs bg-surface border border-border text-text-primary focus:border-accent/30 outline-none"
-                      placeholder="Enter API key..."
+                      placeholder={agent.maskedKey ? `Current: ${agent.maskedKey}` : "Enter API key..."}
                     />
                   </div>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => testConnection(agent.id)}
-                      disabled={testingId === agent.id}
+                      onClick={() => saveApiKey(agent, apiKeys[agent.id] || "")}
+                      disabled={savingId === agent.id || !apiKeys[agent.id]?.trim()}
+                      className="flex-1 h-8 rounded-lg text-xs font-bold bg-surface text-text-primary border border-border hover:bg-elevated disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      {savingId === agent.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Key className="w-3 h-3" />}
+                      Save Key
+                    </button>
+                    <button
+                      onClick={() => testConnection(agent)}
+                      disabled={testingId === agent.id || !agent.vaultId}
                       className="flex-1 h-8 rounded-lg text-xs font-bold bg-accent/20 text-accent border border-accent/30 hover:bg-accent/30 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
                     >
                       {testingId === agent.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
@@ -219,7 +394,7 @@ export default function AgentsPage() {
                   </div>
                   <div className="flex items-center gap-1.5 text-[10px] text-text-muted">
                     <Shield className="w-3 h-3" />
-                    Keys are stored securely and never exposed in the UI
+                    Keys are encrypted in the vault and never exposed in the UI
                   </div>
                 </div>
               )}
@@ -281,9 +456,10 @@ export default function AgentsPage() {
                 </button>
                 <button
                   onClick={addCustomAgent}
-                  disabled={!newAgent.name.trim() || !newAgent.endpoint.trim()}
-                  className="flex-1 h-10 rounded-lg text-sm font-bold bg-accent/20 text-accent border border-accent/30 hover:bg-accent/30 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  disabled={!newAgent.name.trim() || !newAgent.endpoint.trim() || savingId === "new"}
+                  className="flex-1 h-10 rounded-lg text-sm font-bold bg-accent/20 text-accent border border-accent/30 hover:bg-accent/30 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
                 >
+                  {savingId === "new" && <Loader2 className="w-4 h-4 animate-spin" />}
                   Add Agent
                 </button>
               </div>

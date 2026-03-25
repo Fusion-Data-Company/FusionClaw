@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { Menu, X } from "lucide-react";
 
 const FEATURES = [
   {
@@ -73,6 +74,7 @@ function CopyButton({ text }: { text: string }) {
 
 export default function LandingPage() {
   const parallaxRef = useRef<HTMLDivElement>(null);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -89,7 +91,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-[#050505] text-white overflow-x-hidden">
       {/* ─── NAV ─── */}
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-[#050505]/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-3">
             <Image
               src="/fusionclaw-logo.png"
@@ -122,8 +124,31 @@ export default function LandingPage() {
             >
               Live Demo
             </Link>
+            <button
+              onClick={() => setMobileNavOpen(!mobileNavOpen)}
+              className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg text-white/70 hover:text-white transition-colors"
+              aria-label="Toggle menu"
+            >
+              {mobileNavOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
           </div>
         </div>
+        {/* Mobile nav dropdown */}
+        {mobileNavOpen && (
+          <div className="md:hidden border-t border-white/5 bg-[#050505]/95 backdrop-blur-xl px-4 py-4 space-y-3">
+            <a href="#features" onClick={() => setMobileNavOpen(false)} className="block text-sm text-white/60 hover:text-cyan-400 transition-colors">Features</a>
+            <a href="#install" onClick={() => setMobileNavOpen(false)} className="block text-sm text-white/60 hover:text-cyan-400 transition-colors">Install</a>
+            <a href="#mcp" onClick={() => setMobileNavOpen(false)} className="block text-sm text-white/60 hover:text-cyan-400 transition-colors">MCP Tools</a>
+            <a
+              href="https://github.com/Fusion-Data-Company/FusionClaw"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block text-sm text-white/60 hover:text-cyan-400 transition-colors"
+            >
+              GitHub
+            </a>
+          </div>
+        )}
       </nav>
 
       {/* ─── HERO with parallax background ─── */}
@@ -147,20 +172,20 @@ export default function LandingPage() {
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(6,182,212,0.12)_0%,transparent_65%)]" />
         </div>
 
-        <div className="relative z-10 mx-auto max-w-4xl px-6 text-center">
+        <div className="relative z-10 mx-auto max-w-4xl px-4 sm:px-6 text-center">
           {/* Logo */}
-          <div className="mb-8 flex justify-center">
+          <div className="mb-6 sm:mb-8 flex justify-center">
             <Image
               src="/fusionclaw-logo.png"
               alt="FusionClaw"
               width={120}
               height={120}
-              className="rounded-2xl drop-shadow-[0_0_40px_rgba(6,182,212,0.3)]"
+              className="w-20 h-20 sm:w-[120px] sm:h-[120px] rounded-2xl drop-shadow-[0_0_40px_rgba(6,182,212,0.3)]"
             />
           </div>
 
           <h1
-            className="text-4xl font-extrabold tracking-tight sm:text-6xl"
+            className="text-3xl font-extrabold tracking-tight sm:text-4xl md:text-6xl"
             style={{ fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)" }}
           >
             <span className="text-white">Connect Your OpenClaw or Claude Agent</span>
@@ -170,7 +195,7 @@ export default function LandingPage() {
             </span>
           </h1>
 
-          <p className="mx-auto mt-6 max-w-2xl text-lg text-white/60 leading-relaxed">
+          <p className="mx-auto mt-6 max-w-2xl text-base sm:text-lg text-white/60 leading-relaxed">
             New to AI agents? FusionClaw gives your agent guardrails, context control, and every tool
             a solo entrepreneur needs — CRM, ops, finance, marketing — without exposing your entire
             business to an unrestricted agent.
@@ -178,9 +203,9 @@ export default function LandingPage() {
 
           {/* One-liner install */}
           <div className="mx-auto mt-10 max-w-2xl">
-            <div className="flex items-center rounded-xl border border-cyan-500/20 bg-[#0D0D0D]/80 px-5 py-4 backdrop-blur-sm">
-              <span className="mr-3 text-cyan-500 font-mono text-sm">$</span>
-              <code className="flex-1 text-left font-mono text-sm text-white/80 overflow-x-auto whitespace-nowrap">
+            <div className="flex items-center rounded-xl border border-cyan-500/20 bg-[#0D0D0D]/80 px-3 sm:px-5 py-3 sm:py-4 backdrop-blur-sm overflow-hidden">
+              <span className="mr-2 sm:mr-3 text-cyan-500 font-mono text-xs sm:text-sm shrink-0">$</span>
+              <code className="flex-1 text-left font-mono text-xs sm:text-sm text-white/80 overflow-x-auto whitespace-nowrap">
                 git clone https://github.com/Fusion-Data-Company/FusionClaw.git && cd FusionClaw && npm run onboard
               </code>
               <CopyButton text="git clone https://github.com/Fusion-Data-Company/FusionClaw.git && cd FusionClaw && npm run onboard" />
@@ -276,16 +301,16 @@ export default function LandingPage() {
             {STEPS.map((s) => (
               <div
                 key={s.num}
-                className="flex items-start gap-6 rounded-2xl border border-white/5 bg-[#0D0D0D] p-6 transition-all hover:border-cyan-500/20"
+                className="flex items-start gap-3 sm:gap-6 rounded-2xl border border-white/5 bg-[#0D0D0D] p-4 sm:p-6 transition-all hover:border-cyan-500/20"
               >
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 text-lg font-black text-black">
+                <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 text-base sm:text-lg font-black text-black">
                   {s.num}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-lg font-semibold text-white">{s.title}</h3>
-                  <div className="mt-3 flex items-center rounded-lg bg-[#050505] px-4 py-3 border border-white/5">
-                    <span className="mr-2 text-cyan-500 font-mono text-sm">$</span>
-                    <code className="flex-1 font-mono text-sm text-white/70 overflow-x-auto whitespace-nowrap">
+                  <h3 className="text-base sm:text-lg font-semibold text-white">{s.title}</h3>
+                  <div className="mt-3 flex items-center rounded-lg bg-[#050505] px-3 sm:px-4 py-2.5 sm:py-3 border border-white/5 overflow-hidden">
+                    <span className="mr-2 text-cyan-500 font-mono text-xs sm:text-sm shrink-0">$</span>
+                    <code className="flex-1 font-mono text-xs sm:text-sm text-white/70 overflow-x-auto whitespace-nowrap">
                       {s.code}
                     </code>
                     <CopyButton text={s.code} />
@@ -310,7 +335,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="mt-12 rounded-2xl border border-cyan-500/10 bg-[#0D0D0D] p-8 font-mono text-sm">
+          <div className="mt-12 rounded-2xl border border-cyan-500/10 bg-[#0D0D0D] p-4 sm:p-8 font-mono text-xs sm:text-sm">
             <div className="text-white/30 mb-2">~/.claude/mcp_servers.json</div>
             <pre className="text-cyan-400/80 overflow-x-auto">
 {`{
@@ -326,7 +351,7 @@ export default function LandingPage() {
             </pre>
           </div>
 
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
             {[
               { count: "208", label: "CRUD Tools", desc: "Full database access" },
               { count: "7", label: "Analytics", desc: "Dashboards & forecasting" },

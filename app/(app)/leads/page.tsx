@@ -79,19 +79,19 @@ export default function ContactsPage() {
   return (
     <div className="space-y-4 h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between shrink-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.4)]">
+          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.4)] shrink-0">
             <Contact className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-text-primary" style={{ fontFamily: "var(--font-display)" }}>
+            <h1 className="text-xl sm:text-2xl font-bold text-text-primary" style={{ fontFamily: "var(--font-display)" }}>
               Contacts
             </h1>
-            <p className="text-sm text-text-muted">All contacts, leads, vendors & partners</p>
+            <p className="text-xs sm:text-sm text-text-muted">All contacts, leads, vendors & partners</p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <MagneticElement strength={0.2} radius={80}>
             <button
               onClick={() => setImportOpen(true)}
@@ -129,8 +129,8 @@ export default function ContactsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex gap-3 shrink-0 flex-wrap">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+        <div className="relative flex-1 min-w-0 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
           <input
             type="text"
@@ -141,7 +141,7 @@ export default function ContactsPage() {
           />
         </div>
         {/* Contact Type Filter Tabs */}
-        <div className="flex rounded-lg border border-border overflow-hidden">
+        <div className="flex rounded-lg border border-border overflow-x-auto">
           {([
             { value: "all" as ContactFilter, label: "All" },
             { value: "lead" as ContactFilter, label: "Leads" },
@@ -153,7 +153,7 @@ export default function ContactsPage() {
             <button
               key={tab.value}
               onClick={() => setContactTypeFilter(tab.value)}
-              className={`px-3 py-1.5 text-xs font-medium transition-all cursor-pointer ${
+              className={`px-3 py-1.5 text-xs font-medium transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                 contactTypeFilter === tab.value
                   ? "bg-accent/20 text-accent"
                   : "bg-surface text-text-muted hover:text-text-secondary hover:bg-elevated"

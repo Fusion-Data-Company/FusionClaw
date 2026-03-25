@@ -181,7 +181,7 @@ export default function SettingsPage() {
           <Settings className="w-5 h-5 text-accent" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-text-primary" style={{ fontFamily: "var(--font-display)" }}>Settings</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-text-primary" style={{ fontFamily: "var(--font-display)" }}>Settings</h1>
           <p className="text-sm text-text-muted">Configure AI models, image generation, and preferences</p>
         </div>
       </div>
@@ -189,7 +189,7 @@ export default function SettingsPage() {
       {/* Service Status */}
       <div>
         <h2 className="text-xs font-medium uppercase tracking-wider text-text-muted mb-3">Service Status</h2>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {[
             { label: "OpenRouter", desc: "AI Generation", connected: true },
             { label: "fal.ai", desc: "Image Generation", connected: true },
@@ -223,7 +223,7 @@ export default function SettingsPage() {
         <p className="text-[11px] text-text-disabled mb-4">
           Connect data providers to enrich your leads with real B2B data. Keys are encrypted with AES-256-GCM and never exposed.
         </p>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {PROVIDERS.map((config) => (
             <ProviderCard
               key={config.id}
@@ -439,31 +439,31 @@ export default function SettingsPage() {
           <h2 className="text-sm font-bold text-text-primary">Data Management</h2>
         </div>
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
             <div>
               <p className="text-sm text-text-primary font-medium">Export Settings</p>
               <p className="text-[10px] text-text-muted mt-0.5">Download current settings as JSON</p>
             </div>
-            <button className="px-4 py-2 rounded-lg border border-border text-xs font-medium text-text-primary hover:bg-elevated transition-colors flex items-center gap-2 cursor-pointer">
+            <button className="px-4 py-2 rounded-lg border border-border text-xs font-medium text-text-primary hover:bg-elevated transition-colors flex items-center gap-2 cursor-pointer shrink-0 w-fit">
               <Download className="w-3.5 h-3.5" /> Export
             </button>
           </div>
 
           <div className="border-t border-border" />
 
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
             <div>
               <p className="text-sm text-text-primary font-medium">Clear Chat History</p>
               <p className="text-[10px] text-text-muted mt-0.5">Delete all chat messages. Projects and content preserved.</p>
             </div>
-            <button className="px-4 py-2 rounded-lg border border-error/20 text-xs font-medium text-error hover:bg-error/10 transition-colors flex items-center gap-2 cursor-pointer">
+            <button className="px-4 py-2 rounded-lg border border-error/20 text-xs font-medium text-error hover:bg-error/10 transition-colors flex items-center gap-2 cursor-pointer shrink-0 w-fit">
               <Trash2 className="w-3.5 h-3.5" /> Clear
             </button>
           </div>
 
           <div className="border-t border-border" />
 
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
             <div>
               <p className="text-sm text-text-primary font-medium flex items-center gap-2">
                 Delete All Data
@@ -471,7 +471,7 @@ export default function SettingsPage() {
               </p>
               <p className="text-[10px] text-text-muted mt-0.5">Permanently delete all projects, content, and images. Cannot be undone.</p>
             </div>
-            <button className="px-4 py-2 rounded-lg border border-error/20 text-xs font-medium text-error hover:bg-error/10 transition-colors flex items-center gap-2 cursor-pointer">
+            <button className="px-4 py-2 rounded-lg border border-error/20 text-xs font-medium text-error hover:bg-error/10 transition-colors flex items-center gap-2 cursor-pointer shrink-0 w-fit">
               <Trash2 className="w-3.5 h-3.5" /> Delete All
             </button>
           </div>

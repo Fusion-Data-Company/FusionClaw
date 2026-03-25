@@ -99,10 +99,10 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-extrabold text-text-primary" style={{ fontFamily: "var(--font-display)" }}>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-text-primary" style={{ fontFamily: "var(--font-display)" }}>
           Command Center
         </h1>
         <p className="text-sm text-text-muted mt-1">
@@ -112,7 +112,7 @@ export default function DashboardPage() {
 
       {/* Key Metrics */}
       <motion.div
-        className="grid grid-cols-2 md:grid-cols-4 gap-4"
+        className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4"
         initial="hidden"
         animate="visible"
         variants={{ visible: { transition: { staggerChildren: 0.08 } } }}
@@ -152,7 +152,7 @@ export default function DashboardPage() {
       {/* Quick Actions */}
       <div>
         <h2 className="text-sm font-bold text-text-primary uppercase tracking-wider mb-3">Quick Actions</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
           {QUICK_ACTIONS.map((action) => (
             <Link key={action.label} href={action.href}>
               <SpotlightCard className="p-3 cursor-pointer group hover:border-accent/30 transition-all text-center">
@@ -173,7 +173,7 @@ export default function DashboardPage() {
       {/* Tool Connections & Status */}
       <div>
         <h2 className="text-sm font-bold text-text-primary uppercase tracking-wider mb-3">Connected Tools & Services</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
           {TOOLS.map((tool) => {
             const StatusIcon = STATUS_ICON[tool.status];
             return (

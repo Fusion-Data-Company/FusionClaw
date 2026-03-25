@@ -320,7 +320,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Main Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="h-16 flex items-center justify-between px-6 shrink-0 bg-bg border-b border-border">
+        <header className="h-16 flex items-center justify-between px-3 sm:px-6 shrink-0 bg-bg border-b border-border">
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -331,7 +331,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </button>
 
           {/* Search */}
-          <div className="flex items-center gap-3 flex-1 max-w-md">
+          <div className="hidden sm:flex items-center gap-3 flex-1 max-w-md">
             <div className="relative flex-1">
               <input
                 type="text"
@@ -344,10 +344,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
             </div>
           </div>
+          {/* Mobile spacer when search is hidden */}
+          <div className="flex-1 sm:hidden" />
 
           {/* Right actions */}
-          <div className="flex items-center gap-4">
-            <InternalClock />
+          <div className="flex items-center gap-2 sm:gap-4">
+            <div className="hidden sm:block">
+              <InternalClock />
+            </div>
 
             {/* Notification bell */}
             <button
@@ -372,7 +376,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
         {/* Page Content */}
         <div className="flex-1 flex min-h-0 min-w-0">
-          <main className="flex-1 p-6 overflow-y-auto">{children}</main>
+          <main className="flex-1 p-3 sm:p-6 overflow-y-auto">{children}</main>
           <RightSidebar />
         </div>
       </div>
