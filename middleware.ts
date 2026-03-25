@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
 // Paths that don't require authentication
-const PUBLIC_PATHS = ["/", "/login", "/api/auth/login", "/api/auth/logout"];
+const PUBLIC_PATHS = ["/", "/login", "/api/auth/login", "/api/auth/logout", "/api/google/callback"];
 
 // Static asset patterns to skip
 const STATIC_PATTERNS = [

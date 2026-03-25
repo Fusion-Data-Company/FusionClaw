@@ -655,3 +655,23 @@ export const invoicesRelations = relations(invoices, ({ one }) => ({
 export const expensesRelations = relations(expenses, ({ one }) => ({
   createdByUser: one(users, { fields: [expenses.createdBy], references: [users.id] }),
 }));
+
+// ─── Google Integrations ──────────────────────────────────────────────────
+
+export const googleIntegrations = pgTable("google_integrations", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  accessToken: text("access_token").notNull(),
+  refreshToken: text("refresh_token"),
+  scopes: jsonb("scopes").$type<string[]>().default([]),
+  googleEmail: varchar("google_email", { length: 255 }),
+  expiresAt: timestamp("expires_at"),
+  connectedAt: timestamp("connected_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_google_integrations_user").on(table.userId),
+]);
+
+export const googleIntegrationsRelations = relations(googleIntegrations, ({ one }) => ({
+  user: one(users, { fields: [googleIntegrations.userId], references: [users.id] }),
+}));

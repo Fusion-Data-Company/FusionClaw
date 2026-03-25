@@ -15,6 +15,7 @@ import {
   Bell,
   Shield,
 } from "lucide-react";
+import { GoogleConnectCard } from "@/components/google/google-connect-card";
 
 const AI_MODELS = [
   { value: "perplexity/sonar", label: "Perplexity Sonar", provider: "Perplexity", tier: "mid" },
@@ -171,6 +172,9 @@ export default function SettingsPage() {
           ))}
         </div>
       </div>
+
+      {/* Google Workspace Integration */}
+      <GoogleConnectCard />
 
       {/* AI Configuration */}
       <GlassCard padding="lg">
