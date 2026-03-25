@@ -14,6 +14,7 @@ import {
   AlertTriangle,
   Bell,
   Shield,
+  KeyRound,
 } from "lucide-react";
 import { GoogleConnectCard } from "@/components/google/google-connect-card";
 import { ProviderCard, PROVIDERS, type VaultEntry } from "@/components/vault/provider-card";
@@ -217,11 +218,14 @@ export default function SettingsPage() {
       {/* Google Workspace Integration */}
       <GoogleConnectCard />
 
-      {/* Enrichment Providers — API Key Vault */}
+      {/* API Keys & Integrations */}
       <div>
-        <h2 className="text-xs font-medium uppercase tracking-wider text-text-muted mb-3">Enrichment Providers</h2>
+        <div className="flex items-center gap-2 mb-3">
+          <KeyRound className="w-4 h-4 text-accent" />
+          <h2 className="text-xs font-medium uppercase tracking-wider text-text-muted">API Keys & Integrations</h2>
+        </div>
         <p className="text-[11px] text-text-disabled mb-4">
-          Connect data providers to enrich your leads with real B2B data. Keys are encrypted with AES-256-GCM and never exposed.
+          Connect services to power your workflows. Sign up through our links to support FusionClaw. Keys are encrypted with AES-256-GCM and never exposed.
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {PROVIDERS.map((config) => (

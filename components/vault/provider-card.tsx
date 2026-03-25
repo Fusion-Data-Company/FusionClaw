@@ -4,8 +4,10 @@ import { useState } from "react";
 import {
   CheckCircle, XCircle, Loader2, Trash2, Eye, EyeOff,
   RefreshCw, AlertTriangle, ExternalLink,
+  Send, Search, Bot, Flame, Mail, User, Database, Brain, Image as ImageIcon,
 } from "lucide-react";
 import { toast } from "sonner";
+import type { LucideIcon } from "lucide-react";
 
 export interface VaultEntry {
   id: string;
@@ -23,8 +25,12 @@ export interface ProviderConfig {
   name: string;
   description: string;
   icon: string;
+  lucideIcon?: LucideIcon;
   color: string;
   docsUrl: string;
+  signupUrl: string;
+  affiliateUrl?: string;
+  affiliateCommission?: string;
   keyPlaceholder: string;
   hasSecret?: boolean;
   secretPlaceholder?: string;
@@ -33,64 +39,121 @@ export interface ProviderConfig {
 
 export const PROVIDERS: ProviderConfig[] = [
   {
+    id: "upload_post",
+    name: "Upload-Post",
+    description: "Post to TikTok, Instagram, YouTube, LinkedIn, Facebook, X, Threads, Pinterest, Reddit, Bluesky from one API",
+    icon: "UP",
+    lucideIcon: Send,
+    color: "text-violet-400 bg-violet-500/10",
+    docsUrl: "https://upload-post.com/docs",
+    signupUrl: "https://upload-post.com/?ref=fusionclaw",
+    affiliateUrl: "https://www.upload-post.com/affiliates/",
+    affiliateCommission: "50% recurring",
+    keyPlaceholder: "Enter your Upload-Post API key",
+    scopes: ["publish", "schedule"],
+  },
+  {
     id: "apollo",
     name: "Apollo.io",
-    description: "B2B enrichment — email, phone, title, company size, tech stack",
+    description: "B2B lead database with 275M+ contacts for sales intelligence",
     icon: "A",
+    lucideIcon: Search,
     color: "text-blue-400 bg-blue-500/10",
     docsUrl: "https://docs.apollo.io/reference/people-enrichment",
+    signupUrl: "https://www.apollo.io/?ref=fusionclaw",
+    affiliateCommission: "15-20% commission",
     keyPlaceholder: "Enter your Apollo API key",
     scopes: ["people_enrichment", "org_enrichment"],
   },
   {
     id: "apify",
     name: "Apify",
-    description: "Web scraping actors — Google Maps, LinkedIn, any website",
+    description: "Web scraping and automation platform with 3,000+ ready-made scrapers",
     icon: "Ap",
+    lucideIcon: Bot,
     color: "text-green-400 bg-green-500/10",
     docsUrl: "https://docs.apify.com/api/v2",
+    signupUrl: "https://apify.com/?ref=fusionclaw",
+    affiliateUrl: "https://apify.com/partners/affiliate",
+    affiliateCommission: "20-30% (up to $2,500/customer)",
     keyPlaceholder: "Enter your Apify API token",
     scopes: ["actors", "datasets"],
   },
   {
     id: "firecrawl",
     name: "Firecrawl",
-    description: "AI web extraction — scrape company sites for contacts and data",
+    description: "Turn websites into clean markdown for AI. Scrape, crawl, extract.",
     icon: "F",
+    lucideIcon: Flame,
     color: "text-orange-400 bg-orange-500/10",
     docsUrl: "https://docs.firecrawl.dev",
+    signupUrl: "https://www.firecrawl.dev/?ref=fusionclaw",
+    affiliateCommission: "10-50% commission",
     keyPlaceholder: "Enter your Firecrawl API key",
     scopes: ["scrape", "crawl"],
   },
   {
     id: "hunter",
     name: "Hunter.io",
-    description: "Email finder + verifier — find business emails from domains",
+    description: "Find and verify professional email addresses at scale",
     icon: "H",
+    lucideIcon: Mail,
     color: "text-amber-400 bg-amber-500/10",
     docsUrl: "https://hunter.io/api-documentation",
+    signupUrl: "https://hunter.io/?ref=fusionclaw",
+    affiliateCommission: "30% recurring for 12 months",
     keyPlaceholder: "Enter your Hunter.io API key",
     scopes: ["domain_search", "email_verifier"],
   },
   {
     id: "proxycurl",
     name: "Proxycurl",
-    description: "LinkedIn data — profile info, company pages, job history",
+    description: "LinkedIn profile and company data API for enrichment",
     icon: "P",
+    lucideIcon: User,
     color: "text-cyan-400 bg-cyan-500/10",
     docsUrl: "https://nubela.co/proxycurl/docs",
+    signupUrl: "https://nubela.co/proxycurl/?ref=fusionclaw",
+    affiliateCommission: "10% for 2 years",
     keyPlaceholder: "Enter your Proxycurl API key",
     scopes: ["person_profile", "company_profile"],
   },
   {
-    id: "abstract",
-    name: "Abstract API",
-    description: "Validation — verify emails and phone numbers are real",
-    icon: "Ab",
+    id: "neon",
+    name: "Neon",
+    description: "Serverless PostgreSQL with branching, autoscaling, and bottomless storage",
+    icon: "N",
+    lucideIcon: Database,
+    color: "text-emerald-400 bg-emerald-500/10",
+    docsUrl: "https://neon.tech/docs",
+    signupUrl: "https://neon.tech/?ref=fusionclaw",
+    affiliateCommission: "$10 per referral",
+    keyPlaceholder: "Enter your Neon connection string",
+    scopes: ["database"],
+  },
+  {
+    id: "openrouter",
+    name: "OpenRouter",
+    description: "Unified API for 200+ AI models including Claude, GPT-4, Gemini, Llama",
+    icon: "OR",
+    lucideIcon: Brain,
     color: "text-purple-400 bg-purple-500/10",
-    docsUrl: "https://www.abstractapi.com/api/email-verification-validation-api",
-    keyPlaceholder: "Enter your Abstract API key",
-    scopes: ["email_validation", "phone_validation"],
+    docsUrl: "https://openrouter.ai/docs",
+    signupUrl: "https://openrouter.ai/",
+    keyPlaceholder: "Enter your OpenRouter API key",
+    scopes: ["chat", "completions"],
+  },
+  {
+    id: "fal",
+    name: "fal.ai",
+    description: "Fast inference for image generation models (Flux, Stable Diffusion)",
+    icon: "fal",
+    lucideIcon: ImageIcon,
+    color: "text-pink-400 bg-pink-500/10",
+    docsUrl: "https://fal.ai/docs",
+    signupUrl: "https://fal.ai/",
+    keyPlaceholder: "Enter your fal.ai API key",
+    scopes: ["inference"],
   },
 ];
 
@@ -110,6 +173,7 @@ export function ProviderCard({ config, entry, onSave, onDelete, onTest }: Provid
   const [editing, setEditing] = useState(false);
 
   const isConnected = entry && entry.status === "active";
+  const IconComponent = config.lucideIcon;
 
   const handleSave = async () => {
     if (!keyInput.trim()) return;
@@ -160,7 +224,7 @@ export function ProviderCard({ config, entry, onSave, onDelete, onTest }: Provid
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
           <div className={`flex h-9 w-9 items-center justify-center rounded-lg text-xs font-bold ${config.color}`}>
-            {config.icon}
+            {IconComponent ? <IconComponent className="w-4 h-4" /> : config.icon}
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -183,6 +247,25 @@ export function ProviderCard({ config, entry, onSave, onDelete, onTest }: Provid
         ) : (
           <span className="flex items-center gap-1 text-[10px] text-text-disabled">
             <XCircle className="w-3 h-3" /> Not connected
+          </span>
+        )}
+      </div>
+
+      {/* Affiliate badge + Get API Key button */}
+      <div className="flex items-center gap-2 mb-3">
+        <a
+          href={config.signupUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-500/30 bg-cyan-500/5 px-3 py-1.5 text-[11px] font-semibold text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-500/50 transition-all"
+        >
+          <ExternalLink className="w-3 h-3" />
+          Get API Key
+        </a>
+        {config.affiliateCommission && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
+            <CheckCircle className="w-2.5 h-2.5" />
+            {config.affiliateCommission}
           </span>
         )}
       </div>
@@ -213,7 +296,7 @@ export function ProviderCard({ config, entry, onSave, onDelete, onTest }: Provid
         </div>
       ) : (
         /* Not connected or editing */
-        <div className="space-y-2 mt-2">
+        <div className="space-y-2">
           <div className="relative">
             <input
               type={showKey ? "text" : "password"}
@@ -236,7 +319,7 @@ export function ProviderCard({ config, entry, onSave, onDelete, onTest }: Provid
               className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-cyan-500 px-3 py-2 text-xs font-semibold text-black hover:bg-cyan-400 transition-colors disabled:opacity-50"
             >
               {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
-              {saving ? "Encrypting..." : entry ? "Update Key" : "Connect"}
+              {saving ? "Encrypting..." : entry ? "Update Key" : "Save Key"}
             </button>
             {editing && (
               <button
