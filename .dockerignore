@@ -1,0 +1,8 @@
+node_modules
+.next
+.env.local
+.env*.local
+mcp-server/node_modules
+mcp-server/.next
+test-results
+.git

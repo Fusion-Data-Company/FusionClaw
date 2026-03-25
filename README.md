@@ -11,8 +11,10 @@ Run your entire business from one dark-mode dashboard — CRM, operations, conte
 [![Tailwind](https://img.shields.io/badge/Tailwind-v4-06B6D4?logo=tailwindcss)](https://tailwindcss.com)
 [![Drizzle](https://img.shields.io/badge/Drizzle-ORM-C5F74F?logo=drizzle)](https://orm.drizzle.team)
 [![License](https://img.shields.io/badge/License-BSL_1.1-blue)](LICENSE)
+[![CI](https://github.com/Fusion-Data-Company/FusionClaw/actions/workflows/ci.yml/badge.svg)](https://github.com/Fusion-Data-Company/FusionClaw/actions/workflows/ci.yml)
+[![GitHub stars](https://img.shields.io/github/stars/Fusion-Data-Company/FusionClaw?style=social)](https://github.com/Fusion-Data-Company/FusionClaw)
 
-[Setup Guide](docs/setup-guide.md) | [Architecture](docs/architecture.md) | [Contributing](CONTRIBUTING.md) | [Changelog](CHANGELOG.md)
+[Live Demo](https://fusionclaw.vercel.app) | [Vision](VISION.md) | [Setup Guide](docs/setup-guide.md) | [Architecture](docs/architecture.md) | [Contributing](CONTRIBUTING.md)
 
 </div>
 
@@ -135,15 +137,49 @@ docs/                Setup guide, architecture, MCP reference
 
 | Document | Description |
 |----------|-------------|
+| [Vision](VISION.md) | Why FusionClaw exists and where it's going |
 | [Setup Guide](docs/setup-guide.md) | Installation, configuration, deployment |
 | [Architecture](docs/architecture.md) | System design, data flow, schema overview |
+| [MCP Tools Reference](docs/mcp-tools.md) | Complete list of 234 agent tools |
 | [Contributing](CONTRIBUTING.md) | How to contribute, code style, PR process |
 | [Changelog](CHANGELOG.md) | Version history and release notes |
 | [Security](SECURITY.md) | Vulnerability reporting policy |
 
+## Self-Hosting
+
+```bash
+# Clone and configure
+git clone https://github.com/Fusion-Data-Company/FusionClaw.git
+cd FusionClaw
+cp .env.example .env.local    # edit with your keys
+npm install
+npx drizzle-kit push           # create database tables
+npm run dev                    # http://localhost:3000
+```
+
+See [.env.example](.env.example) for all required environment variables.
+
+## Star History
+
+<a href="https://star-history.com/#Fusion-Data-Company/FusionClaw&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Fusion-Data-Company/FusionClaw&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Fusion-Data-Company/FusionClaw&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Fusion-Data-Company/FusionClaw&type=Date" />
+ </picture>
+</a>
+
 ## Contributing
 
 We welcome contributions. Please read our [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md) before submitting a PR.
+
+Looking for a place to start? Check out issues labeled [`good first issue`](https://github.com/Fusion-Data-Company/FusionClaw/labels/good%20first%20issue).
+
+## Contributors
+
+<a href="https://github.com/Fusion-Data-Company/FusionClaw/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=Fusion-Data-Company/FusionClaw" />
+</a>
 
 ## License
 
@@ -154,5 +190,7 @@ We welcome contributions. Please read our [Contributing Guide](CONTRIBUTING.md) 
 <div align="center">
 
 Built by [Fusion Data Company](https://fusiondataco.com)
+
+If this is useful, give it a star. It helps more than you think.
 
 </div>
