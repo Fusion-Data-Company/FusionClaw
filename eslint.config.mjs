@@ -15,7 +15,9 @@ const eslintConfig = defineConfig([
   ]),
   {
     rules: {
-      // Downgrade to warning — typed 'any' is acceptable in this codebase
+      // Downgrade to warning — any is acceptable for third-party API payloads,
+      // dynamic DB query results, and legacy ported code. Explicit types are
+      // preferred; suppress this locally with eslint-disable when truly necessary.
       "@typescript-eslint/no-explicit-any": "warn",
       // React Hooks Compiler rules — downgrade to warning (best-practice hints, not hard bugs)
       "react-hooks/set-state-in-effect": "warn",
