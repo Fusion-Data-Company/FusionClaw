@@ -9,6 +9,7 @@ import { BackgroundDecoration } from "@/components/ui/BackgroundDecoration";
 import { HealthFooter } from "@/components/ui/HealthFooter";
 import { CommandPalette } from "@/components/ui/CommandPalette";
 import { NotificationBell } from "@/components/ui/NotificationBell";
+import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
 import {
   CommandIcon, ContactsIcon, FinanceIcon, MarketingIcon, AgentIcon, SystemIcon,
 } from "@/components/ui/SectionIcons";
@@ -48,6 +49,7 @@ import {
   Calendar,
   Store,
   Mic,
+  Network,
 } from "lucide-react";
 
 interface NavItem {
@@ -132,6 +134,7 @@ const NAV_SECTIONS: NavSection[] = [
       { name: "Workflows", href: "/workflows", icon: WorkflowIcon, iconColor: "text-violet-400", iconBg: "bg-violet-500/20", glowColor: "rgba(167,139,250,0.3)" },
       { name: "Activity Stream", href: "/activity", icon: Activity, iconColor: "text-rose-400", iconBg: "bg-rose-500/20", glowColor: "rgba(244,63,94,0.25)" },
       { name: "Webhooks", href: "/webhooks", icon: Webhook, iconColor: "text-cyan-400", iconBg: "bg-cyan-500/20", glowColor: "rgba(34,211,238,0.25)" },
+      { name: "Wiki Brain", href: "/wiki", icon: Network, iconColor: "text-purple-400", iconBg: "bg-purple-500/20", glowColor: "rgba(167,139,250,0.3)" },
     ],
   },
   {
@@ -237,6 +240,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen bg-bg">
       <BackgroundDecoration />
       <CommandPalette />
+      <OnboardingFlow />
       {/* Mobile Menu Backdrop */}
       {mobileMenuOpen && (
         <div

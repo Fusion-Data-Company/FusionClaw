@@ -64,6 +64,8 @@ interface SettingsState {
   autoGenerateInfographic: boolean;
   emailNotifications: boolean;
   slackNotifications: boolean;
+  tipsEnabled: boolean;
+  onboardingEnabled: boolean;
 }
 
 export default function SettingsPage() {
@@ -79,6 +81,8 @@ export default function SettingsPage() {
     autoGenerateInfographic: true,
     emailNotifications: true,
     slackNotifications: false,
+    tipsEnabled: true,
+    onboardingEnabled: true,
   });
 
   const [saving, setSaving] = useState(false);
@@ -136,6 +140,8 @@ export default function SettingsPage() {
             chatTemperature: parseFloat(data.chatTemperature) || prev.chatTemperature,
             chatMaxTokens: data.chatMaxTokens || prev.chatMaxTokens,
             defaultImageModel: data.defaultImageModel || prev.defaultImageModel,
+            tipsEnabled: data.tipsEnabled !== false,
+            onboardingEnabled: data.onboardingEnabled !== false,
           }));
         }
         setLoaded(true);
@@ -155,6 +161,8 @@ export default function SettingsPage() {
         if ("chatTemperature" in partial) dbFields.chatTemperature = String(partial.chatTemperature);
         if ("chatMaxTokens" in partial) dbFields.chatMaxTokens = partial.chatMaxTokens;
         if ("defaultImageModel" in partial) dbFields.defaultImageModel = partial.defaultImageModel;
+        if ("tipsEnabled" in partial) dbFields.tipsEnabled = partial.tipsEnabled;
+        if ("onboardingEnabled" in partial) dbFields.onboardingEnabled = partial.onboardingEnabled;
         if (Object.keys(dbFields).length > 0) {
           await fetch("/api/settings", {
             method: "PATCH",
@@ -433,6 +441,34 @@ export default function SettingsPage() {
             checked={settings.slackNotifications}
             onChange={(v) => update({ slackNotifications: v })}
           />
+        </div>
+      </GlassCard>
+
+      {/* Onboarding & Tips */}
+      <GlassCard padding="lg">
+        <div className="flex items-center gap-2 mb-4">
+          <Bell className="w-4 h-4 text-blue-400" />
+          <h2 className="text-sm font-bold text-text-primary">Onboarding & Tips</h2>
+        </div>
+        <div className="space-y-3">
+          <ToggleRow
+            label="Show tips"
+            description="Contextual hint cards appear on pages to teach the platform. Turn off for a cleaner workspace."
+            checked={settings.tipsEnabled}
+            onChange={(v) => update({ tipsEnabled: v })}
+          />
+          <ToggleRow
+            label="Show onboarding flow"
+            description="The first-run welcome modal that introduces Wiki Brain, Skills, and the Binding Interview."
+            checked={settings.onboardingEnabled}
+            onChange={(v) => update({ onboardingEnabled: v })}
+          />
+          <a
+            href="/onboarding/interview"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-cyan-300 hover:text-cyan-200 mt-2"
+          >
+            Run the Binding Interview again →
+          </a>
         </div>
       </GlassCard>
 

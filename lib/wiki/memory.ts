@@ -175,7 +175,7 @@ export async function writeToWiki(opts: {
 /**
  * Recompute the wiki_links edges for a page based on its [[backlinks]].
  */
-async function syncWikilinks(pageId: string, content: string): Promise<void> {
+export async function syncWikilinks(pageId: string, content: string): Promise<void> {
   await db.delete(wikiLinks).where(eq(wikiLinks.fromPageId, pageId));
   const targetSlugs = extractWikilinks(content);
   if (targetSlugs.length === 0) return;

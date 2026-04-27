@@ -17,7 +17,12 @@ import {
   Loader2,
   Link2,
   Trash2,
+  Upload,
+  ScrollText,
+  CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
+import Link from "next/link";
 import { GlassCard } from "@/components/primitives";
 
 // react-force-graph is canvas-based — must be SSR-disabled.
@@ -597,8 +602,11 @@ export default function WikiPage() {
         </GlassCard>
       </div>
 
+      {/* RAW drop zone + Query bar */}
+      <RawDropZone onIngested={fetchAll} />
+
       {/* Mode toggle */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <button
           onClick={() => setMode("wiki")}
           className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 ${
@@ -618,6 +626,22 @@ export default function WikiPage() {
           }`}
         >
           <Network className="w-3.5 h-3.5" /> Graph View
+        </button>
+        <Link
+          href="/wiki/log"
+          className="px-3 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 bg-white/[0.03] text-text-muted border border-white/10 hover:bg-white/[0.05]"
+        >
+          <ScrollText className="w-3.5 h-3.5" /> Log
+        </Link>
+        <button
+          onClick={async () => {
+            const res = await fetch("/api/wiki/lint", { method: "POST" });
+            const data = await res.json();
+            alert(`Lint complete: ${data.orphans?.length ?? 0} orphans, ${data.broken?.length ?? 0} broken links, ${data.stale?.length ?? 0} stale.`);
+          }}
+          className="px-3 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 bg-white/[0.03] text-text-muted border border-white/10 hover:bg-white/[0.05]"
+        >
+          <AlertCircle className="w-3.5 h-3.5" /> Lint
         </button>
       </div>
 
@@ -862,3 +886,93 @@ function NewPageModal({
     </div>
   );
 }
+
+
+// ─── RAW Drop Zone ──────────────────────────────────────────────────────────
+
+function RawDropZone({ onIngested }: { onIngested: () => void }) {
+  const [dragOver, setDragOver] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [recent, setRecent] = useState<Array<{ filename: string; status: string; kind: string; warnings?: string[] }>>([]);
+
+  async function uploadFiles(files: File[]) {
+    if (files.length === 0) return;
+    setUploading(true);
+    try {
+      const form = new FormData();
+      for (const f of files) form.append('file', f);
+      const res = await fetch('/api/wiki/ingest', { method: 'POST', body: form });
+      const data = await res.json();
+      const records = data.records ?? [];
+      setRecent((prev) => [...records.slice(0, 8), ...prev].slice(0, 8));
+      // Trigger processing for the newly ingested rows so they become wiki pages immediately.
+      try {
+        await fetch('/api/wiki/process', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ max: 20 }) });
+      } catch { /* non-fatal */ }
+      onIngested();
+    } catch (err) {
+      setRecent((prev) => [{ filename: '(upload failed)', status: 'failed', kind: 'binary', warnings: [(err as Error).message] }, ...prev].slice(0, 8));
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <GlassCard padding="none" className="overflow-hidden">
+      <div
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragOver(false);
+          const files = Array.from(e.dataTransfer.files ?? []);
+          if (files.length > 0) uploadFiles(files);
+        }}
+        className={`relative px-4 py-4 transition-all ${dragOver ? 'bg-blue-500/5 border-blue-500/40' : ''}`}
+        style={{ borderBottom: recent.length > 0 ? '1px solid rgba(255,255,255,0.05)' : undefined }}
+      >
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${dragOver ? 'bg-blue-500/20' : 'bg-blue-500/10'}`}>
+              {uploading ? <Loader2 className="w-4 h-4 text-blue-300 animate-spin" /> : <Upload className="w-4 h-4 text-blue-300" />}
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs font-bold text-text-primary">RAW — drop ANY file to ingest into Wiki Brain</div>
+              <div className="text-[10px] text-text-muted">md / pdf / docx / txt / json / csv / code / images / audio / video / archives / spreadsheets — agent processes after upload</div>
+            </div>
+          </div>
+          <label className="px-3 py-1.5 rounded-lg bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5">
+            <Upload className="w-3.5 h-3.5" /> Browse files
+            <input
+              type="file"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                const files = Array.from(e.target.files ?? []);
+                e.target.value = '';
+                uploadFiles(files);
+              }}
+            />
+          </label>
+        </div>
+      </div>
+      {recent.length > 0 && (
+        <div className="px-4 py-2 max-h-32 overflow-y-auto">
+          {recent.map((r, i) => (
+            <div key={i} className="flex items-center gap-2 text-[10px] py-0.5">
+              {r.status === 'failed'
+                ? <AlertCircle className="w-3 h-3 text-red-400 shrink-0" />
+                : <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />}
+              <span className="font-mono text-text-secondary truncate">{r.filename}</span>
+              <span className="text-text-muted">·</span>
+              <span className="text-text-muted">{r.kind}</span>
+              <span className="text-text-muted">·</span>
+              <span className={r.status === 'failed' ? 'text-red-400' : r.status === 'skipped' ? 'text-yellow-400' : 'text-emerald-400'}>{r.status}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </GlassCard>
+  );
+}
+

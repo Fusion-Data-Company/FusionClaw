@@ -10,6 +10,7 @@ import {
   ListTodo, Send, Calendar, Image, ArrowRight, AlertTriangle,
 } from "lucide-react";
 import Link from "next/link";
+import { HintCard } from "@/components/onboarding/HintCard";
 
 interface ToolConnection {
   key: string;
@@ -114,6 +115,15 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6 sm:space-y-8">
+      <HintCard
+        id="dashboard-wiki-brain"
+        title="Wiki Brain is your agent's memory"
+        body="Drop ANY file (markdown, PDF, DOCX, code, images) into the RAW zone on Wiki Brain and the ingest agent turns it into linked wiki pages. The graph view shows how everything connects."
+        cta={{ label: "Open Wiki Brain", href: "/wiki" }}
+        icon="sparkles"
+        accent="purple"
+        position="fixed-br"
+      />
       {/* Header */}
       <div>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-text-primary" style={{ fontFamily: "var(--font-display)" }}>

@@ -2,6 +2,51 @@
 
 All notable changes to FusionClaw are documented here.
 
+## [1.1.0] - 2026-04-27 — Wiki Brain crown jewel
+
+The wiki becomes the agent's only brain. Every doc, decision, file, and
+conversation can land in the wiki and feed the agent. The architecture follows
+Karpathy's LLM Wiki pattern: raw sources → ingest agent → wiki pages + log.
+
+### Added — Wiki Brain (Phase 1.1, the crown jewel)
+
+- **Bulletproof multi-format ingest** (`POST /api/wiki/ingest`) — accepts ANY file type via multipart upload or JSON. Detects MIME via `file-type` + extension fallback + UTF-8 heuristic. Extracts text from md/txt/code/json/csv/yaml/html/xml directly, PDF via `pdf-parse`, DOCX via `mammoth`. Images, audio, video, archives, spreadsheets, and unknown binaries are stored as-is in Vercel Blob and referenced by URL — they remain in the data tree for the agent to act on later. Idempotent by SHA-256 content hash. Never throws — every file gets a structured result row.
+- **Schema additions**: `raw_sources` (with content hash, blob URL, processing status, meta), `wiki_log` (chronological audit: ingest, query, lint, manual_edit, auto_update, skill_create, platform_modify), `onboarding_state` (per-user progress).
+- **Ingest agent** (`POST /api/wiki/process`) — picks pending raw_sources rows and calls Claude/OpenRouter with the full Karpathy ingest prompt + current wiki index. Decides: new pages, updated pages, or both. Falls back to deterministic mode (filename → page) when no LLM key is configured. Cross-references via `[[wikilinks]]`. Flags contradictions (`> [!contradicts]`) and unclear sources (`> [!unclear]`).
+- **Query route** (`POST /api/wiki/query`) — Postgres full-text retrieval + optional LLM synthesis with citations. Optional `persist:true` writes the Q&A back as a wiki page under `agent-memory/queries`.
+- **Lint route** (`POST /api/wiki/lint`) — orphans, broken wikilinks, stale pages, flagged callouts, duplicate slugs.
+- **Raw sources route** (`GET/DELETE /api/wiki/raw`) — list and prune the ingest queue.
+- **Log route** (`GET /api/wiki/log`) — chronological view of every wiki operation.
+- **Wiki seeder** (`scripts/seed-wiki.ts`) — walks docs/ + CLAUDE.md + README and ingests every markdown file as a wiki page. Auto-extracts wikilinks AND runs a plain-text title-mention pass for initial backlinks. Idempotent (upsert by slug). On first run: **93 pages, 324 edges, 90% confidence.**
+- **`/wiki` UI** — drag-drop RAW upload zone above the file tree (accepts ANY file), Wiki / Graph View / Log / Lint mode toggle, live recent-uploads feed showing kind + status. The graph view visualizes all 93 nodes with force-directed physics.
+- **`/wiki/log` page** — timeline view filtered by event type (ingest, query, lint, manual_edit, auto_update, skill_create, platform_modify).
+
+### Added — Onboarding & hint system
+
+- **OnboardingFlow** (`components/onboarding/OnboardingFlow.tsx`) — first-run welcome modal with 4 steps (Welcome → Wiki Brain → Agent platform-modify → Binding Interview). Style matches contacts pop-out card: GlassCard + status-glow header + shimmer + spotlight. Persists completion via `/api/onboarding`.
+- **HintCard** (`components/onboarding/HintCard.tsx`) — contextual floating tip card (4 accent variants: blue/amber/cyan/purple). Per-id dismiss persistence. Wired to dashboard already.
+- **Binding Interview** (`/onboarding/interview`) — 20 questions across three buckets (Identity 5, Company 8, Working Style 7). Answers auto-write to wiki page slug=`binding-interview` under `/agent-memory` so they become permanent agent context.
+- **Settings toggles** (`/settings`) — new "Onboarding & Tips" section with two toggles (`tipsEnabled`, `onboardingEnabled`), plus a "Run the Binding Interview again" link.
+
+### Added — Agent platform-modify capability
+
+- **`POST /api/agent/platform-modify`** — single ingress for the agent to modify the platform. Supported actions: `create_skill`, `update_skill`, `delete_skill`, `update_settings`, `write_wiki`. Every successful action writes a `wiki_log` entry of type `platform_modify` for full audit trail. Capability discovery via `GET`.
+
+### Schema
+
+- `settings.tipsEnabled` (bool, default true)
+- `settings.onboardingEnabled` (bool, default true)
+- `settings.onboardingComplete` (bool, default false)
+- `settings.bindingInterviewComplete` (bool, default false)
+- new tables: `raw_sources`, `wiki_log`, `onboarding_state`
+- new enums: `raw_source_status`, `wiki_log_type`
+
+### Dependencies
+
+- `pdf-parse` — PDF text extraction
+- `mammoth` — DOCX text extraction
+- `file-type` — MIME sniffing for any-file ingest
+
 ## [1.0.0] - 2026-04-27 — Elite Launch
 
 The OSS-launch release. FusionClaw becomes an agent-native business OS — the

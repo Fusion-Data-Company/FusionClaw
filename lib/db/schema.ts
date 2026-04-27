@@ -418,6 +418,10 @@ export const settings = pgTable("settings", {
   chatModel: varchar("chat_model", { length: 100 }).default("anthropic/claude-sonnet-4"),
   chatMaxTokens: integer("chat_max_tokens").default(4096),
   chatTemperature: decimal("chat_temperature", { precision: 3, scale: 2 }).default("0.70"),
+  tipsEnabled: boolean("tips_enabled").default(true).notNull(),
+  onboardingEnabled: boolean("onboarding_enabled").default(true).notNull(),
+  onboardingComplete: boolean("onboarding_complete").default(false).notNull(),
+  bindingInterviewComplete: boolean("binding_interview_complete").default(false).notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
@@ -791,6 +795,65 @@ export const wikiLinksRelations = relations(wikiLinks, ({ one }) => ({
   from: one(wikiPages, { fields: [wikiLinks.fromPageId], references: [wikiPages.id], relationName: "outgoing" }),
   to: one(wikiPages, { fields: [wikiLinks.toPageId], references: [wikiPages.id], relationName: "incoming" }),
 }));
+
+// ─── Wiki Brain — RAW sources + log (Karpathy LLM Wiki pattern, Phase 1.1) ───
+
+export const rawSourceStatusEnum = pgEnum("raw_source_status", [
+  "pending", "processing", "complete", "failed", "skipped",
+]);
+
+export const rawSources = pgTable("raw_sources", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  filename: varchar("filename", { length: 500 }).notNull(),
+  mimeType: varchar("mime_type", { length: 200 }).notNull(),
+  fileExtension: varchar("file_extension", { length: 20 }),
+  contentHash: varchar("content_hash", { length: 64 }),
+  rawContent: text("raw_content"),
+  blobUrl: varchar("blob_url", { length: 1000 }),
+  sizeBytes: integer("size_bytes"),
+  uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
+  processedAt: timestamp("processed_at"),
+  processingStatus: rawSourceStatusEnum("processing_status").default("pending").notNull(),
+  processingError: text("processing_error"),
+  resultPageIds: jsonb("result_page_ids"),
+  meta: jsonb("meta"),
+}, (table) => [
+  index("idx_raw_sources_status").on(table.processingStatus),
+  index("idx_raw_sources_uploaded").on(table.uploadedAt),
+  index("idx_raw_sources_hash").on(table.contentHash),
+]);
+
+export const wikiLogTypeEnum = pgEnum("wiki_log_type", [
+  "ingest", "query", "lint", "manual_edit", "auto_update", "skill_create", "platform_modify",
+]);
+
+export const wikiLog = pgTable("wiki_log", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  type: wikiLogTypeEnum("type").notNull(),
+  pageId: uuid("page_id").references(() => wikiPages.id, { onDelete: "set null" }),
+  sourceId: uuid("source_id").references(() => rawSources.id, { onDelete: "set null" }),
+  summary: text("summary").notNull(),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_wiki_log_type_created").on(table.type, table.createdAt),
+  index("idx_wiki_log_created").on(table.createdAt),
+]);
+
+// ─── Onboarding state ───────────────────────────────────────────────────────
+
+export const onboardingState = pgTable("onboarding_state", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
+  step: varchar("step", { length: 100 }).notNull(),
+  completedSteps: jsonb("completed_steps").default([]).notNull(),
+  dismissedHints: jsonb("dismissed_hints").default([]).notNull(),
+  interviewAnswers: jsonb("interview_answers"),
+  companyProfile: jsonb("company_profile"),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_onboarding_user").on(table.userId),
+]);
 
 // ─── Notifications ──────────────────────────────────────────────────────────
 
