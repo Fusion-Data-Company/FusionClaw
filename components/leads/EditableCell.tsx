@@ -170,13 +170,15 @@ export default function EditableCell({
   if (type === "multiselect") {
     const arr = Array.isArray(value) ? (value as string[]) : [];
     return (
-      <div ref={containerRef} className="inline-flex" onClick={(e) => e.stopPropagation()}>
-        <div className="flex flex-wrap gap-1 items-center">
-          {children ?? displayValue}
+      <div ref={containerRef} className="block w-full" onClick={(e) => e.stopPropagation()}>
+        {/* Single-line, no flex-wrap — children render in their own fixed grid; the
+            + button is positioned by the children's grid (caller controls placement). */}
+        <div className="flex items-center gap-1 min-w-0 max-w-full whitespace-nowrap">
+          <div className="flex-1 min-w-0">{children ?? displayValue}</div>
           <button
             ref={triggerRef}
             onClick={() => setOpen((o) => !o)}
-            className="w-4 h-4 rounded-sm border border-dashed border-border text-text-muted hover:text-amber-400 hover:border-amber-500/40 transition-colors flex items-center justify-center cursor-pointer"
+            className="w-4 h-4 rounded-sm border border-dashed border-border text-text-muted hover:text-amber-400 hover:border-amber-500/40 transition-colors flex items-center justify-center cursor-pointer shrink-0"
             title="Edit tags"
           >
             <Plus className="w-2.5 h-2.5" />
@@ -292,29 +294,34 @@ export default function EditableCell({
   }
 
   // ── VIEW MODE ─────────────────────────────────────────────────────────
-  // Fixed-height inner row, no margin growth on hover — keeps the table geometry
-  // rock-solid. Hover indicator is a left/right border instead of an outset ring.
+  // CRITICAL: zero-displacement hover indicator. Headers, sub-labels, edit-mode
+  // inputs, and non-editable cells all start at the same X (TD padding-left only).
+  // We use box-shadow inset for hover so it doesn't push content sideways.
   const isRight = align === "right";
   return (
     <div
       onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
       className={cn(
         "group block w-full cursor-pointer rounded transition-colors truncate",
+        isRight ? "text-right" : "",
+        "hover:bg-elevated/40",
+        // Inset box-shadow hover ring (2px on left for L-aligned, right for R-aligned).
+        // Does NOT displace content. View mode, edit mode, header, sub-label all at same X.
         isRight
-          ? "border-r-2 border-transparent hover:border-amber-500/40 hover:bg-elevated/40 pr-1.5 text-right"
-          : "border-l-2 border-transparent hover:border-amber-500/40 hover:bg-elevated/40 pl-1.5",
+          ? "hover:shadow-[inset_-2px_0_0_rgba(251,191,36,0.45)]"
+          : "hover:shadow-[inset_2px_0_0_rgba(251,191,36,0.45)]",
         className,
       )}
       title="Click to edit"
     >
       <span className={cn(
-        "inline-flex items-center gap-1 min-w-0 max-w-full",
-        isRight && "justify-end",
+        "block min-w-0 max-w-full truncate",
+        isRight && "text-right",
       )}>
-        {!isRight && type === "currency" && <DollarSign className="w-3 h-3 text-emerald-400 shrink-0" />}
-        {!isRight && type === "email" && <Mail className="w-3 h-3 text-cyan-400 shrink-0" />}
-        {!isRight && type === "tel" && <Phone className="w-3 h-3 text-emerald-400 shrink-0" />}
-        <span className="truncate">{children ?? displayValue ?? defaultDisplay(value, type)}</span>
+        {/* No icon prefixes — column header carries the icon. This ensures
+            every cell's content starts at exactly TD-padding-left (12px) so
+            primary line, sub-label line, and adjacent columns all align. */}
+        {children ?? displayValue ?? defaultDisplay(value, type)}
       </span>
     </div>
   );

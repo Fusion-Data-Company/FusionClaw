@@ -65,17 +65,17 @@ npm run dev        # http://localhost:3000 — no login required on localhost
 
 **What you should see:** the landing page at `localhost:3000`. Click **Live Demo** → you're routed straight into the app at `/dashboard`. **No signup, no Clerk, no third-party auth.** On localhost you're trusted automatically. When you deploy to Vercel or your own server, you set a single `OWNER_PASSWORD` env var to gate the UI. Agents authenticate with the MCP API key.
 
-> The `onboard` command creates your `.env.local`, pushes the database schema, generates a secure MCP API key, and optionally generates an `OWNER_PASSWORD` for deployed instances. See the [Setup Guide](docs/setup-guide.md) for manual configuration.
+> The `onboard` command creates your `.env.local`, pushes the database schema, generates a secure MCP API key, and optionally generates an `OWNER_PASSWORD` for deployed instances. Full docs at **[docs/](docs/index.md)** — setup, install paths, concepts, MCP reference, modules, security, troubleshooting.
 
 ## Modules
 
-| Module | Pages | Description |
-|--------|-------|-------------|
-| **Command** | Dashboard, Today, Tasks, Employees, Reports | Daily operations hub with shift tracking and accountability |
-| **Finance** | Invoices, Expenses, Financials | Bookkeeping with P&L charts, tax estimates, overdue alerts |
-| **Contacts** | Leads Database, Pipeline | CRM with 37k+ row virtual table and kanban pipeline |
-| **Marketing** | Campaigns, AI Queue, Studio, Gallery, Publishing | Content creation and distribution pipeline |
-| **System** | Knowledge Base, Chat, Agents, Cron Jobs, Branding, Settings | AI assistant, automation, and platform configuration |
+| Module        | Pages                                                       | Description                                                 |
+| ------------- | ----------------------------------------------------------- | ----------------------------------------------------------- |
+| **Command**   | Dashboard, Today, Tasks, Employees, Reports                 | Daily operations hub with shift tracking and accountability |
+| **Finance**   | Invoices, Expenses, Financials                              | Bookkeeping with P&L charts, tax estimates, overdue alerts  |
+| **Contacts**  | Leads Database, Pipeline                                    | CRM with 37k+ row virtual table and kanban pipeline         |
+| **Marketing** | Campaigns, AI Queue, Studio, Gallery, Publishing            | Content creation and distribution pipeline                  |
+| **System**    | Knowledge Base, Chat, Agents, Cron Jobs, Branding, Settings | AI assistant, automation, and platform configuration        |
 
 ## MCP Server — 234 Tools
 
@@ -94,31 +94,31 @@ The built-in MCP server gives AI agents complete programmatic access to your bus
 }
 ```
 
-| Category | Tools | Examples |
-|----------|-------|---------|
-| CRUD | 208 | `leads_list`, `invoices_create`, `tasks_update`, `expenses_delete` |
-| Query | 4 | `query_custom`, `query_aggregate`, `query_raw_sql` |
-| Analytics | 7 | `dashboard_metrics`, `pipeline_summary`, `revenue_forecast` |
-| AI | 5 | `chat_send`, `image_generate`, `content_humanize` |
-| System | 10 | `settings_get`, `cron_trigger`, `health_check` |
+| Category  | Tools | Examples                                                          |
+| --------- | ----- | ----------------------------------------------------------------- |
+| CRUD      | 208   | `leads_list`, `invoices_create`, `tasks_update`, `expenses_delete` |
+| Query     | 4     | `query_custom`, `query_aggregate`, `query_raw_sql`                |
+| Analytics | 7     | `dashboard_metrics`, `pipeline_summary`, `revenue_forecast`       |
+| AI        | 5     | `chat_send`, `image_generate`, `content_humanize`                 |
+| System    | 10    | `settings_get`, `cron_trigger`, `health_check`                    |
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Framework | Next.js 16 (App Router, Turbopack) |
-| Database | Neon PostgreSQL + Drizzle ORM |
-| Styling | Tailwind CSS v4 (dark mode only) |
-| Components | Radix UI, Framer Motion |
-| Tables | TanStack Table v8 + TanStack Virtual |
-| Drag & Drop | @hello-pangea/dnd |
-| Charts | Recharts |
-| AI Text | OpenRouter API (streaming SSE) |
-| AI Images | fal.ai (Flux, Nano Banana) |
-| Storage | Vercel Blob |
-| Agent Protocol | Model Context Protocol SDK |
-| Testing | Playwright (47+ E2E and API tests) |
-| Deployment | Vercel |
+| Layer          | Technology                            |
+| -------------- | ------------------------------------- |
+| Framework      | Next.js 16 (App Router, Turbopack)    |
+| Database       | Neon PostgreSQL + Drizzle ORM         |
+| Styling        | Tailwind CSS v4 (dark mode only)      |
+| Components     | Radix UI, Framer Motion               |
+| Tables         | TanStack Table v8 + TanStack Virtual  |
+| Drag & Drop    | @hello-pangea/dnd                     |
+| Charts         | Recharts                              |
+| AI Text        | OpenRouter API (streaming SSE)        |
+| AI Images      | fal.ai (Flux, Nano Banana)            |
+| Storage        | Vercel Blob                           |
+| Agent Protocol | Model Context Protocol SDK            |
+| Testing        | Playwright (47+ E2E and API tests)    |
+| Deployment     | Vercel                                |
 
 ## Project Structure
 

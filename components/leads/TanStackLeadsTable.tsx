@@ -142,9 +142,9 @@ const DEMO_LEADS: Lead[] = [
   },
 ];
 
-// Shared styles
+// Shared styles — generous padding so the table breathes
 const TH_STYLE: React.CSSProperties = {
-  padding: "8px 12px",
+  padding: "10px 16px",
   boxSizing: "border-box",
   position: "relative",
   verticalAlign: "middle",
@@ -160,7 +160,7 @@ const TH_STYLE: React.CSSProperties = {
 };
 
 const TD_STYLE: React.CSSProperties = {
-  padding: "8px 12px",
+  padding: "10px 16px",
   boxSizing: "border-box",
   verticalAlign: "middle",
   overflow: "hidden",
@@ -564,7 +564,7 @@ const createColumns = (
                   key={tag}
                   title={tag}
                   className={cn(
-                    "group/tag relative inline-flex items-center justify-center px-1.5 py-[3px] text-[9px] font-bold uppercase tracking-[0.08em] border transition-all hover:scale-105 truncate",
+                    "group/tag relative flex w-full items-center justify-center px-1.5 py-[3px] text-[9px] font-bold uppercase tracking-[0.08em] border transition-all hover:brightness-125 truncate",
                     c.text, c.border,
                   )}
                   style={{
@@ -930,7 +930,7 @@ export default function TanStackLeadsTable({
   const rowVirtualizer = useVirtualizer({
     count: table.getRowModel().rows.length,
     getScrollElement: () => tableContainerRef.current,
-    estimateSize: () => 56,
+    estimateSize: () => 64,
     overscan: 5,
   });
 
@@ -979,9 +979,9 @@ export default function TanStackLeadsTable({
         </div>
       </div>
 
-      {/* Table */}
+      {/* Table — fills viewport width; columns scale proportionally above their min size */}
       <div ref={tableContainerRef} className="flex-1 overflow-auto" style={{ minHeight: 0 }}>
-        <table style={{ width: table.getTotalSize(), tableLayout: "fixed", borderCollapse: "collapse" }}>
+        <table style={{ width: "100%", minWidth: table.getTotalSize(), tableLayout: "fixed", borderCollapse: "collapse" }}>
           <colgroup>
             {table.getVisibleLeafColumns().map((column) => (
               <col key={column.id} style={{ width: column.getSize() }} />
@@ -1027,7 +1027,8 @@ export default function TanStackLeadsTable({
                     left: 0,
                     width: "100%",
                     transform: `translateY(${virtualRow.start}px)`,
-                    borderLeft: row.getIsSelected() ? "2px solid var(--color-accent)" : "2px solid transparent",
+                    // Selection indicator via box-shadow — doesn't reserve width, doesn't shift content
+                    boxShadow: row.getIsSelected() ? "inset 2px 0 0 var(--color-accent)" : undefined,
                   }}
                 >
                   {row.getVisibleCells().map((cell) => (

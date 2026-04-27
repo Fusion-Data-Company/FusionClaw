@@ -23,13 +23,13 @@ title: "FusionClaw"
 
 ## Quick start
 
-| Card | Link |
-|---|---|
-| 🚀 **Get Started** | [start/getting-started](start/getting-started.md) — install in 60 seconds |
-| 🛠️ **Install** | [install/local](install/local.md) · [install/docker](install/docker.md) · [install/vercel](install/vercel.md) |
-| 🤖 **Connect an agent** | [snippets/claude-code-config](snippets/claude-code-config.md) |
-| 🪄 **Build your first skill** | [concepts/skill-forge](concepts/skill-forge.md) |
-| 🧠 **Wiki Brain** | [concepts/wiki-brain](concepts/wiki-brain.md) |
+| Card                          | Link                                                                                                          |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| 🚀 **Get Started**            | [start/getting-started](start/getting-started.md) — install in 60 seconds                                     |
+| 🛠️ **Install**                 | [install/local](install/local.md) · [install/docker](install/docker.md) · [install/vercel](install/vercel.md) |
+| 🤖 **Connect an agent**       | [snippets/claude-code-config](snippets/claude-code-config.md)                                                 |
+| 🪄 **Build your first skill** | [concepts/skill-forge](concepts/skill-forge.md)                                                               |
+| 🧠 **Wiki Brain**             | [concepts/wiki-brain](concepts/wiki-brain.md)                                                                 |
 
 ---
 
@@ -101,11 +101,11 @@ The database is the single source of truth. Three things write to it: the human 
 
 ## Three install paths
 
-| Path | Command | Time | Guide |
-|---|---|---|---|
-| **Local** | `curl -fsSL fusionclaw.app/install.sh \| bash` | ~60s | [install/local](install/local.md) |
+| Path       | Command                                              | Time | Guide                              |
+| ---------- | ---------------------------------------------------- | ---- | ---------------------------------- |
+| **Local**  | `curl -fsSL fusionclaw.app/install.sh \| bash`        | ~60s | [install/local](install/local.md)  |
 | **Docker** | `curl -fsSL fusionclaw.app/install-docker.sh \| bash` | ~90s | [install/docker](install/docker.md) |
-| **Vercel** | One-click deploy → fork → live URL | ~90s | [install/vercel](install/vercel.md) |
+| **Vercel** | One-click deploy → fork → live URL                   | ~90s | [install/vercel](install/vercel.md) |
 
 All three produce a working dashboard in under two minutes.
 
@@ -136,18 +136,18 @@ Restart Claude Code → run `/mcp` → 234 tools available. Full reference: [ref
 
 ## Start here
 
-| Section | What's there |
-|---|---|
-| [start/](start/) | Getting started · what FusionClaw is · the first 10 minutes |
-| [install/](install/) | Local · Docker · Vercel install paths |
-| [concepts/](concepts/) | Agent-native · MCP server · Wiki Brain · Skill Forge · Council mode · Eval Studio · reflection loop · voice agent · browser skills · cost routing · self-hosted auth · design system |
-| [modules/](modules/) | Per-module guides — Dashboard, Today, Tasks, Leads, Wiki Brain, Skills, Council, Eval, Voice, etc. |
-| [reference/](reference/) | MCP tool catalog · API routes · database schema · env vars · webhook formats |
-| [integrations/](integrations/) | OpenRouter · fal.ai · OpenAI Realtime · ElevenLabs · Resend · Vercel Blob · Google Workspace |
-| [security/](security/) | Auth · OWNER_PASSWORD · MCP key · webhook secrets · deployment hardening |
-| [help/](help/) | FAQ · troubleshooting · install issues · contact |
-| [snippets/](snippets/) | Copy-paste config blocks |
-| [plugins/](plugins/) | Plugin authoring (v1.1+) |
+| Section                        | What's there                                                                                                                                                                              |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [start/](start/)               | Getting started · what FusionClaw is · the first 10 minutes                                                                                                                               |
+| [install/](install/)           | Local · Docker · Vercel install paths                                                                                                                                                     |
+| [concepts/](concepts/)         | Agent-native · MCP server · Wiki Brain · Skill Forge · Council mode · Eval Studio · reflection loop · voice agent · browser skills · cost routing · self-hosted auth · design system    |
+| [modules/](modules/)           | Per-module guides — Dashboard, Today, Tasks, Leads, Wiki Brain, Skills, Council, Eval, Voice, etc.                                                                                       |
+| [reference/](reference/)       | MCP tool catalog · API routes · database schema · env vars · webhook formats                                                                                                              |
+| [integrations/](integrations/) | OpenRouter · fal.ai · OpenAI Realtime · ElevenLabs · Resend · Vercel Blob · Google Workspace                                                                                              |
+| [security/](security/)         | Auth · OWNER_PASSWORD · MCP key · webhook secrets · deployment hardening                                                                                                                  |
+| [help/](help/)                 | FAQ · troubleshooting · install issues · contact                                                                                                                                          |
+| [snippets/](snippets/)         | Copy-paste config blocks                                                                                                                                                                  |
+| [plugins/](plugins/)           | Plugin authoring (v1.1+)                                                                                                                                                                  |
 
 ---
 
