@@ -1,6 +1,6 @@
 <div align="center">
 
-# FusionClaw
+<img src="public/fusionclaw-logo.png" alt="FusionClaw" width="320" />
 
 ### All hustle. No luck. One database.
 
