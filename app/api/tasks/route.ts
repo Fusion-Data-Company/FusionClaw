@@ -36,7 +36,7 @@ export async function GET(req: Request) {
 
     // Get assignee names
     const userIds = [...new Set(allTasks.map(t => t.assignedTo).filter(Boolean))] as string[];
-    let userMap: Record<string, string> = {};
+    const userMap: Record<string, string> = {};
     if (userIds.length > 0) {
       const usersData = await db.select({ id: users.id, name: users.name }).from(users);
       usersData.forEach(u => { userMap[u.id] = u.name || "Unnamed"; });

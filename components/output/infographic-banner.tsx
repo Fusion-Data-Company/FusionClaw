@@ -16,6 +16,7 @@ export function InfographicBanner({
   onRegenerate,
 }: InfographicBannerProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   if (!image && !isGenerating) return null;
 
@@ -34,8 +35,6 @@ export function InfographicBanner({
       console.error("Download failed:", err);
     }
   };
-
-  const [copied, setCopied] = useState(false);
 
   const handleCopyImage = async () => {
     if (!image) return;
