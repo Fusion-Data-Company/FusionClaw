@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronRight, FileText, ExternalLink, Copy } from "lucide-react";
 import { marked } from "marked";
+import DOMPurify from "dompurify";
 
 interface GalleryContent {
   id: string;
@@ -204,11 +205,12 @@ export function GalleryPostsTab({ content }: GalleryPostsTabProps) {
                               prose-strong:text-text-primary
                               prose-li:text-text-dim"
                             dangerouslySetInnerHTML={{
-                              __html: item.contentMarkdown
-                                ? (marked.parse(item.contentMarkdown, {
-                                    async: false,
-                                  }) as string)
-                                : item.contentHtml,
+                              // DOMPurify prevents XSS from AI-generated or user-supplied HTML
+                              __html: DOMPurify.sanitize(
+                                item.contentMarkdown
+                                  ? (marked.parse(item.contentMarkdown, { async: false }) as string)
+                                  : (item.contentHtml ?? "")
+                              ),
                             }}
                           />
                         </div>

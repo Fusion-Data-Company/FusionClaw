@@ -82,15 +82,14 @@ The design targets people who stare at screens 12+ hours a day. It should feel l
 ```bash
 git clone https://github.com/Fusion-Data-Company/FusionClaw.git
 cd FusionClaw
-cp .env.example .env.local   # add your keys
 npm install
-npx drizzle-kit push          # create tables
-npm run dev                   # http://localhost:3000
+npm run onboard   # interactive wizard: DB URL, optional API keys, generates MCP key
+npm run dev       # http://localhost:3000 — no login required on localhost
 ```
 
-You need a Neon database (free tier works), an OpenRouter key (for AI), and optionally a fal.ai key (for image generation). That's it.
+You need a Neon database (free tier works), and optionally an OpenRouter key (for AI text) and a fal.ai key (for images). That's it. **No Clerk, no Auth0, no signup with a third-party.** On localhost you're trusted automatically. When you deploy, you set a single `OWNER_PASSWORD` env var to gate the UI. Agents use the MCP key.
 
-Docker support is also included if you prefer containers.
+Docker support is also included if you prefer containers — `docker build && docker run` with the same env vars.
 
 ## What I Learned Building This
 

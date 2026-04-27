@@ -33,6 +33,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import EditableCell from "./EditableCell";
+import { SocialLinkCell } from "./SocialLinkCell";
+import { ContactDetailDrawer } from "./ContactDetailDrawer";
 
 import {
   ArrowUp,
@@ -313,7 +315,7 @@ const createColumns = (
     ),
     size: 200,
   },
-  // Contact Type
+  // Contact Type — editable select
   {
     accessorKey: "contactType",
     header: () => <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted">Type</span>,
@@ -321,19 +323,33 @@ const createColumns = (
       const ct = row.original.contactType || "lead";
       const config = CONTACT_TYPE_CONFIG[ct] || CONTACT_TYPE_CONFIG.other;
       return (
-        <span
-          className={cn(
-            "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border",
-            config.bg,
-            config.text,
-            config.border
-          )}
-        >
-          {ct}
-        </span>
+        <EditableCell
+          value={ct}
+          onSave={(value) => updateLead(row.original.id, "contactType", value)}
+          type="select"
+          options={[
+            { value: "lead", label: "Lead" },
+            { value: "vendor", label: "Vendor" },
+            { value: "supplier", label: "Supplier" },
+            { value: "consultant", label: "Consultant" },
+            { value: "other", label: "Other" },
+          ]}
+          displayValue={
+            <span
+              className={cn(
+                "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border",
+                config.bg,
+                config.text,
+                config.border
+              )}
+            >
+              {ct}
+            </span>
+          }
+        />
       );
     },
-    size: 100,
+    size: 110,
   },
   // Email
   {
@@ -385,7 +401,7 @@ const createColumns = (
     ),
     size: 150,
   },
-  // Links
+  // Links — every social icon is an inline-editable popover (click to add/edit/open/clear)
   {
     id: "links",
     header: () => <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted">Links</span>,
@@ -393,81 +409,45 @@ const createColumns = (
       const lead = row.original;
       return (
         <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-          {lead.website ? (
-            <button
-              onClick={() => window.open(lead.website, "_blank")}
-              className="text-blue-400 hover:text-blue-300 transition-colors"
-              title={lead.website}
-            >
-              <Globe className="h-4 w-4" />
-            </button>
-          ) : (
-            <Globe className="h-4 w-4 text-text-disabled" />
-          )}
-          {lead.linkedin ? (
-            <button
-              onClick={() => window.open(lead.linkedin, "_blank")}
-              className="text-[#0A66C2] hover:brightness-125 transition-all"
-            >
-              <Linkedin className="h-4 w-4" />
-            </button>
-          ) : (
-            <Linkedin className="h-4 w-4 text-text-disabled" />
-          )}
-          {lead.facebook ? (
-            <button
-              onClick={() => window.open(lead.facebook, "_blank")}
-              className="text-[#1877F2] hover:brightness-125 transition-all"
-            >
-              <Facebook className="h-4 w-4" />
-            </button>
-          ) : (
-            <Facebook className="h-4 w-4 text-text-disabled" />
-          )}
-          {lead.instagram ? (
-            <button
-              onClick={() => window.open(lead.instagram, "_blank")}
-              className="text-[#E4405F] hover:brightness-125 transition-all"
-            >
-              <Instagram className="h-4 w-4" />
-            </button>
-          ) : (
-            <Instagram className="h-4 w-4 text-text-disabled" />
-          )}
-          {lead.twitterX ? (
-            <button
-              onClick={() => window.open(lead.twitterX, "_blank")}
-              className="text-text-primary hover:text-white transition-colors"
-            >
-              <XIcon className="h-4 w-4" />
-            </button>
-          ) : (
-            <XIcon className="h-4 w-4 text-text-disabled" />
-          )}
-          {lead.youtube ? (
-            <button
-              onClick={() => window.open(lead.youtube, "_blank")}
-              className="text-[#FF0000] hover:brightness-125 transition-all"
-            >
-              <Youtube className="h-4 w-4" />
-            </button>
-          ) : (
-            <Youtube className="h-4 w-4 text-text-disabled" />
-          )}
-          {lead.tiktok ? (
-            <button
-              onClick={() => window.open(lead.tiktok, "_blank")}
-              className="text-[#00F2EA] hover:brightness-125 transition-all"
-            >
-              <TikTokIcon className="h-4 w-4" />
-            </button>
-          ) : (
-            <TikTokIcon className="h-4 w-4 text-text-disabled" />
-          )}
+          <SocialLinkCell
+            icon={Globe} label="Website" placeholder="https://example.com"
+            brandColor="text-blue-400" url={lead.website}
+            onSave={(url) => updateLead(lead.id, "website", url)}
+          />
+          <SocialLinkCell
+            icon={Linkedin} label="LinkedIn" placeholder="https://linkedin.com/in/..."
+            brandColor="text-[#0A66C2]" url={lead.linkedin}
+            onSave={(url) => updateLead(lead.id, "linkedin", url)}
+          />
+          <SocialLinkCell
+            icon={Facebook} label="Facebook" placeholder="https://facebook.com/..."
+            brandColor="text-[#1877F2]" url={lead.facebook}
+            onSave={(url) => updateLead(lead.id, "facebook", url)}
+          />
+          <SocialLinkCell
+            icon={Instagram} label="Instagram" placeholder="https://instagram.com/..."
+            brandColor="text-[#E4405F]" url={lead.instagram}
+            onSave={(url) => updateLead(lead.id, "instagram", url)}
+          />
+          <SocialLinkCell
+            icon={XIcon} label="X / Twitter" placeholder="https://x.com/..."
+            brandColor="text-text-primary" url={lead.twitterX}
+            onSave={(url) => updateLead(lead.id, "twitterX", url)}
+          />
+          <SocialLinkCell
+            icon={Youtube} label="YouTube" placeholder="https://youtube.com/@..."
+            brandColor="text-[#FF0000]" url={lead.youtube}
+            onSave={(url) => updateLead(lead.id, "youtube", url)}
+          />
+          <SocialLinkCell
+            icon={TikTokIcon} label="TikTok" placeholder="https://tiktok.com/@..."
+            brandColor="text-[#00F2EA]" url={lead.tiktok}
+            onSave={(url) => updateLead(lead.id, "tiktok", url)}
+          />
         </div>
       );
     },
-    size: 180,
+    size: 200,
   },
   // Address
   {
@@ -536,107 +516,179 @@ const createColumns = (
     },
     size: 120,
   },
-  // Tags
+  // Tags — editable multiselect with elite cyberpunk pill styling, single-line, +N overflow
   {
     accessorKey: "tags",
     header: ({ column }) => <SortHeader column={column} icon={Tag} label="Tags" />,
     cell: ({ row, getValue }) => {
       const tags = (getValue() as string[]) || [];
-      const TAG_COLORS = [
-        { bg: "bg-red-500/20", text: "text-red-300", border: "border-red-500/30" },
-        { bg: "bg-amber-500/20", text: "text-amber-300", border: "border-amber-500/30" },
-        { bg: "bg-emerald-500/20", text: "text-emerald-300", border: "border-emerald-500/30" },
-        { bg: "bg-blue-500/20", text: "text-blue-300", border: "border-blue-500/30" },
-        { bg: "bg-violet-500/20", text: "text-violet-300", border: "border-violet-500/30" },
+      // Each tag gets a unique gradient + glow, hashed by tag string so it's
+      // stable across re-renders. The pill has chamfered corners, an inset
+      // gradient sheen, and a faint outer glow in its accent color.
+      const TAG_PALETTE: Array<{ from: string; to: string; text: string; border: string; glow: string }> = [
+        { from: "rgba(244,63,94,0.28)",  to: "rgba(244,63,94,0.06)",  text: "text-rose-200",    border: "border-rose-500/40",   glow: "rgba(244,63,94,0.35)" },
+        { from: "rgba(251,191,36,0.28)", to: "rgba(251,146,60,0.06)", text: "text-amber-200",   border: "border-amber-500/40",  glow: "rgba(251,191,36,0.35)" },
+        { from: "rgba(52,211,153,0.28)", to: "rgba(20,184,166,0.06)", text: "text-emerald-200", border: "border-emerald-500/40",glow: "rgba(52,211,153,0.35)" },
+        { from: "rgba(96,165,250,0.28)", to: "rgba(34,211,238,0.06)", text: "text-blue-200",    border: "border-blue-500/40",   glow: "rgba(96,165,250,0.35)" },
+        { from: "rgba(167,139,250,0.28)",to: "rgba(232,121,249,0.06)",text: "text-violet-200",  border: "border-violet-500/40", glow: "rgba(167,139,250,0.35)" },
+        { from: "rgba(34,211,238,0.28)", to: "rgba(96,165,250,0.06)", text: "text-cyan-200",    border: "border-cyan-500/40",   glow: "rgba(34,211,238,0.35)" },
       ];
+      const colorFor = (s: string) => {
+        let h = 0;
+        for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+        return TAG_PALETTE[h % TAG_PALETTE.length];
+      };
+      const visible = tags.slice(0, 2);
+      const overflow = tags.length - visible.length;
       return (
-        <div className="flex flex-wrap gap-1" onClick={(e) => e.stopPropagation()}>
-          {tags.map((tag, i) => {
-            const color = TAG_COLORS[i % TAG_COLORS.length];
-            return (
+        <EditableCell
+          value={tags}
+          onSave={(value) => updateLead(row.original.id, "tags", value)}
+          type="multiselect"
+          options={[
+            { value: "warm", label: "warm" },
+            { value: "decision-maker", label: "decision-maker" },
+            { value: "smb", label: "smb" },
+            { value: "enterprise", label: "enterprise" },
+            { value: "do-not-contact", label: "do-not-contact" },
+            { value: "vip", label: "vip" },
+          ]}
+        >
+          <div className="grid grid-cols-[1fr_1fr_28px] items-center gap-1 max-w-full overflow-hidden whitespace-nowrap">
+            {[0, 1].map((slot) => {
+              const tag = visible[slot];
+              if (!tag) return <span key={`empty-${slot}`} />;
+              const c = colorFor(tag);
+              return (
+                <span
+                  key={tag}
+                  title={tag}
+                  className={cn(
+                    "group/tag relative inline-flex items-center justify-center px-1.5 py-[3px] text-[9px] font-bold uppercase tracking-[0.08em] border transition-all hover:scale-105 truncate",
+                    c.text, c.border,
+                  )}
+                  style={{
+                    clipPath: "polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px))",
+                    background: `linear-gradient(135deg, ${c.from} 0%, ${c.to} 100%)`,
+                    boxShadow: `inset 0 1px 0 rgba(255,255,255,0.06), 0 0 6px ${c.glow.replace(/0\.\d+/, "0.18")}`,
+                  }}
+                >
+                  <span
+                    className="pointer-events-none absolute inset-0 opacity-50"
+                    style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.05) 100%)" }}
+                  />
+                  <span className="relative truncate">{tag}</span>
+                </span>
+              );
+            })}
+            {overflow > 0 ? (
               <span
-                key={tag}
-                className={cn(
-                  "inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wide border",
-                  color.bg,
-                  color.text,
-                  color.border
-                )}
+                className="inline-flex items-center justify-center w-7 px-1 py-[3px] text-[9px] font-mono font-bold border bg-surface-2 text-text-muted border-border/80 transition-all hover:bg-elevated hover:text-text-secondary cursor-help"
+                style={{ clipPath: "polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px))" }}
+                title={tags.slice(2).join(", ")}
               >
-                {tag}
+                +{overflow}
               </span>
-            );
-          })}
-        </div>
+            ) : (
+              <span />
+            )}
+          </div>
+        </EditableCell>
       );
     },
-    size: 200,
+    size: 320,
   },
-  // Deal Value
+  // Deal Value — editable currency
   {
     accessorKey: "dealValue",
     header: ({ column }) => <SortHeader column={column} icon={DollarSign} label="Value" />,
     cell: ({ row, getValue }) => {
-      const value = getValue() as number;
-      const formatted = value ? value.toLocaleString("en-US") : "0";
+      const raw = getValue();
+      const num = typeof raw === "number" ? raw : parseFloat(String(raw ?? "0"));
+      const safe = Number.isFinite(num) ? num : 0;
+      const formatted = safe ? safe.toLocaleString("en-US") : "0";
       return (
         <EditableCell
-          value={value?.toString() || ""}
-          onSave={(val) => updateLead(row.original.id, "dealValue", parseFloat(val) || 0)}
+          value={safe}
+          align="right"
+          onSave={(val) => {
+            const n = typeof val === "number" ? val : parseFloat(String(val));
+            updateLead(row.original.id, "dealValue", Number.isFinite(n) ? n : 0);
+          }}
           type="currency"
           displayValue={
-            <span className={cn("font-bold tabular-nums text-sm", value > 0 ? "text-success" : "text-text-muted")}>
+            <span className={cn("font-bold tabular-nums text-sm whitespace-nowrap", safe > 0 ? "text-emerald-300" : "text-text-muted")}>
               ${formatted}
             </span>
           }
         />
       );
     },
-    size: 100,
+    size: 110,
   },
-  // Last Contact
+  // Last Contact — editable date, right-aligned for clean digit stacking
   {
     accessorKey: "lastContactDate",
-    header: ({ column }) => <SortHeader column={column} icon={CalendarIcon} label="Last" />,
+    header: ({ column }) => (
+      <div className="text-right">
+        <SortHeader column={column} icon={CalendarIcon} label="Last" />
+      </div>
+    ),
     cell: ({ row, getValue }) => {
-      const date = getValue() as string;
-      const displayDate = date
-        ? (() => {
-            const d = new Date(date);
-            const now = new Date();
-            const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000);
-            if (diffDays === 0) return "Today";
-            if (diffDays === 1) return "1d";
-            if (diffDays < 7) return `${diffDays}d`;
-            return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-          })()
-        : "--";
-      return <span className="text-xs text-text-muted">{displayDate}</span>;
+      const date = getValue() as string | null;
+      // Always-absolute format keeps every value 5-6 chars (Apr 8, May 12)
+      // so right-aligned values don't bounce on the left edge.
+      const display = date
+        ? new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+        : null;
+      return (
+        <EditableCell
+          value={date ? new Date(date).toISOString().split("T")[0] : ""}
+          align="right"
+          onSave={(val) => updateLead(row.original.id, "lastContactDate", val ? new Date(String(val)).toISOString() : null)}
+          type="date"
+          displayValue={
+            <span className="inline-block min-w-[52px] text-right text-xs text-text-muted tabular-nums whitespace-nowrap">
+              {display ?? <span className="text-text-disabled italic">—</span>}
+            </span>
+          }
+        />
+      );
     },
-    size: 70,
+    size: 88,
   },
-  // Next Follow-up
+  // Next Follow-up — editable date, right-aligned, always absolute format
   {
     accessorKey: "nextFollowUpDate",
-    header: ({ column }) => <SortHeader column={column} icon={Clock} label="Next" />,
+    header: ({ column }) => (
+      <div className="text-right">
+        <SortHeader column={column} icon={Clock} label="Next" />
+      </div>
+    ),
     cell: ({ row, getValue }) => {
-      const date = getValue() as string;
+      const date = getValue() as string | null;
       const isOverdue = date && new Date(date) < new Date();
-      const displayDate = date
-        ? (() => {
-            const d = new Date(date);
-            const now = new Date();
-            const diffDays = Math.floor((d.getTime() - now.getTime()) / 86400000);
-            if (diffDays < -1) return `${Math.abs(diffDays)}d!`;
-            if (diffDays === 0) return "Today";
-            if (diffDays === 1) return "Tmrw";
-            if (diffDays < 7) return `${diffDays}d`;
-            return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-          })()
-        : "--";
-      return <span className={cn("text-xs", isOverdue ? "text-error font-bold" : "text-text-muted")}>{displayDate}</span>;
+      const display = date
+        ? new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+        : null;
+      return (
+        <EditableCell
+          value={date ? new Date(date).toISOString().split("T")[0] : ""}
+          align="right"
+          onSave={(val) => updateLead(row.original.id, "nextFollowUpDate", val ? new Date(String(val)).toISOString() : null)}
+          type="date"
+          displayValue={
+            <span className={cn(
+              "inline-block min-w-[52px] text-right text-xs tabular-nums whitespace-nowrap",
+              isOverdue ? "text-rose-400 font-bold" : "text-text-muted",
+            )}>
+              {display ?? <span className="text-text-disabled italic">—</span>}
+            </span>
+          }
+        />
+      );
     },
-    size: 70,
+    size: 88,
   },
   // Actions
   {
@@ -1032,93 +1084,11 @@ export default function TanStackLeadsTable({
         </div>
       </div>
 
-      {/* Contact Detail Slide-Up Panel */}
-      {selectedContactId !== null && leadsData.filter(l => l.id === selectedContactId).map(lead => (
-        <div
-          key={`detail-${lead.id}`}
-          className="absolute bottom-0 left-0 right-0 z-20 border-t-2 border-accent/40 bg-elevated rounded-b-lg shadow-[0_-4px_24px_rgba(0,0,0,0.5)]"
-          style={{ maxHeight: "45%" }}
-        >
-          <div className="overflow-y-auto px-6 py-4" style={{ maxHeight: "100%" }}>
-            <div className="flex items-start justify-between mb-3">
-              <div>
-                <h3 className="text-base font-bold text-text-primary">{lead.contact || "No Name"}</h3>
-                <p className="text-xs text-text-muted">{lead.jobTitle || ""}{lead.jobTitle && lead.company ? " at " : ""}{lead.company}</p>
-              </div>
-              <button
-                onClick={(e) => { e.stopPropagation(); setSelectedContactId(null); }}
-                className="text-xs text-text-muted hover:text-text-primary px-2 py-1 rounded border border-border hover:border-border-med transition-colors cursor-pointer"
-              >
-                Close
-              </button>
-            </div>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
-              {lead.phone && (
-                <div className="flex items-center gap-2">
-                  <Phone className="w-3.5 h-3.5 text-text-muted shrink-0" />
-                  <span className="text-text-secondary truncate">{lead.phone}</span>
-                </div>
-              )}
-              {lead.altPhone && (
-                <div className="flex items-center gap-2">
-                  <Phone className="w-3.5 h-3.5 text-text-muted shrink-0" />
-                  <span className="text-text-secondary truncate">{lead.altPhone}</span>
-                </div>
-              )}
-              {lead.email && (
-                <div className="flex items-center gap-2">
-                  <Mail className="w-3.5 h-3.5 text-text-muted shrink-0" />
-                  <a href={`mailto:${lead.email}`} className="text-accent truncate hover:underline" onClick={e => e.stopPropagation()}>{lead.email}</a>
-                </div>
-              )}
-              {lead.email2 && (
-                <div className="flex items-center gap-2">
-                  <Mail className="w-3.5 h-3.5 text-text-muted shrink-0" />
-                  <a href={`mailto:${lead.email2}`} className="text-accent truncate hover:underline" onClick={e => e.stopPropagation()}>{lead.email2}</a>
-                </div>
-              )}
-              {lead.website && (
-                <div className="flex items-center gap-2">
-                  <Globe className="w-3.5 h-3.5 text-text-muted shrink-0" />
-                  <a href={lead.website.startsWith("http") ? lead.website : `https://${lead.website}`} target="_blank" rel="noopener noreferrer" className="text-accent truncate hover:underline" onClick={e => e.stopPropagation()}>{lead.website}</a>
-                </div>
-              )}
-              {lead.address && (
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-3.5 h-3.5 text-[#34A853] shrink-0" />
-                  <span className="text-text-secondary truncate">{lead.address}</span>
-                </div>
-              )}
-              {lead.dealValue != null && lead.dealValue > 0 && (
-                <div className="flex items-center gap-2">
-                  <DollarSign className="w-3.5 h-3.5 text-text-muted shrink-0" />
-                  <span className="text-emerald-400 font-semibold">${lead.dealValue.toLocaleString()}</span>
-                </div>
-              )}
-              {lead.source && (
-                <div className="flex items-center gap-2">
-                  <Target className="w-3.5 h-3.5 text-text-muted shrink-0" />
-                  <span className="text-text-secondary">{lead.source}</span>
-                </div>
-              )}
-            </div>
-            {(lead.linkedin || lead.facebook || lead.instagram || lead.twitterX || lead.youtube || lead.tiktok) && (
-              <div className="flex items-center gap-3 mt-3 pt-3 border-t border-border">
-                {lead.linkedin && <a href={lead.linkedin} target="_blank" rel="noopener noreferrer" className="text-[#0A66C2] hover:brightness-125 transition-all" onClick={e => e.stopPropagation()}><Linkedin className="w-4 h-4" /></a>}
-                {lead.facebook && <a href={lead.facebook} target="_blank" rel="noopener noreferrer" className="text-[#1877F2] hover:brightness-125 transition-all" onClick={e => e.stopPropagation()}><Facebook className="w-4 h-4" /></a>}
-                {lead.instagram && <a href={lead.instagram} target="_blank" rel="noopener noreferrer" className="text-[#E4405F] hover:brightness-125 transition-all" onClick={e => e.stopPropagation()}><Instagram className="w-4 h-4" /></a>}
-                {lead.youtube && <a href={lead.youtube} target="_blank" rel="noopener noreferrer" className="text-[#FF0000] hover:brightness-125 transition-all" onClick={e => e.stopPropagation()}><Youtube className="w-4 h-4" /></a>}
-              </div>
-            )}
-            {lead.notes && (
-              <div className="mt-3 pt-3 border-t border-border">
-                <p className="text-[10px] font-semibold text-text-muted uppercase tracking-wider mb-1">Notes</p>
-                <p className="text-sm text-text-secondary">{lead.notes}</p>
-              </div>
-            )}
-          </div>
-        </div>
-      ))}
+      {/* Contact Detail Drawer — slides in from the RIGHT, rich layout, all available fields */}
+      <ContactDetailDrawer
+        lead={selectedContactId !== null ? leadsData.find((l) => l.id === selectedContactId) ?? null : null}
+        onClose={() => setSelectedContactId(null)}
+      />
     </div>
   );
 }

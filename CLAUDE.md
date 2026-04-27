@@ -3,6 +3,25 @@
 
 ---
 
+## ⚠️ PROTOCOL FILES — READ FIRST, BEFORE ANYTHING ELSE
+
+Before touching this repo, read these in order. They are binding rules, not suggestions:
+
+1. **`docs/agent-protocols/watchdog_briefing.md`** — verification protocol. Every fix you claim runs through a watchdog subagent spawned with this brief. Multi-axis scoring. **90% literal threshold for "done" — never round up, never soften.** Verbatim reports only.
+2. **`docs/agent-protocols/discovery_agent_templates.md`** — 10 analytical agent templates. Spawn the relevant ones in parallel BEFORE each phase to find what to fix. They are Rob's eyes for finding work.
+3. **`docs/agent-protocols/prd_supercharged_format.md`** — supersedes the default PRD format. Discovery → synthesis → execution → watchdog architecture.
+4. **`docs/agent-protocols/wiki_brain_karpathy_pattern.md`** — implementation spec for Wiki Brain ingest agent (Phase 1.1).
+5. **`docs/agent-protocols/fusionclaw_launch_plan.md`** — all 7 launch decisions locked: license MIT, tagline "All hustle. No luck. One database.", domain fusionclaw.app, demo strategy, channels, etc.
+6. **`docs/PRD-OSS-LAUNCH.md`** — the source of truth for phased delivery. Read §13 (current state honest), §14 (substance gap), §15 (every phase), §16 (watchdog protocol bound).
+
+**Off-limits**: `app/(app)/leads/*` — Rob has explicitly forbidden styling changes to the contacts table. Do not touch its visual design.
+
+**Truth-only protocol**: never claim "fixed," "shipped," "done," "verified" without a watchdog CONFIRMED verdict at literal score ≥ 90.0%. Anything below is "NOT YET" with the missing axes named. Banned: rounding up, "essentially passing," "basically there," confidence theater.
+
+---
+
+---
+
 ## What This Is
 
 FusionClaw is a unified business-in-a-box SaaS platform built by merging 4 existing production apps:
@@ -35,7 +54,8 @@ All live in: `~/Library/Mobile Documents/com~apple~CloudDocs/DATA TREE/ACTIVE PR
 ```
 Framework:   Next.js 16 (App Router, Turbopack)
 Database:    Neon PostgreSQL via Drizzle ORM
-Auth:        Clerk
+Auth:        Self-hosted — localhost passthrough + OWNER_PASSWORD cookie session.
+             No third-party auth provider. MCP key for AI agents.
 Styling:     Tailwind CSS v4
 Animations:  Framer Motion
 Tables:      TanStack Table v8 + TanStack Virtual
@@ -198,7 +218,7 @@ Single unified `src/lib/db/schema.ts` with Drizzle ORM.
 ### INCLUDE these tables:
 
 **Employee/Shift tracking (from mat-ops):**
-- `users` — id (uuid), clerkId, email, name, role (admin/employee), avatarUrl, createdAt
+- `users` — id (uuid), authId (sentinel: 'owner' for self-host singleton; or invite token for employees), email, name, role (admin/employee), avatarUrl, createdAt
 - `shifts` — id, userId, shiftDate (date), startedAt, endedAt, status (OPEN/SUBMITTED), upworkNewJobs, upworkProposals, upworkFollowups, upworkReplies, upworkCallsBooked, emailsSent, emailReplies, coldCallsMade, trackerUpdated, notes, completionPercent, createdAt
 - `checklist_items` — id, shiftId, key, label, category (SOCIAL/BLOG), checkpoint (AM8/PM12/PM4), platform, completed, completedAt
 - `uploads` — id, shiftId, checklistItemId, category, blobUrl, filename, mimeType, sizeBytes
@@ -307,14 +327,12 @@ git checkout -b dev && git push -u origin dev
 ## Environment Variables
 
 ```bash
-# Clerk
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
-CLERK_SECRET_KEY=
-CLERK_WEBHOOK_SECRET=
-NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
-NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
-NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/dashboard
-NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/dashboard
+# Auth (self-hosted, no third-party)
+# Localhost requires nothing. Deployed instances need OWNER_PASSWORD.
+OWNER_PASSWORD=
+OWNER_EMAIL=
+OWNER_NAME=
+SESSION_SECRET=
 
 # Database
 DATABASE_URL=
@@ -347,7 +365,7 @@ Execute these steps in order. Do not skip. Do not ask for clarification.
 6. Port GlassCard + EliteEffects + all primitives from stain-and-seal
 7. Write unified `src/lib/db/schema.ts`
 8. Write `drizzle.config.ts` + run `drizzle-kit push`
-9. Set up Clerk middleware + auth pages
+9. Set up self-hosted middleware (localhost trust + OWNER_PASSWORD cookie session) + login page
 10. Build admin shell layout (sidebar + header + right sidebar)
 11. Build Dashboard page with SpotlightCard metric cards + neon animation
 12. Port Today page from mat-ops

@@ -12,10 +12,14 @@ import {
 import Link from "next/link";
 
 interface ToolConnection {
+  key: string;
   name: string;
-  icon: React.ComponentType<any>;
   status: "connected" | "disconnected" | "warning";
-  detail?: string;
+  detail: string;
+}
+
+interface ToolStyle {
+  icon: React.ComponentType<any>;
   color: string;
   glowColor: string;
 }
@@ -38,16 +42,23 @@ interface DashboardStats {
   openShifts: number;
 }
 
-const TOOLS: ToolConnection[] = [
-  { name: "Neon DB", icon: Database, status: "connected", detail: "PostgreSQL connected", color: "text-emerald-400", glowColor: "rgba(52,211,153,0.3)" },
-  { name: "Vercel", icon: Ship, status: "connected", detail: "Deployed", color: "text-white", glowColor: "rgba(255,255,255,0.2)" },
-  { name: "MCP Server", icon: Cpu, status: "connected", detail: "234 tools ready", color: "text-amber-400", glowColor: "rgba(251,191,36,0.3)" },
-  { name: "OpenRouter", icon: Bot, status: "disconnected", detail: "Not configured", color: "text-slate-400", glowColor: "rgba(148,163,184,0.2)" },
-  { name: "WordPress", icon: Globe, status: "disconnected", detail: "Not connected", color: "text-slate-400", glowColor: "rgba(148,163,184,0.2)" },
-  { name: "FAL AI", icon: Image, status: "connected", detail: "Image gen ready", color: "text-violet-400", glowColor: "rgba(167,139,250,0.3)" },
-  { name: "Resend", icon: Send, status: "connected", detail: "Email ready", color: "text-blue-400", glowColor: "rgba(59,130,246,0.3)" },
-  { name: "Blob Storage", icon: Cloud, status: "connected", detail: "Vercel Blob", color: "text-cyan-400", glowColor: "rgba(34,211,238,0.3)" },
-];
+// Icon + color styling per integration. Status comes from the API at runtime.
+const TOOL_STYLES: Record<string, ToolStyle> = {
+  neon:       { icon: Database, color: "text-emerald-400", glowColor: "rgba(52,211,153,0.3)" },
+  vercel:     { icon: Ship,     color: "text-white",       glowColor: "rgba(255,255,255,0.2)" },
+  mcp:        { icon: Cpu,      color: "text-amber-400",   glowColor: "rgba(251,191,36,0.3)" },
+  openrouter: { icon: Bot,      color: "text-cyan-400",    glowColor: "rgba(34,211,238,0.3)" },
+  fal:        { icon: Image,    color: "text-violet-400",  glowColor: "rgba(167,139,250,0.3)" },
+  resend:     { icon: Send,     color: "text-blue-400",    glowColor: "rgba(59,130,246,0.3)" },
+  blob:       { icon: Cloud,    color: "text-cyan-400",    glowColor: "rgba(34,211,238,0.3)" },
+  wordpress:  { icon: Globe,    color: "text-slate-400",   glowColor: "rgba(148,163,184,0.2)" },
+};
+
+const FALLBACK_STYLE: ToolStyle = {
+  icon: Cpu,
+  color: "text-slate-400",
+  glowColor: "rgba(148,163,184,0.2)",
+};
 
 const QUICK_ACTIONS: QuickAction[] = [
   { label: "Add Lead", description: "Create new contact", href: "/leads", icon: PlusCircle, gradient: "from-blue-500 to-cyan-500", glow: "rgba(59,130,246,0.3)" },
@@ -66,6 +77,7 @@ const STATUS_ICON = {
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [tools, setTools] = useState<ToolConnection[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -74,10 +86,11 @@ export default function DashboardPage() {
 
   const fetchDashboardData = async () => {
     try {
-      const [leadsRes, tasksRes, employeesRes] = await Promise.all([
+      const [leadsRes, tasksRes, employeesRes, integrationsRes] = await Promise.all([
         fetch("/api/leads").then(r => r.json()).catch(() => ({ leads: [] })),
         fetch("/api/tasks").then(r => r.json()).catch(() => ({ tasks: [], stats: {} })),
         fetch("/api/employees").then(r => r.json()).catch(() => ({ employees: [] })),
+        fetch("/api/dashboard/integrations").then(r => r.json()).catch(() => ({ integrations: [] })),
       ]);
 
       const today = new Date().toISOString().split("T")[0];
@@ -91,6 +104,7 @@ export default function DashboardPage() {
         employees: employeesRes.employees?.length || 0,
         openShifts: 0,
       });
+      setTools(integrationsRes.integrations || []);
     } catch (err) {
       console.error("Dashboard data error:", err);
     } finally {
@@ -170,22 +184,25 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Tool Connections & Status */}
+      {/* Tool Connections & Status — real env-var-derived status */}
       <div>
         <h2 className="text-sm font-bold text-text-primary uppercase tracking-wider mb-3">Connected Tools & Services</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
-          {TOOLS.map((tool) => {
+          {tools.map((tool) => {
             const StatusIcon = STATUS_ICON[tool.status];
+            const style = TOOL_STYLES[tool.key] ?? FALLBACK_STYLE;
+            const ToolIcon = style.icon;
+            const dimmed = tool.status === "disconnected";
             return (
-              <GlassCard key={tool.name} padding="sm" className="flex items-center gap-3">
+              <GlassCard key={tool.key} padding="sm" className="flex items-center gap-3">
                 <div
                   className="w-9 h-9 rounded-lg bg-surface-2 flex items-center justify-center border border-border"
-                  style={{ boxShadow: `0 0 8px ${tool.glowColor}` }}
+                  style={dimmed ? undefined : { boxShadow: `0 0 8px ${style.glowColor}` }}
                 >
-                  <tool.icon className={`w-4 h-4 ${tool.color}`} />
+                  <ToolIcon className={`w-4 h-4 ${dimmed ? "text-text-disabled" : style.color}`} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs font-bold text-text-primary truncate">{tool.name}</div>
+                  <div className={`text-xs font-bold truncate ${dimmed ? "text-text-muted" : "text-text-primary"}`}>{tool.name}</div>
                   <div className="flex items-center gap-1">
                     <StatusIcon
                       className={`w-2.5 h-2.5 ${
@@ -202,6 +219,11 @@ export default function DashboardPage() {
               </GlassCard>
             );
           })}
+          {tools.length === 0 && !loading && (
+            <div className="col-span-full text-xs text-text-muted text-center py-4">
+              Unable to load integration status.
+            </div>
+          )}
         </div>
       </div>
 

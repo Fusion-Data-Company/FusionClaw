@@ -43,10 +43,10 @@ Your AI doesn't need 10 integrations. It needs one: FusionClaw.
 
 ## Why Open Source
 
-The best business tools shouldn't be locked behind enterprise contracts. We chose BSL 1.1 (converts to Apache 2.0 in 2030) because:
+The best business tools shouldn't be locked behind enterprise contracts. We chose MIT — the most permissive OSS license — because:
 
-1. Individuals and small teams can use it freely
-2. Contributors know their work won't be strip-mined by cloud vendors
+1. Individuals, agencies, and contractors can use it for anything, including commercial work
+2. Forking is encouraged — fork it, brand it, sell it, no strings
 3. The codebase is fully inspectable — no black boxes handling your business data
 4. The community can build on it, extend it, and make it better than any single company could
 

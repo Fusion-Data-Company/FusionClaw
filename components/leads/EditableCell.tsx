@@ -1,23 +1,36 @@
 "use client";
 
 import { useState, useRef, useEffect, type ReactNode } from "react";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Badge } from "@/components/ui/badge";
-import { Check, X, Edit, DollarSign, Mail, Phone } from "lucide-react";
+import { createPortal } from "react-dom";
+import { Check, X, DollarSign, Mail, Phone, ChevronDown, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast as sonner } from "sonner";
+
+/**
+ * Inline-editable cell. Click to edit, Enter to save, Esc to cancel,
+ * blur saves (unless clicking the cancel button). Supports text, email,
+ * tel, currency, number, date, select, multiselect.
+ *
+ * Persistence is the parent's job (via onSave) — this component only
+ * surfaces the editing UX. Saves fire optimistically; failures bubble
+ * up via the parent's catch.
+ */
+
+interface Option { value: string; label: string }
 
 interface EditableCellProps {
-  value: any;
-  onSave: (value: any) => void;
+  value: unknown;
+  onSave: (value: unknown) => void | Promise<void>;
   type?: "text" | "email" | "tel" | "select" | "multiselect" | "currency" | "date" | "number";
-  options?: { value: string; label: string }[];
+  options?: Option[];
   className?: string;
   displayValue?: ReactNode;
   placeholder?: string;
   disabled?: boolean;
+  /** Right-align contents (use for currency / dates / numeric columns) */
+  align?: "left" | "right";
+  /** Render children in view mode instead of the default value display (still click-to-edit) */
+  children?: ReactNode;
 }
 
 export default function EditableCell({
@@ -29,295 +42,305 @@ export default function EditableCell({
   displayValue,
   placeholder = "",
   disabled = false,
+  align = "left",
+  children,
 }: EditableCellProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState(value);
-  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [editValue, setEditValue] = useState<unknown>(value ?? "");
+  const [open, setOpen] = useState(false);
+  const [popPos, setPopPos] = useState<{ top: number; left: number } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const saving = useRef(false);
 
-  // Sync editValue when the value prop changes
   useEffect(() => {
-    if (!isEditing) {
-      setEditValue(value);
-    }
+    if (!isEditing) setEditValue(value ?? "");
   }, [value, isEditing]);
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
       inputRef.current.focus();
-      inputRef.current.select();
+      try { inputRef.current.select(); } catch {/**/}
     }
   }, [isEditing]);
 
-  const handleSave = () => {
-    let processedValue = editValue;
+  // Position the portal popover below the trigger; close on scroll / outside click
+  useEffect(() => {
+    if (!open) return;
+    const compute = () => {
+      const rect = (triggerRef.current ?? containerRef.current)?.getBoundingClientRect();
+      if (!rect) return;
+      setPopPos({ top: rect.bottom + 4, left: rect.left });
+    };
+    compute();
+    const handler = (e: MouseEvent) => {
+      if (popoverRef.current?.contains(e.target as Node)) return;
+      if (containerRef.current?.contains(e.target as Node)) return;
+      setOpen(false);
+    };
+    const onScroll = () => setOpen(false);
+    document.addEventListener("mousedown", handler);
+    window.addEventListener("scroll", onScroll, true);
+    window.addEventListener("resize", compute);
+    return () => {
+      document.removeEventListener("mousedown", handler);
+      window.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("resize", compute);
+    };
+  }, [open]);
 
+  const commit = async (next: unknown) => {
+    if (saving.current) return;
+    let processed: unknown = next;
     if (type === "currency" || type === "number") {
-      processedValue = parseFloat(editValue) || 0;
+      const n = parseFloat(String(next));
+      processed = Number.isFinite(n) ? n : 0;
     }
-
-    // Skip API call if value hasn't actually changed
-    if (processedValue === value || String(processedValue).trim() === String(value ?? "").trim()) {
+    const sameStr = String(processed ?? "").trim() === String(value ?? "").trim();
+    if (processed === value || sameStr) {
       setIsEditing(false);
       return;
     }
-
-    onSave(processedValue);
-    setIsEditing(false);
-  };
-
-  const handleCancel = () => {
-    setEditValue(value);
-    setIsEditing(false);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleSave();
-    } else if (e.key === "Escape") {
-      handleCancel();
+    saving.current = true;
+    try {
+      await Promise.resolve(onSave(processed));
+    } catch (err) {
+      sonner.error("Save failed", { description: String(err).slice(0, 120) });
+    } finally {
+      saving.current = false;
+      setIsEditing(false);
     }
   };
 
-  const formatDisplayValue = (val: any) => {
-    if (displayValue) return displayValue;
-
-    switch (type) {
-      case "currency":
-        return val ? (
-          <span className="font-bold tabular-nums text-success">{parseFloat(val).toLocaleString()}</span>
-        ) : (
-          <span className="text-text-muted">0</span>
-        );
-      case "date": {
-        if (!val) return "";
-        const d = new Date(val);
-        const now = new Date();
-        const diffMs = now.getTime() - d.getTime();
-        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-        let relative = "";
-        if (diffDays === 0) relative = "Today";
-        else if (diffDays === 1) relative = "1d ago";
-        else if (diffDays < 7) relative = `${diffDays}d ago`;
-        else if (diffDays < 30) relative = `${Math.floor(diffDays / 7)}w ago`;
-        else relative = d.toLocaleDateString();
-        return <span className="text-text-muted text-xs">{relative}</span>;
-      }
-      case "email":
-        return val ? (
-          <a
-            href={`mailto:${val}`}
-            className="text-accent hover:text-accent-light transition-colors"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {val}
-          </a>
-        ) : (
-          ""
-        );
-      case "tel":
-        return val ? (
-          <a
-            href={`tel:${val}`}
-            className="text-cyan hover:text-cyan/80 transition-colors"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {val}
-          </a>
-        ) : (
-          ""
-        );
-      case "multiselect":
-        return Array.isArray(val) ? (
-          <div className="flex flex-wrap gap-1">
-            {val.map((item: any, index: number) => (
-              <Badge key={index} variant="secondary" className="text-xs">
-                {item}
-              </Badge>
-            ))}
-          </div>
-        ) : (
-          ""
-        );
-      default:
-        return val || "";
-    }
+  const cancel = () => {
+    setEditValue(value ?? "");
+    setIsEditing(false);
   };
 
-  // Handle multiselect editing
-  if (type === "multiselect") {
+  if (disabled) {
     return (
-      <div onClick={(e) => e.stopPropagation()}>
-        <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              className={cn(
-                "h-5 w-5 p-0 text-text-muted hover:text-text-primary hover:bg-elevated rounded-full",
-                className
-              )}
-            >
-              <Edit className="w-3 h-3" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent
-            className="w-64 bg-surface border-accent/20"
-            onClick={(e: any) => e.stopPropagation()}
+      <div className={cn("opacity-60 truncate", className)}>
+        {children ?? displayValue ?? defaultDisplay(value, type)}
+      </div>
+    );
+  }
+
+  // ── SELECT ─────────────────────────────────────────────────────────────
+  if (type === "select") {
+    return (
+      <div ref={containerRef} className="inline-flex" onClick={(e) => e.stopPropagation()}>
+        <button
+          ref={triggerRef}
+          onClick={() => setOpen((o) => !o)}
+          className={cn("group inline-flex items-center gap-1 cursor-pointer hover:brightness-125 transition-all", className)}
+        >
+          {displayValue ?? <span className="text-text-secondary">{String(value ?? placeholder)}</span>}
+          <ChevronDown className="w-2.5 h-2.5 text-text-muted opacity-0 group-hover:opacity-100" />
+        </button>
+        {open && popPos && typeof document !== "undefined" && createPortal(
+          <div
+            ref={popoverRef}
+            onClick={(e) => e.stopPropagation()}
+            className="fixed z-[100] min-w-[160px] rounded-lg border border-border-med bg-surface shadow-[0_12px_36px_rgba(0,0,0,0.6)] backdrop-blur-md overflow-hidden"
+            style={{ top: popPos.top, left: popPos.left }}
           >
-            <div className="space-y-2">
-              <div className="font-medium text-text-primary text-sm">Edit Tags</div>
-              <div className="flex flex-wrap gap-1">
-                {options.map((option) => {
-                  const isSelected = Array.isArray(value) && value.includes(option.value);
+            {options.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => { setOpen(false); commit(opt.value); }}
+                className={cn(
+                  "w-full text-left px-3 py-1.5 text-xs cursor-pointer hover:bg-elevated transition-colors flex items-center justify-between",
+                  String(value) === opt.value ? "text-amber-300 bg-amber-500/5" : "text-text-secondary"
+                )}
+              >
+                <span>{opt.label}</span>
+                {String(value) === opt.value && <Check className="w-3 h-3" />}
+              </button>
+            ))}
+          </div>,
+          document.body,
+        )}
+      </div>
+    );
+  }
+
+  // ── MULTISELECT (tags) ─────────────────────────────────────────────────
+  if (type === "multiselect") {
+    const arr = Array.isArray(value) ? (value as string[]) : [];
+    return (
+      <div ref={containerRef} className="inline-flex" onClick={(e) => e.stopPropagation()}>
+        <div className="flex flex-wrap gap-1 items-center">
+          {children ?? displayValue}
+          <button
+            ref={triggerRef}
+            onClick={() => setOpen((o) => !o)}
+            className="w-4 h-4 rounded-sm border border-dashed border-border text-text-muted hover:text-amber-400 hover:border-amber-500/40 transition-colors flex items-center justify-center cursor-pointer"
+            title="Edit tags"
+          >
+            <Plus className="w-2.5 h-2.5" />
+          </button>
+        </div>
+        {open && popPos && typeof document !== "undefined" && createPortal(
+          <div
+            ref={popoverRef}
+            onClick={(e) => e.stopPropagation()}
+            className="fixed z-[100] min-w-[260px] p-2 rounded-lg border border-border-med bg-surface shadow-[0_12px_36px_rgba(0,0,0,0.6)] backdrop-blur-md"
+            style={{ top: popPos.top, left: popPos.left }}
+          >
+            <div className="text-[9px] uppercase tracking-wider font-bold text-text-muted mb-1.5 px-1">Tags</div>
+            {options.length > 0 && (
+              <div className="flex flex-wrap gap-1 mb-2">
+                {options.map((opt) => {
+                  const on = arr.includes(opt.value);
                   return (
-                    <Badge
-                      key={option.value}
-                      variant={isSelected ? "default" : "outline"}
-                      className={cn(
-                        "cursor-pointer text-xs",
-                        isSelected
-                          ? "bg-accent/20 text-accent border-accent/30"
-                          : "border-border text-text-secondary hover:bg-elevated"
-                      )}
+                    <button
+                      key={opt.value}
                       onClick={() => {
-                        const currentValues = Array.isArray(value) ? value : [];
-                        const newValues = isSelected
-                          ? currentValues.filter((v) => v !== option.value)
-                          : [...currentValues, option.value];
-                        onSave(newValues);
+                        const next = on ? arr.filter((v) => v !== opt.value) : [...arr, opt.value];
+                        onSave(next);
                       }}
+                      className={cn(
+                        "px-1.5 py-0.5 rounded text-[10px] font-medium border cursor-pointer transition-colors",
+                        on ? "bg-amber-500/15 border-amber-500/40 text-amber-300" : "bg-surface-2 border-border text-text-muted hover:border-border-med",
+                      )}
                     >
-                      {option.label}
-                    </Badge>
+                      {opt.label}
+                    </button>
                   );
                 })}
               </div>
-            </div>
-          </PopoverContent>
-        </Popover>
-      </div>
-    );
-  }
-
-  // Handle select editing
-  if (type === "select") {
-    if (disabled) {
-      return (
-        <div
-          className={cn(
-            "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border border-border",
-            className
-          )}
-        >
-          {displayValue || value}
-        </div>
-      );
-    }
-
-    return (
-      <div onClick={(e) => e.stopPropagation()}>
-        <Select value={value} onValueChange={onSave}>
-          <SelectTrigger
-            className={cn(
-              "h-auto p-0 border-none bg-transparent shadow-none hover:brightness-110 [&>svg]:hidden",
-              className
             )}
-          >
-            <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border border-border cursor-pointer">
-              {displayValue || <SelectValue placeholder={placeholder} />}
-            </div>
-          </SelectTrigger>
-          <SelectContent className="bg-surface border-accent/20 min-w-[160px]">
-            {options.map((option) => (
-              <SelectItem
-                key={option.value}
-                value={option.value}
-                className="text-xs text-text-secondary hover:bg-elevated hover:text-text-primary cursor-pointer"
-              >
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+            {arr.length > 0 && (
+              <div className="flex flex-wrap gap-1 mb-2">
+                {arr.filter((v) => !options.some((o) => o.value === v)).map((tag) => (
+                  <span key={tag} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                    {tag}
+                    <button
+                      onClick={() => onSave(arr.filter((v) => v !== tag))}
+                      className="hover:text-rose-300 cursor-pointer"
+                    >
+                      <X className="w-2 h-2" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <input
+              autoFocus
+              type="text"
+              placeholder="Add tag + Enter"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  const v = (e.target as HTMLInputElement).value.trim();
+                  if (v && !arr.includes(v)) onSave([...arr, v]);
+                  (e.target as HTMLInputElement).value = "";
+                }
+                if (e.key === "Escape") setOpen(false);
+              }}
+              className="w-full px-2 py-1 rounded text-[11px] bg-surface-2 border border-border text-text-primary placeholder:text-text-disabled outline-none focus:border-amber-500/40"
+            />
+          </div>,
+          document.body,
+        )}
       </div>
     );
   }
 
-  // Handle regular text/input editing
+  // ── EDIT MODE ─────────────────────────────────────────────────────────
   if (isEditing) {
+    const inputType = type === "currency" || type === "number" ? "number" : type === "date" ? "date" : "text";
     return (
-      <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
-        <Input
+      <div className="flex items-center gap-1 w-full" onClick={(e) => e.stopPropagation()}>
+        <input
           ref={inputRef}
-          type={type === "currency" ? "number" : type}
-          value={editValue}
+          type={inputType}
+          value={String(editValue ?? "")}
           onChange={(e) => setEditValue(e.target.value)}
-          onKeyDown={handleKeyDown}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") { e.preventDefault(); commit(editValue); }
+            if (e.key === "Escape") { e.preventDefault(); cancel(); }
+          }}
           onBlur={(e) => {
-            // Don't save if clicking the save/cancel buttons
             const related = e.relatedTarget as HTMLElement | null;
-            if (related?.closest("[data-editable-action]")) return;
-            handleSave();
+            if (related?.dataset.editAction === "cancel") { cancel(); return; }
+            commit(editValue);
           }}
-          onClick={(e) => e.stopPropagation()}
-          className="h-6 text-xs border-accent/30 focus:border-accent px-1"
+          step={type === "currency" ? "0.01" : type === "number" ? "1" : undefined}
           placeholder={placeholder}
-          step={type === "currency" ? "0.01" : undefined}
-          min={type === "currency" ? "0" : undefined}
+          className="h-7 w-full min-w-0 px-2 rounded text-[12px] bg-surface-2 border border-amber-500/40 text-text-primary outline-none focus:border-amber-500/70 focus:shadow-[0_0_8px_rgba(251,191,36,0.25)]"
         />
-        <Button
-          size="sm"
-          variant="ghost"
-          data-editable-action="save"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleSave();
-          }}
-          className="h-5 w-5 p-0 text-success hover:text-success/80"
+        <button
+          data-edit-action="save"
+          onMouseDown={(e) => { e.preventDefault(); commit(editValue); }}
+          className="w-5 h-5 rounded shrink-0 flex items-center justify-center text-emerald-400 hover:bg-emerald-500/10 cursor-pointer"
+          title="Save (Enter)"
         >
           <Check className="w-3 h-3" />
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          data-editable-action="cancel"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleCancel();
-          }}
-          className="h-5 w-5 p-0 text-error hover:text-error/80"
+        </button>
+        <button
+          data-edit-action="cancel"
+          onMouseDown={(e) => { e.preventDefault(); cancel(); }}
+          className="w-5 h-5 rounded shrink-0 flex items-center justify-center text-rose-400 hover:bg-rose-500/10 cursor-pointer"
+          title="Cancel (Esc)"
         >
           <X className="w-3 h-3" />
-        </Button>
+        </button>
       </div>
     );
   }
 
+  // ── VIEW MODE ─────────────────────────────────────────────────────────
+  // Fixed-height inner row, no margin growth on hover — keeps the table geometry
+  // rock-solid. Hover indicator is a left/right border instead of an outset ring.
+  const isRight = align === "right";
   return (
     <div
+      onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
       className={cn(
-        "group rounded transition-colors whitespace-nowrap overflow-hidden text-ellipsis",
-        disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:bg-elevated/50",
-        className
+        "group block w-full cursor-pointer rounded transition-colors truncate",
+        isRight
+          ? "border-r-2 border-transparent hover:border-amber-500/40 hover:bg-elevated/40 pr-1.5 text-right"
+          : "border-l-2 border-transparent hover:border-amber-500/40 hover:bg-elevated/40 pl-1.5",
+        className,
       )}
-      onClick={
-        disabled
-          ? undefined
-          : (e) => {
-              e.stopPropagation();
-              setIsEditing(true);
-            }
-      }
-      style={{ lineHeight: "20px" }}
+      title="Click to edit"
     >
-      <div className="flex items-center gap-1 overflow-hidden">
-        <div className="flex items-center gap-1 min-w-0 overflow-hidden">
-          {type === "currency" && <DollarSign className="w-3 h-3 text-success shrink-0" />}
-          {type === "email" && <Mail className="w-3 h-3 text-accent shrink-0" />}
-          {type === "tel" && <Phone className="w-3 h-3 text-cyan shrink-0" />}
-          <span className="truncate">{formatDisplayValue(value)}</span>
-        </div>
-      </div>
+      <span className={cn(
+        "inline-flex items-center gap-1 min-w-0 max-w-full",
+        isRight && "justify-end",
+      )}>
+        {!isRight && type === "currency" && <DollarSign className="w-3 h-3 text-emerald-400 shrink-0" />}
+        {!isRight && type === "email" && <Mail className="w-3 h-3 text-cyan-400 shrink-0" />}
+        {!isRight && type === "tel" && <Phone className="w-3 h-3 text-emerald-400 shrink-0" />}
+        <span className="truncate">{children ?? displayValue ?? defaultDisplay(value, type)}</span>
+      </span>
     </div>
   );
+}
+
+function defaultDisplay(value: unknown, type: string): ReactNode {
+  if (value === null || value === undefined || value === "") {
+    return <span className="text-text-disabled italic">—</span>;
+  }
+  if (type === "currency") {
+    const n = typeof value === "number" ? value : parseFloat(String(value));
+    return <span className="font-mono tabular-nums text-emerald-300">{Number.isFinite(n) ? n.toLocaleString() : 0}</span>;
+  }
+  if (type === "date") {
+    try {
+      const d = new Date(String(value));
+      const days = Math.floor((Date.now() - d.getTime()) / 86400000);
+      const rel = days === 0 ? "today" : days === 1 ? "yesterday" : days < 7 ? `${days}d ago` : days < 30 ? `${Math.floor(days / 7)}w ago` : d.toLocaleDateString();
+      return <span className="text-text-muted text-[11px] font-mono">{rel}</span>;
+    } catch { return String(value); }
+  }
+  if (type === "email" && value) {
+    return <span className="text-cyan-300">{String(value)}</span>;
+  }
+  if (type === "tel" && value) {
+    return <span className="text-emerald-300">{String(value)}</span>;
+  }
+  return String(value);
 }

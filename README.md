@@ -2,19 +2,22 @@
 
 # FusionClaw
 
-**The AI-native business operating system.**
+### All hustle. No luck. One database.
 
-Run your entire business from one dark-mode dashboard — CRM, operations, content, finance — with 234 MCP tools that let any AI agent operate it programmatically.
+**The agent-native business operating system.** Bring your own AI agent. Run your own business. CRM, operations, content, finance, marketing — one Postgres database, 234 MCP tools, dark-mode-only.
+
+<!-- TODO: replace with hosted YouTube install video embed once recorded -->
+<!-- [![FusionClaw 60-second install](docs/assets/install-video-thumb.png)](https://youtu.be/PLACEHOLDER) -->
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript)](https://typescriptlang.org)
 [![Tailwind](https://img.shields.io/badge/Tailwind-v4-06B6D4?logo=tailwindcss)](https://tailwindcss.com)
 [![Drizzle](https://img.shields.io/badge/Drizzle-ORM-C5F74F?logo=drizzle)](https://orm.drizzle.team)
-[![License](https://img.shields.io/badge/License-BSL_1.1-blue)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![CI](https://github.com/Fusion-Data-Company/FusionClaw/actions/workflows/ci.yml/badge.svg)](https://github.com/Fusion-Data-Company/FusionClaw/actions/workflows/ci.yml)
 [![GitHub stars](https://img.shields.io/github/stars/Fusion-Data-Company/FusionClaw?style=social)](https://github.com/Fusion-Data-Company/FusionClaw)
 
-[Live Demo](https://fusionclaw.vercel.app) | [Vision](VISION.md) | [Setup Guide](docs/setup-guide.md) | [Architecture](docs/architecture.md) | [Contributing](CONTRIBUTING.md)
+[fusionclaw.app](https://fusionclaw.app) · [Live Demo](https://demo.fusionclaw.app) · [Docs](https://docs.fusionclaw.app) · [Discord](#) · [Vision](VISION.md) · [Contributing](CONTRIBUTING.md)
 
 </div>
 
@@ -24,15 +27,31 @@ Run your entire business from one dark-mode dashboard — CRM, operations, conte
 
 FusionClaw is a unified business platform built for small business owners and agencies who want one tool instead of ten. It merges CRM, employee ops, content creation, marketing, and bookkeeping into a single Next.js application — and exposes everything through MCP so AI agents like Claude Code can run your business alongside you.
 
-### Key capabilities
+### What sets it apart — agent-native from the metal up
 
-- **CRM & Pipeline** — 37k+ row TanStack Virtual table, drag-and-drop kanban, full lead lifecycle
+Most CRMs added a chat sidebar. FusionClaw is built around a self-improving agent fleet:
+
+- **🪄 Skill Forge** — Type a one-line goal, get a working skill (prompt + eval criteria + seed test cases) in 5 seconds
+- **🧠 Karpathy reflection loop** — Every Monday at 6am the worst-performing skill gets analyzed and 3 prompt edits proposed
+- **⚡ Reasoning trace streaming** — Watch agents think live; tool calls render as expandable nodes, final output as interactive UI
+- **🎨 Generative UI** — Skills return scorecards, email previews, intel cards — not walls of text
+- **🧪 Eval Studio** — Per-skill test cases with pass/fail matrix; 80% rate gates promotion to production
+- **👥 Council mode** — 3 agents (Sales, Researcher, Closer) debate every deal, then synthesize a verdict
+- **🎙️ Voice agent** — Full-duplex via OpenAI Realtime; talk to your CRM, run skills, create tasks
+- **🌐 Browser-using skills** — Hand a URL, get back structured intel; ready to swap to Stagehand for full automation
+- **💰 Cost-optimized routing** — Thompson sampling bandit picks the cheapest model that hits your eval bar
+- **📚 Wiki memory** — The agent's memory layer is a transparent wiki you can read, edit, and curate (no opaque vector DB)
+- **🛒 Skill Marketplace** — One-click install of curated templates with seed evals included
+
+### Standard business capabilities
+
+- **CRM & Pipeline** — 37k+ row TanStack Virtual table with full inline editing, drag-and-drop kanban, complete lead lifecycle
 - **Employee Ops** — Shift tracking, daily checklists, task management, accountability reports
-- **Content Studio** — OpenRouter streaming chat, fal.ai image generation (3 models), WordPress publishing
-- **Marketing** — Email campaigns, AI content queue with approval workflow
+- **Content Studio** — OpenRouter streaming chat, fal.ai image generation, WordPress publishing
+- **Marketing** — Email campaigns, AI content queue with approval workflow, content calendar
 - **Finance** — Invoices with line items, expense tracking (10 categories), P&L dashboard with tax estimates
-- **234 MCP Tools** — Give any MCP-compatible agent full programmatic control with a single API key
-- **AI Chat Agent** — Built-in assistant with real-time context about your entire business
+- **MCP Server** — 100+ tools exposing the entire platform to MCP-compatible agents with a single API key
+- **Webhooks · Workflows · Activity Stream** — Inbound webhooks fire skills; outbound webhooks fire on lead/task/skill events; live activity stream shows every run + cost + latency
 
 ## Quick Start
 
@@ -40,11 +59,13 @@ FusionClaw is a unified business platform built for small business owners and ag
 git clone https://github.com/Fusion-Data-Company/FusionClaw.git
 cd FusionClaw
 npm install
-npm run onboard    # interactive setup: DB, API keys, MCP key
-npm run dev        # http://localhost:3000
+npm run onboard    # interactive: DB URL, optional API keys, MCP key, optional OWNER_PASSWORD
+npm run dev        # http://localhost:3000 — no login required on localhost
 ```
 
-> The `onboard` command creates your `.env.local`, pushes the database schema, and generates a secure MCP API key. See the [Setup Guide](docs/setup-guide.md) for manual configuration.
+**What you should see:** the landing page at `localhost:3000`. Click **Live Demo** → you're routed straight into the app at `/dashboard`. **No signup, no Clerk, no third-party auth.** On localhost you're trusted automatically. When you deploy to Vercel or your own server, you set a single `OWNER_PASSWORD` env var to gate the UI. Agents authenticate with the MCP API key.
+
+> The `onboard` command creates your `.env.local`, pushes the database schema, generates a secure MCP API key, and optionally generates an `OWNER_PASSWORD` for deployed instances. See the [Setup Guide](docs/setup-guide.md) for manual configuration.
 
 ## Modules
 
@@ -183,7 +204,7 @@ Looking for a place to start? Check out issues labeled [`good first issue`](http
 
 ## License
 
-[Business Source License 1.1](LICENSE) — Free for non-competitive use. Converts to Apache 2.0 on 2030-01-01.
+[MIT License](LICENSE) — free for any use, including commercial. Fork it, ship it, sell it. Just keep the copyright notice.
 
 ---
 

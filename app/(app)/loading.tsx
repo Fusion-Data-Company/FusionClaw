@@ -36,7 +36,7 @@ export default function AppLoading() {
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="border-b border-border/50 px-4 py-3 flex gap-8">
             {Array.from({ length: 5 }).map((_, j) => (
-              <div key={j} className="h-3 rounded bg-surface-2" style={{ width: `${60 + Math.random() * 40}px` }} />
+              <div key={j} className="h-3 rounded bg-surface-2" style={{ width: `${[70, 90, 60, 80, 75][j % 5]}px` }} />
             ))}
           </div>
         ))}

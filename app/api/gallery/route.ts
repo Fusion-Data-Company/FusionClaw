@@ -17,7 +17,7 @@ export async function GET() {
       if (!urls || urls.length === 0) return [];
 
       return urls.map((url, index) => ({
-        id: `${gen.id}-${index}`,
+        id: `${gen.id}::${index}`,
         generationId: gen.id,
         imageUrl: url,
         prompt: gen.prompt,

@@ -5,6 +5,16 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
 
+// Elite agent-native capabilities — the differentiators that justify the launch
+const ELITE_FEATURES: Array<{ tag: string; title: string; desc: string }> = [
+  { tag: "Forge", title: "Skills that write themselves", desc: "Type a one-line goal. The platform generates a working skill — prompt, eval criteria, model, seed test cases — in 5 seconds." },
+  { tag: "Karpathy", title: "Self-improving via reflection loop", desc: "Every Monday at 6am, the worst-performing skill gets analyzed and 3 prompt edits proposed. Wake up to a smarter platform." },
+  { tag: "Live", title: "Watch agents think", desc: "Click Run on any skill. A side panel streams tokens, expands tool calls, and renders the final output as an interactive UI component — not a wall of text." },
+  { tag: "Council", title: "3 agents debate every deal", desc: "Sales, Researcher, and Closer personas argue over a lead in real time, then synthesize a verdict. All grounded in your wiki notes." },
+  { tag: "Voice", title: "Talk to your CRM", desc: "Full-duplex voice agent via OpenAI Realtime. \"Move Cedar & Pine to negotiation and book a follow-up Tuesday\" — and it does both." },
+  { tag: "Browser", title: "Skills that browse the web", desc: "Hand a URL to any skill. It reads, follows links, and returns structured intel. Zero-dependency baseline; ready to swap to Stagehand for full automation." },
+];
+
 const FEATURES = [
   {
     icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z",
@@ -105,6 +115,7 @@ export default function LandingPage() {
             </span>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm text-white/60">
+            <a href="#agent" className="hover:text-amber-400 transition-colors">Agent</a>
             <a href="#features" className="hover:text-cyan-400 transition-colors">Features</a>
             <a href="#install" className="hover:text-cyan-400 transition-colors">Install</a>
             <a href="#mcp" className="hover:text-cyan-400 transition-colors">MCP Tools</a>
@@ -245,8 +256,60 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ─── ELITE / AGENT-NATIVE CAPABILITIES ─── */}
+      <section id="agent" className="relative py-24 border-t border-white/5">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-amber-400/30 bg-amber-400/5 text-[10px] uppercase tracking-[0.25em] font-bold text-amber-300 mb-4">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.7)]" />
+              What sets it apart
+            </div>
+            <h2 className="text-3xl font-bold sm:text-4xl" style={{ fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)" }}>
+              Agents that write their own skills,{" "}
+              <span className="bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 bg-clip-text text-transparent">improve overnight</span>
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-white/60">
+              Most CRMs added a chat sidebar. FusionClaw is built around a self-improving agent fleet: skills define themselves, evaluate themselves with real test cases, and reflect on their own failures every Monday.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {ELITE_FEATURES.map((f) => (
+              <div
+                key={f.title}
+                className="group relative overflow-hidden border border-white/8 bg-gradient-to-br from-white/[0.03] to-transparent p-5 transition-all hover:border-amber-400/40"
+                style={{ clipPath: "polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px))" }}
+              >
+                {/* Holographic shimmer on hover */}
+                <span
+                  className="pointer-events-none absolute inset-0 -translate-x-full opacity-0 group-hover:opacity-100 group-hover:translate-x-full transition-all duration-1000"
+                  style={{ background: "linear-gradient(110deg, transparent 30%, rgba(251,191,36,0.18) 50%, transparent 70%)" }}
+                />
+                {/* Corner brackets */}
+                <span className="pointer-events-none absolute top-2 left-2 w-2 h-2 border-t border-l border-amber-400/40" />
+                <span className="pointer-events-none absolute bottom-2 right-2 w-2 h-2 border-b border-r border-amber-400/40" />
+
+                <div className="relative">
+                  <div className="inline-block px-2 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-widest border border-amber-400/30 bg-amber-400/10 text-amber-300 mb-3">
+                    {f.tag}
+                  </div>
+                  <h3 className="text-base font-bold text-white mb-1.5" style={{ fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)" }}>
+                    {f.title}
+                  </h3>
+                  <p className="text-[13px] text-white/60 leading-relaxed">{f.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center mt-8 text-[11px] text-white/40 font-mono">
+            Plus eval studio · cost-optimized model routing · live activity stream · skill marketplace · wiki memory layer
+          </div>
+        </div>
+      </section>
+
       {/* ─── FEATURES ─── */}
-      <section id="features" className="relative py-24">
+      <section id="features" className="relative py-24 border-t border-white/5">
         <div className="mx-auto max-w-7xl px-6">
           <div className="text-center">
             <h2 className="text-3xl font-bold sm:text-4xl" style={{ fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)" }}>

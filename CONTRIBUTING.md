@@ -102,4 +102,4 @@ Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before contributing.
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the project's [BSL 1.1 License](LICENSE).
+By contributing, you agree that your contributions will be licensed under the project's [MIT License](LICENSE).

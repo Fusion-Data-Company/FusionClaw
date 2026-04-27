@@ -1,27 +1,28 @@
 import { type Page } from "@playwright/test";
 
 /**
- * Login to FusionClaw via the gateway password.
- * Navigates to /login, fills the password, submits, and waits for dashboard.
+ * Auth model: localhost passes through middleware without auth.
+ * On a deployed instance, the suite would need to call /api/auth/login
+ * with OWNER_PASSWORD first. For local Playwright runs, these helpers
+ * just navigate to the app — the middleware trusts localhost.
+ */
+
+/**
+ * "Log in" by navigating to the app. On localhost, no credentials are
+ * required — the middleware short-circuits and lib/auth.ts auto-creates
+ * the singleton owner on first request.
  */
 export async function login(page: Page) {
-  const password = process.env.GATEWAY_PASSWORD || "fusionclaw2024";
-  await page.goto("/login");
-  await page.fill('input[type="password"]', password);
-  await page.click('button[type="submit"]');
-  await page.waitForURL("**/dashboard", { timeout: 10000 });
+  await page.goto("/dashboard");
 }
 
 /**
- * Login via API and set the session cookie directly (faster for non-auth tests).
+ * API-side equivalent. With localhost middleware passthrough, requests
+ * to API routes need no setup — but if a test runs against a deployed
+ * URL with OWNER_PASSWORD set, you'd extend this to POST /api/auth/login
+ * with the password first.
  */
-export async function loginViaApi(page: Page) {
-  const password = process.env.GATEWAY_PASSWORD || "fusionclaw2024";
-  const res = await page.request.post("/api/auth/login", {
-    data: { password },
-  });
-  // The cookie is set automatically from the response
-  if (res.status() !== 200) {
-    throw new Error(`Login failed with status ${res.status()}`);
-  }
+export async function loginViaApi(_page: Page) {
+  // No-op on localhost. Future: detect non-localhost baseURL and call
+  // /api/auth/login with process.env.OWNER_PASSWORD.
 }

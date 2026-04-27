@@ -1,12 +1,9 @@
 import { test, expect } from "@playwright/test";
 
-const PASSWORD = process.env.GATEWAY_PASSWORD || "fusionclaw2024";
-
+// Auth: localhost is trusted by middleware, so request fixtures targeting
+// the local dev server need no setup. To run against a deployed URL,
+// extend this with a beforeEach that POSTs OWNER_PASSWORD to /api/auth/login.
 test.describe("CRUD API Routes", () => {
-  // Login before all tests to get session cookie
-  test.beforeEach(async ({ request }) => {
-    await request.post("/api/auth/login", { data: { password: PASSWORD } });
-  });
 
   test("GET /api/dashboard — returns metrics", async ({ request }) => {
     const res = await request.get("/api/dashboard");

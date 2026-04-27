@@ -75,6 +75,7 @@ export async function POST(request: NextRequest) {
     const result = await db.insert(leads).values({
       company: body.company,
       type: body.type,
+      contactType: body.contactType || "lead",
       website: body.website,
       contact: body.contact,
       jobTitle: body.jobTitle,

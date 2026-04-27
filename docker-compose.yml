@@ -1,12 +1,63 @@
-version: "3.8"
+version: "3.9"
+
+# FusionClaw — one-command self-host
+# ----------------------------------------------------------------------------
+# Quickstart:
+#   1. cp .env.local.example .env.local  (or .env.docker)
+#   2. fill in OWNER_PASSWORD, OPENROUTER_API_KEY, SESSION_SECRET, etc.
+#   3. docker compose up -d --build
+#   4. open http://localhost:3000
+#
+# Notes:
+#  - Postgres data persists in the named volume `fusionclaw-pgdata`.
+#  - The app waits for the DB to be healthy before starting.
+#  - On first run, run `docker compose exec app npx drizzle-kit push` to apply schema.
+# ----------------------------------------------------------------------------
 
 services:
-  fusionclaw:
-    build: .
-    ports:
-      - "3000:3000"
-    env_file:
-      - .env.local
-    environment:
-      - NODE_ENV=production
+  db:
+    image: postgres:16-alpine
+    container_name: fusionclaw-db
     restart: unless-stopped
+    environment:
+      POSTGRES_USER: fusionclaw
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-fusionclaw_dev}
+      POSTGRES_DB: fusionclaw
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - fusionclaw-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fusionclaw -d fusionclaw"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fusionclaw-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      DATABASE_URL: postgresql://fusionclaw:${POSTGRES_PASSWORD:-fusionclaw_dev}@db:5432/fusionclaw
+      NODE_ENV: production
+      # Pull from .env.local if present, otherwise from process env
+      OWNER_PASSWORD: ${OWNER_PASSWORD:-}
+      SESSION_SECRET: ${SESSION_SECRET:-}
+      MCP_API_KEY: ${MCP_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      FAL_KEY: ${FAL_KEY:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      BLOB_READ_WRITE_TOKEN: ${BLOB_READ_WRITE_TOKEN:-}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+
+volumes:
+  fusionclaw-pgdata:
+    name: fusionclaw-pgdata

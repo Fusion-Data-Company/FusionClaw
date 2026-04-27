@@ -1,11 +1,17 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { User } from "lucide-react";
 import { RightSidebar } from "@/components/admin/RightSidebar";
 import { BackgroundDecoration } from "@/components/ui/BackgroundDecoration";
+import { HealthFooter } from "@/components/ui/HealthFooter";
+import { CommandPalette } from "@/components/ui/CommandPalette";
+import { NotificationBell } from "@/components/ui/NotificationBell";
+import {
+  CommandIcon, ContactsIcon, FinanceIcon, MarketingIcon, AgentIcon, SystemIcon,
+} from "@/components/ui/SectionIcons";
 import {
   LayoutDashboard,
   CalendarCheck,
@@ -21,7 +27,6 @@ import {
   BookOpen,
   MessageSquare,
   Settings,
-  Bell,
   Search,
   Menu,
   ChevronLeft,
@@ -34,67 +39,112 @@ import {
   Receipt,
   CreditCard,
   TrendingUp,
+  ScrollText,
+  Activity,
+  Webhook,
+  Code,
+  Workflow as WorkflowIcon,
+  Inbox,
+  Calendar,
+  Store,
+  Mic,
 } from "lucide-react";
 
 interface NavItem {
   name: string;
   href: string;
   icon: React.ElementType;
-  iconColor: string;     // tailwind text color for the icon
-  iconBg: string;        // tailwind bg for the icon badge
-  glowColor?: string;    // CSS box-shadow color
+  iconColor: string;
+  iconBg: string;
+  glowColor?: string;
 }
 
 interface NavSection {
   label: string;
-  collapsible?: boolean;
+  sectionIcon: React.ComponentType<{ className?: string; active?: boolean; size?: number }>;
+  accent: string;        // single hex/rgba color for the section header treatment
+  glowRgba: string;      // CSS color for the active section's glow
   items: NavItem[];
 }
 
 const NAV_SECTIONS: NavSection[] = [
   {
     label: "COMMAND",
+    sectionIcon: CommandIcon,
+    accent: "text-blue-300",
+    glowRgba: "rgba(96,165,250,0.45)",
     items: [
       { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, iconColor: "text-blue-400", iconBg: "bg-blue-500/20", glowColor: "rgba(59,130,246,0.25)" },
       { name: "Today", href: "/today", icon: CalendarCheck, iconColor: "text-emerald-400", iconBg: "bg-emerald-500/20", glowColor: "rgba(16,185,129,0.25)" },
       { name: "Tasks", href: "/tasks", icon: ListTodo, iconColor: "text-rose-400", iconBg: "bg-rose-500/20", glowColor: "rgba(244,63,94,0.25)" },
-      { name: "Employees", href: "/employees", icon: Users, iconColor: "text-amber-400", iconBg: "bg-amber-500/20", glowColor: "rgba(245,158,11,0.25)" },
       { name: "Reports", href: "/reports", icon: FileBarChart, iconColor: "text-pink-400", iconBg: "bg-pink-500/20", glowColor: "rgba(236,72,153,0.25)" },
     ],
   },
   {
-    label: "FINANCE",
-    items: [
-      { name: "Invoices", href: "/invoices", icon: Receipt, iconColor: "text-green-400", iconBg: "bg-green-500/20", glowColor: "rgba(74,222,128,0.25)" },
-      { name: "Expenses", href: "/expenses", icon: CreditCard, iconColor: "text-orange-400", iconBg: "bg-orange-500/20", glowColor: "rgba(251,146,60,0.25)" },
-      { name: "Financials", href: "/financials", icon: TrendingUp, iconColor: "text-emerald-400", iconBg: "bg-emerald-500/20", glowColor: "rgba(52,211,153,0.25)" },
-    ],
-  },
-  {
     label: "CONTACTS",
+    sectionIcon: ContactsIcon,
+    accent: "text-cyan-300",
+    glowRgba: "rgba(34,211,238,0.45)",
     items: [
       { name: "Contacts", href: "/leads", icon: Contact, iconColor: "text-cyan-400", iconBg: "bg-cyan-500/20", glowColor: "rgba(34,211,238,0.25)" },
       { name: "Pipeline", href: "/leads/pipeline", icon: Kanban, iconColor: "text-violet-400", iconBg: "bg-violet-500/20", glowColor: "rgba(139,92,246,0.25)" },
+      { name: "Inbox", href: "/inbox", icon: Inbox, iconColor: "text-cyan-400", iconBg: "bg-cyan-500/20", glowColor: "rgba(34,211,238,0.25)" },
+    ],
+  },
+  {
+    label: "FINANCE",
+    sectionIcon: FinanceIcon,
+    accent: "text-emerald-300",
+    glowRgba: "rgba(52,211,153,0.45)",
+    items: [
+      { name: "Financials", href: "/financials", icon: TrendingUp, iconColor: "text-emerald-400", iconBg: "bg-emerald-500/20", glowColor: "rgba(52,211,153,0.25)" },
+      { name: "Invoices", href: "/invoices", icon: Receipt, iconColor: "text-green-400", iconBg: "bg-green-500/20", glowColor: "rgba(74,222,128,0.25)" },
+      { name: "Expenses", href: "/expenses", icon: CreditCard, iconColor: "text-orange-400", iconBg: "bg-orange-500/20", glowColor: "rgba(251,146,60,0.25)" },
     ],
   },
   {
     label: "MARKETING",
+    sectionIcon: MarketingIcon,
+    accent: "text-fuchsia-300",
+    glowRgba: "rgba(232,121,249,0.45)",
     items: [
       { name: "Campaigns", href: "/campaigns", icon: Megaphone, iconColor: "text-red-400", iconBg: "bg-red-500/20", glowColor: "rgba(248,113,113,0.25)" },
       { name: "AI Queue", href: "/ai-queue", icon: Sparkles, iconColor: "text-yellow-400", iconBg: "bg-yellow-500/20", glowColor: "rgba(250,204,21,0.25)" },
       { name: "Studio", href: "/studio", icon: Palette, iconColor: "text-fuchsia-400", iconBg: "bg-fuchsia-500/20", glowColor: "rgba(232,121,249,0.25)" },
       { name: "Gallery", href: "/gallery", icon: Images, iconColor: "text-indigo-400", iconBg: "bg-indigo-500/20", glowColor: "rgba(129,140,248,0.25)" },
       { name: "Publishing Hub", href: "/publishing", icon: Send, iconColor: "text-sky-400", iconBg: "bg-sky-500/20", glowColor: "rgba(56,189,248,0.25)" },
+      { name: "Content Calendar", href: "/calendar", icon: Calendar, iconColor: "text-fuchsia-400", iconBg: "bg-fuchsia-500/20", glowColor: "rgba(232,121,249,0.3)" },
+      { name: "Branding Library", href: "/branding", icon: FolderHeart, iconColor: "text-pink-400", iconBg: "bg-pink-500/20", glowColor: "rgba(236,72,153,0.25)" },
+    ],
+  },
+  {
+    label: "AGENT",
+    sectionIcon: AgentIcon,
+    accent: "text-amber-300",
+    glowRgba: "rgba(251,191,36,0.55)",
+    items: [
+      { name: "Skills Library", href: "/skills", icon: Sparkles, iconColor: "text-amber-400", iconBg: "bg-amber-500/20", glowColor: "rgba(251,191,36,0.3)" },
+      { name: "Skill Forge", href: "/skills/forge", icon: Sparkles, iconColor: "text-orange-400", iconBg: "bg-orange-500/20", glowColor: "rgba(251,146,60,0.3)" },
+      { name: "Marketplace", href: "/marketplace", icon: Store, iconColor: "text-emerald-400", iconBg: "bg-emerald-500/20", glowColor: "rgba(16,185,129,0.3)" },
+      { name: "Voice", href: "/voice", icon: Mic, iconColor: "text-rose-400", iconBg: "bg-rose-500/20", glowColor: "rgba(244,63,94,0.3)" },
+      { name: "Assistant", href: "/chat", icon: MessageSquare, iconColor: "text-purple-400", iconBg: "bg-purple-500/20", glowColor: "rgba(167,139,250,0.25)" },
+      { name: "Agent Connections", href: "/agents", icon: Bot, iconColor: "text-orange-400", iconBg: "bg-orange-500/20", glowColor: "rgba(251,146,60,0.25)" },
+      { name: "Workflows", href: "/workflows", icon: WorkflowIcon, iconColor: "text-violet-400", iconBg: "bg-violet-500/20", glowColor: "rgba(167,139,250,0.3)" },
+      { name: "Activity Stream", href: "/activity", icon: Activity, iconColor: "text-rose-400", iconBg: "bg-rose-500/20", glowColor: "rgba(244,63,94,0.25)" },
+      { name: "Webhooks", href: "/webhooks", icon: Webhook, iconColor: "text-cyan-400", iconBg: "bg-cyan-500/20", glowColor: "rgba(34,211,238,0.25)" },
     ],
   },
   {
     label: "SYSTEM",
+    sectionIcon: SystemIcon,
+    accent: "text-slate-300",
+    glowRgba: "rgba(148,163,184,0.45)",
     items: [
       { name: "Knowledge Base", href: "/knowledge-base", icon: BookOpen, iconColor: "text-teal-400", iconBg: "bg-teal-500/20" },
-      { name: "Assistant", href: "/chat", icon: MessageSquare, iconColor: "text-purple-400", iconBg: "bg-purple-500/20" },
-      { name: "Agent Connections", href: "/agents", icon: Bot, iconColor: "text-orange-400", iconBg: "bg-orange-500/20", glowColor: "rgba(251,146,60,0.25)" },
+      { name: "Employees", href: "/employees", icon: Users, iconColor: "text-amber-400", iconBg: "bg-amber-500/20", glowColor: "rgba(245,158,11,0.25)" },
       { name: "Cron Jobs", href: "/cron-jobs", icon: Clock, iconColor: "text-lime-400", iconBg: "bg-lime-500/20" },
-      { name: "Branding Library", href: "/branding", icon: FolderHeart, iconColor: "text-pink-400", iconBg: "bg-pink-500/20", glowColor: "rgba(236,72,153,0.25)" },
+      { name: "Audit Log", href: "/audit", icon: ScrollText, iconColor: "text-slate-400", iconBg: "bg-slate-500/20" },
+      { name: "API Reference", href: "/api-docs", icon: Code, iconColor: "text-emerald-400", iconBg: "bg-emerald-500/20" },
       { name: "Settings", href: "/settings", icon: Settings, iconColor: "text-slate-400", iconBg: "bg-slate-500/20" },
     ],
   },
@@ -142,39 +192,43 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
-  const [notificationCount, setNotificationCount] = useState(0);
 
-  // Fetch notification count (pending tasks + overdue follow-ups)
+  // Accordion: only one section open at a time. Defaults to whichever
+  // section contains the current page; persists across navigations in localStorage.
+  const sectionForPath = (path: string): string => {
+    for (const sec of NAV_SECTIONS) {
+      if (sec.items.some((it) => it.href === path || (it.href !== "/dashboard" && path.startsWith(it.href)))) {
+        return sec.label;
+      }
+    }
+    return NAV_SECTIONS[0].label;
+  };
+
+  const [openSection, setOpenSection] = useState<string>(() => sectionForPath(pathname));
+
+  // Re-sync open section to the active page (only if user hasn't manually picked one)
+  const userPickedRef = useRef(false);
   useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const res = await fetch("/api/dashboard");
-        if (res.ok) {
-          const data = await res.json();
-          setNotificationCount(data.metrics?.pendingTasks || 0);
-        }
-      } catch { /* silent */ }
-    };
-    fetchNotifications();
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("fc.openSection");
+      if (saved && NAV_SECTIONS.some((s) => s.label === saved)) {
+        userPickedRef.current = true;
+        setOpenSection(saved);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!userPickedRef.current) {
+      setOpenSection(sectionForPath(pathname));
+    }
   }, [pathname]);
 
-  // Global search handler
-  const handleSearch = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && searchQuery.trim()) {
-      router.push(`/leads?search=${encodeURIComponent(searchQuery.trim())}`);
-    }
-  }, [searchQuery, router]);
-
   const toggleSection = (label: string) => {
-    setCollapsedSections(prev => {
-      const next = new Set(prev);
-      if (next.has(label)) {
-        next.delete(label);
-      } else {
-        next.add(label);
-      }
+    userPickedRef.current = true;
+    setOpenSection((curr) => {
+      const next = curr === label ? "" : label;
+      if (typeof window !== "undefined") localStorage.setItem("fc.openSection", next);
       return next;
     });
   };
@@ -182,6 +236,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen bg-bg">
       <BackgroundDecoration />
+      <CommandPalette />
       {/* Mobile Menu Backdrop */}
       {mobileMenuOpen && (
         <div
@@ -228,34 +283,97 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </button>
         </div>
 
-        {/* Nav sections */}
-        <nav className="flex-1 py-4 px-2 space-y-5 overflow-y-auto">
+        {/* Nav sections — accordion: only one open at a time */}
+        <nav className="flex-1 py-3 px-2 space-y-1 overflow-y-auto">
           {NAV_SECTIONS.map((section) => {
-            const isCollapsed = collapsedSections.has(section.label);
+            const SectionIcon = section.sectionIcon;
+            const isOpen = openSection === section.label;
             const hasActiveItem = section.items.some(
-              item => pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))
+              (item) => pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))
             );
 
+            // Collapsed sidebar: render section icons only (clickable)
+            if (sidebarCollapsed) {
+              return (
+                <button
+                  key={section.label}
+                  onClick={() => { setSidebarCollapsed(false); toggleSection(section.label); }}
+                  title={section.label}
+                  className={`w-full h-11 flex items-center justify-center rounded-lg transition-all cursor-pointer ${
+                    hasActiveItem ? "bg-amber-500/5" : "hover:bg-elevated/60"
+                  }`}
+                  style={hasActiveItem ? { boxShadow: `inset 2px 0 0 ${section.glowRgba}` } : undefined}
+                >
+                  <SectionIcon
+                    className={hasActiveItem ? section.accent : "text-text-muted"}
+                    active={hasActiveItem}
+                    size={22}
+                  />
+                </button>
+              );
+            }
+
             return (
-              <div key={section.label}>
-                {!sidebarCollapsed && (
+              <div key={section.label} className="select-none">
+                {/* Section header — clickable accordion control */}
+                <button
+                  onClick={() => toggleSection(section.label)}
+                  className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all ${
+                    isOpen ? "bg-elevated/60" : "hover:bg-elevated/40"
+                  }`}
+                  style={{
+                    boxShadow: hasActiveItem
+                      ? `inset 2px 0 0 ${section.glowRgba}, 0 0 12px ${section.glowRgba.replace("0.45", "0.12").replace("0.55", "0.12")}`
+                      : isOpen ? `inset 2px 0 0 rgba(255,255,255,0.08)` : undefined,
+                  }}
+                >
+                  {/* Corner brackets — sci-fi UI flourish (only on active section) */}
+                  {hasActiveItem && (
+                    <>
+                      <span className="absolute top-1 left-1 w-1.5 h-1.5 border-t border-l opacity-60" style={{ borderColor: section.glowRgba }} />
+                      <span className="absolute top-1 right-1 w-1.5 h-1.5 border-t border-r opacity-60" style={{ borderColor: section.glowRgba }} />
+                      <span className="absolute bottom-1 left-1 w-1.5 h-1.5 border-b border-l opacity-60" style={{ borderColor: section.glowRgba }} />
+                      <span className="absolute bottom-1 right-1 w-1.5 h-1.5 border-b border-r opacity-60" style={{ borderColor: section.glowRgba }} />
+                    </>
+                  )}
+
+                  {/* Custom section icon */}
                   <div
-                    className={`px-3 mb-2 text-[9px] font-extrabold uppercase tracking-[0.15em] flex items-center justify-between ${
-                      section.collapsible ? "cursor-pointer hover:text-text-secondary" : ""
-                    }`}
-                    style={{ color: "var(--color-text-muted)" }}
-                    onClick={() => section.collapsible && toggleSection(section.label)}
+                    className={`w-9 h-9 rounded-md flex items-center justify-center shrink-0 transition-all ${section.accent}`}
+                    style={{
+                      background: hasActiveItem ? `linear-gradient(135deg, ${section.glowRgba.replace(/0\.\d+/, "0.12")} 0%, transparent 100%)` : "rgba(255,255,255,0.02)",
+                      border: `1px solid ${hasActiveItem ? section.glowRgba.replace(/0\.\d+/, "0.3") : "rgba(255,255,255,0.05)"}`,
+                      boxShadow: hasActiveItem ? `0 0 12px ${section.glowRgba.replace(/0\.\d+/, "0.25")}` : undefined,
+                    }}
                   >
-                    <span>{section.label}</span>
-                    {section.collapsible && (
-                      <span className="text-text-disabled">
-                        {isCollapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                      </span>
-                    )}
+                    <SectionIcon active={hasActiveItem} size={20} />
                   </div>
-                )}
-                {(!section.collapsible || !isCollapsed || hasActiveItem) && (
-                  <div className="space-y-0.5">
+
+                  <div className="flex-1 text-left min-w-0">
+                    <div className={`text-[11px] font-bold uppercase tracking-[0.15em] ${hasActiveItem ? section.accent : "text-text-secondary"}`}>
+                      {section.label}
+                    </div>
+                    <div className="text-[10px] text-text-muted font-mono">
+                      {section.items.length} item{section.items.length !== 1 ? "s" : ""}
+                    </div>
+                  </div>
+
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 text-text-muted transition-transform duration-300 shrink-0 ${
+                      isOpen ? "rotate-0" : "-rotate-90"
+                    }`}
+                  />
+                </button>
+
+                {/* Section items — collapsing animation via max-height */}
+                <div
+                  className="overflow-hidden transition-[max-height,opacity] duration-300 ease-out"
+                  style={{
+                    maxHeight: isOpen ? `${section.items.length * 42 + 8}px` : "0px",
+                    opacity: isOpen ? 1 : 0,
+                  }}
+                >
+                  <div className="pl-2 pt-1 pb-1 space-y-0.5">
                     {section.items.map((item) => {
                       const isActive =
                         pathname === item.href ||
@@ -266,36 +384,32 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                           key={item.href}
                           href={item.href}
                           onClick={() => setMobileMenuOpen(false)}
-                          className={`group flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 ${
-                            isActive
-                              ? ""
-                              : "hover:bg-elevated/60"
+                          className={`group relative flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[12px] font-medium transition-all duration-200 ${
+                            isActive ? "" : "hover:bg-elevated/60 hover:translate-x-0.5"
                           }`}
                           style={{
-                            background: isActive ? "rgba(59,130,246,0.08)" : undefined,
-                            color: isActive ? "var(--color-accent)" : "var(--color-text-secondary)",
-                            borderLeft: isActive
-                              ? "2px solid rgba(59,130,246,0.5)"
-                              : "2px solid transparent",
+                            background: isActive ? `linear-gradient(90deg, ${section.glowRgba.replace(/0\.\d+/, "0.10")} 0%, transparent 80%)` : undefined,
+                            color: isActive ? "var(--color-text-primary)" : "var(--color-text-secondary)",
+                            borderLeft: isActive ? `2px solid ${section.glowRgba}` : "2px solid transparent",
                           }}
-                          title={sidebarCollapsed ? item.name : undefined}
                         >
                           <div
-                            className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-all ${
-                              isActive
-                                ? `${item.iconBg} border border-current/20`
-                                : `${item.iconBg} group-hover:scale-110`
+                            className={`w-6 h-6 rounded flex items-center justify-center shrink-0 transition-transform ${item.iconBg} ${
+                              !isActive && "group-hover:scale-110"
                             }`}
                             style={isActive && item.glowColor ? { boxShadow: `0 0 8px ${item.glowColor}` } : undefined}
                           >
-                            <Icon className={`w-3.5 h-3.5 ${isActive ? item.iconColor : item.iconColor} transition-colors`} />
+                            <Icon className={`w-3 h-3 ${item.iconColor}`} />
                           </div>
-                          {!sidebarCollapsed && <span>{item.name}</span>}
+                          <span className="truncate">{item.name}</span>
+                          {isActive && (
+                            <span className="ml-auto w-1 h-1 rounded-full" style={{ background: section.glowRgba, boxShadow: `0 0 6px ${section.glowRgba}` }} />
+                          )}
                         </Link>
                       );
                     })}
                   </div>
-                )}
+                </div>
               </div>
             );
           })}
@@ -303,17 +417,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
         {/* Bottom */}
         {!sidebarCollapsed && (
-          <div className="p-4 border-t border-border">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent/30 to-blue-500/20 flex items-center justify-center border border-accent/20">
-                <User className="w-4 h-4 text-accent" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-xs font-bold text-text-primary truncate">Admin</div>
-                <div className="text-[10px] text-text-muted truncate">rob@fusiondataco.com</div>
+          <>
+            <div className="p-4 border-t border-border">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent/30 to-blue-500/20 flex items-center justify-center border border-accent/20">
+                  <User className="w-4 h-4 text-accent" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-bold text-text-primary truncate">Admin</div>
+                  <div className="text-[10px] text-text-muted truncate">rob@fusiondataco.com</div>
+                </div>
               </div>
             </div>
-          </div>
+            <HealthFooter />
+          </>
         )}
       </aside>
 
@@ -330,19 +447,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <Menu className="w-5 h-5" />
           </button>
 
-          {/* Search */}
+          {/* Search → opens Cmd+K palette */}
           <div className="hidden sm:flex items-center gap-3 flex-1 max-w-md">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                placeholder="Search leads, tasks, content..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={handleSearch}
-                className="w-full h-9 pl-9 pr-4 rounded-lg text-sm outline-none transition-all bg-surface border border-border text-text-primary placeholder:text-text-muted focus:border-accent/30"
-              />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-            </div>
+            <button
+              onClick={() => {
+                window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }));
+              }}
+              className="relative flex-1 h-9 pl-9 pr-3 rounded-lg text-sm text-left bg-surface border border-border text-text-muted hover:border-border-med hover:text-text-secondary transition-colors flex items-center justify-between cursor-pointer group"
+            >
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-hover:text-amber-400 transition-colors" />
+              <span>Search leads, tasks, skills…</span>
+              <kbd className="hidden md:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-mono text-text-muted border border-border bg-surface-2">⌘K</kbd>
+            </button>
           </div>
           {/* Mobile spacer when search is hidden */}
           <div className="flex-1 sm:hidden" />
@@ -353,18 +469,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <InternalClock />
             </div>
 
-            {/* Notification bell */}
-            <button
-              onClick={() => router.push("/tasks")}
-              className="relative w-9 h-9 flex items-center justify-center rounded-lg transition-colors cursor-pointer bg-surface border border-border"
-            >
-              <Bell className="w-4 h-4 text-text-secondary" />
-              {notificationCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center text-white bg-error">
-                  {notificationCount > 9 ? "9+" : notificationCount}
-                </span>
-              )}
-            </button>
+            {/* Notifications */}
+            <NotificationBell />
 
             <div className="hidden md:block">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent/30 to-blue-500/20 flex items-center justify-center border border-accent/20">

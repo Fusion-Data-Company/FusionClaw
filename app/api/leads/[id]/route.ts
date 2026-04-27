@@ -25,6 +25,11 @@ export async function GET(
 }
 
 // PATCH /api/leads/[id] - Update lead
+// Drizzle timestamp columns require Date objects, not ISO strings — coerce them.
+const TIMESTAMP_FIELDS = new Set([
+  "lastContactDate", "nextFollowUpDate", "wonDate",
+]);
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -34,9 +39,26 @@ export async function PATCH(
   try {
     const body = await request.json();
 
+    const coerced: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(body)) {
+      if (TIMESTAMP_FIELDS.has(k)) {
+        if (v === null || v === "" || v === undefined) {
+          coerced[k] = null;
+        } else if (typeof v === "string") {
+          const d = new Date(v);
+          coerced[k] = isNaN(d.getTime()) ? null : d;
+        } else {
+          coerced[k] = v;
+        }
+      } else {
+        coerced[k] = v;
+      }
+    }
+    coerced.updatedAt = new Date();
+
     const result = await db
       .update(leads)
-      .set({ ...body, updatedAt: new Date() })
+      .set(coerced)
       .where(eq(leads.id, id))
       .returning();
 
@@ -47,7 +69,7 @@ export async function PATCH(
     return NextResponse.json(result[0]);
   } catch (error) {
     console.error("Error updating lead:", error);
-    return NextResponse.json({ error: "Failed to update lead" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to update lead", detail: String(error).slice(0, 200) }, { status: 500 });
   }
 }
 

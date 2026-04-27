@@ -703,55 +703,426 @@ export const apiVaultRelations = relations(apiVault, ({ one }) => ({
   user: one(users, { fields: [apiVault.userId], references: [users.id] }),
 }));
 
-// ─── Enrichment Jobs ──────────────────────────────────────────────────────
+// ─── Skills Library (Karpathy-pattern: define → eval → reflect → ship) ─────
 
-export const enrichmentJobStatusEnum = pgEnum("enrichment_job_status", [
-  "pending", "running", "completed", "failed",
+export const skillStageEnum = pgEnum("skill_stage", [
+  "idea",        // Hypothesis: an agentic capability worth trying
+  "testing",     // Wired up, running evals, measuring
+  "validated",   // Passes evals, ready for prod use
+  "production",  // Live, doing work daily
+  "archived",    // Retired or replaced
 ]);
 
-export const enrichmentJobs = pgTable("enrichment_jobs", {
+export const skillCategoryEnum = pgEnum("skill_category", [
+  "outreach",       // Cold email, LinkedIn, follow-ups
+  "qualification",  // Lead scoring, ICP fit, intent signals
+  "content",        // Blog, social, email copy generation
+  "research",       // Company / contact / market intel
+  "ops",            // Internal automations, reports, alerts
+  "support",        // Ticket routing, replies, knowledge lookup
+]);
+
+export const skills = pgTable("skills", {
   id: uuid("id").defaultRandom().primaryKey(),
-  status: enrichmentJobStatusEnum("status").default("pending").notNull(),
-  provider: varchar("provider", { length: 100 }).notNull(),
-  totalLeads: integer("total_leads").default(0).notNull(),
-  enrichedCount: integer("enriched_count").default(0).notNull(),
-  skippedCount: integer("skipped_count").default(0).notNull(),
-  failedCount: integer("failed_count").default(0).notNull(),
-  fieldsTargeted: jsonb("fields_targeted").$type<string[]>().default([]),
-  results: jsonb("results"),
-  error: text("error"),
-  startedAt: timestamp("started_at"),
-  completedAt: timestamp("completed_at"),
+  name: varchar("name", { length: 200 }).notNull(),
+  description: text("description").notNull(),
+  category: skillCategoryEnum("category").default("ops").notNull(),
+  stage: skillStageEnum("stage").default("idea").notNull(),
+  // Karpathy loop fields
+  prompt: text("prompt"),                // The instruction template the agent runs
+  evalCriteria: text("eval_criteria"),   // What "good" looks like
+  reflection: text("reflection"),        // What we learned from runs
+  // Wiring
+  agentProvider: varchar("agent_provider", { length: 50 }),    // openrouter | claude | openclaw | custom
+  agentModel: varchar("agent_model", { length: 100 }),
+  vaultId: uuid("vault_id").references(() => apiVault.id, { onDelete: "set null" }),
+  // Telemetry
+  runs: integer("runs").default(0).notNull(),
+  successes: integer("successes").default(0).notNull(),
+  lastRunAt: timestamp("last_run_at"),
+  // Kanban
+  kanbanOrder: integer("kanban_order").default(0).notNull(),
+  tags: jsonb("tags").$type<string[]>().default([]),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_skills_stage").on(table.stage),
+  index("idx_skills_category").on(table.category),
+]);
+
+export const skillsRelations = relations(skills, ({ one }) => ({
+  vault: one(apiVault, { fields: [skills.vaultId], references: [apiVault.id] }),
+}));
+
+export type Skill = InferSelectModel<typeof skills>;
+
+// ─── Wiki (Knowledge graph with [[wikilinks]]) ──────────────────────────────
+
+export const wikiPages = pgTable("wiki_pages", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  title: varchar("title", { length: 300 }).notNull(),
+  slug: varchar("slug", { length: 200 }).unique().notNull(),
+  content: text("content").default("").notNull(),
+  folderPath: varchar("folder_path", { length: 500 }).default("/").notNull(),
+  confidence: integer("confidence").default(50).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_wiki_pages_slug").on(table.slug),
+  index("idx_wiki_pages_folder").on(table.folderPath),
+]);
+
+export const wikiLinks = pgTable("wiki_links", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  fromPageId: uuid("from_page_id").references(() => wikiPages.id, { onDelete: "cascade" }).notNull(),
+  toPageId: uuid("to_page_id").references(() => wikiPages.id, { onDelete: "cascade" }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_wiki_links_from").on(table.fromPageId),
+  index("idx_wiki_links_to").on(table.toPageId),
+]);
+
+export const wikiPagesRelations = relations(wikiPages, ({ many }) => ({
+  outgoing: many(wikiLinks, { relationName: "outgoing" }),
+  incoming: many(wikiLinks, { relationName: "incoming" }),
+}));
+
+export const wikiLinksRelations = relations(wikiLinks, ({ one }) => ({
+  from: one(wikiPages, { fields: [wikiLinks.fromPageId], references: [wikiPages.id], relationName: "outgoing" }),
+  to: one(wikiPages, { fields: [wikiLinks.toPageId], references: [wikiPages.id], relationName: "incoming" }),
+}));
+
+// ─── Notifications ──────────────────────────────────────────────────────────
+
+export const notificationKindEnum = pgEnum("notification_kind", [
+  "lead_won",       // new deal closed
+  "lead_overdue",   // follow-up date passed
+  "task_overdue",   // due date passed and not completed
+  "task_assigned",  // someone assigned you a task
+  "skill_promoted", // a skill moved to validated/production
+  "skill_failure",  // skill run failed
+  "cron_failure",   // cron job failed
+  "campaign_sent",  // campaign blast finished
+  "invoice_paid",   // invoice marked paid
+  "invoice_overdue",// invoice overdue
+  "system",         // generic system message
+]);
+
+export const notifications = pgTable("notifications", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
+  kind: notificationKindEnum("kind").notNull(),
+  title: varchar("title", { length: 300 }).notNull(),
+  body: text("body"),
+  href: varchar("href", { length: 500 }),
+  metadata: jsonb("metadata"),
+  readAt: timestamp("read_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_notifications_user_unread").on(table.userId, table.readAt),
+  index("idx_notifications_created").on(table.createdAt),
+]);
+
+export type Notification = InferSelectModel<typeof notifications>;
+
+// ─── Saved Views (per-page filter sets, named & pinnable) ──────────────────
+
+export const savedViewScopeEnum = pgEnum("saved_view_scope", [
+  "leads", "tasks", "invoices", "expenses", "skills", "campaigns",
+]);
+
+export const savedViews = pgTable("saved_views", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
+  scope: savedViewScopeEnum("scope").notNull(),
+  name: varchar("name", { length: 200 }).notNull(),
+  // Filter spec — page-specific JSON. e.g. { search, status, contactType, sort }
+  filters: jsonb("filters").notNull(),
+  pinned: boolean("pinned").default(false).notNull(),
+  sortOrder: integer("sort_order").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_saved_views_user_scope").on(table.userId, table.scope),
+]);
+
+export type SavedView = InferSelectModel<typeof savedViews>;
+
+// ─── Skill Runs (every agentic call we make — for replay, cost, and Karpathy reflection) ──
+
+export const skillRunStatusEnum = pgEnum("skill_run_status", ["pending", "running", "success", "failed", "timeout"]);
+
+export const skillRuns = pgTable("skill_runs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  skillId: uuid("skill_id").references(() => skills.id, { onDelete: "cascade" }).notNull(),
+  status: skillRunStatusEnum("status").default("pending").notNull(),
+  inputs: jsonb("inputs"),               // values used to fill the prompt template
+  promptRendered: text("prompt_rendered"), // the actual prompt string sent
+  output: text("output"),                // assistant response
+  errorMessage: text("error_message"),
+  model: varchar("model", { length: 100 }),
+  // Token + cost telemetry — costs in USD
+  promptTokens: integer("prompt_tokens").default(0),
+  completionTokens: integer("completion_tokens").default(0),
+  totalTokens: integer("total_tokens").default(0),
+  costUsd: decimal("cost_usd", { precision: 10, scale: 6 }).default("0"),
+  durationMs: integer("duration_ms").default(0),
+  // Operator marks success after review (for skills with subjective output)
+  evaluated: boolean("evaluated").default(false),
+  evalPass: boolean("eval_pass"),
+  evalNote: text("eval_note"),
+  triggeredBy: varchar("triggered_by", { length: 50 }).default("manual"), // manual | webhook | cron | workflow
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_skill_runs_skill").on(table.skillId),
+  index("idx_skill_runs_created").on(table.createdAt),
+  index("idx_skill_runs_status").on(table.status),
+]);
+
+export const skillRunsRelations = relations(skillRuns, ({ one }) => ({
+  skill: one(skills, { fields: [skillRuns.skillId], references: [skills.id] }),
+}));
+
+export type SkillRun = InferSelectModel<typeof skillRuns>;
+
+// ─── Audit Log (every write that should be reviewable) ──────────────────────
+
+export const auditLog = pgTable("audit_log", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+  action: varchar("action", { length: 100 }).notNull(),  // e.g. "leads.bulk.status"
+  entityKind: varchar("entity_kind", { length: 50 }),    // e.g. "lead", "skill", "invoice"
+  entityId: varchar("entity_id", { length: 100 }),       // primary id touched
+  metadata: jsonb("metadata"),                           // full payload, response, count, etc.
+  ipAddress: varchar("ip_address", { length: 45 }),
+  userAgent: varchar("user_agent", { length: 500 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_audit_log_user").on(table.userId),
+  index("idx_audit_log_action").on(table.action),
+  index("idx_audit_log_created").on(table.createdAt),
+  index("idx_audit_log_entity").on(table.entityKind, table.entityId),
+]);
+
+export type AuditLogEntry = InferSelectModel<typeof auditLog>;
+
+// ─── Webhooks (inbound triggers + outbound subscriptions) ──────────────────
+
+export const webhookDirectionEnum = pgEnum("webhook_direction", ["inbound", "outbound"]);
+export const webhookEventEnum = pgEnum("webhook_event", [
+  "lead.created", "lead.updated", "lead.status_changed", "lead.won",
+  "task.created", "task.completed",
+  "skill.run.success", "skill.run.failed", "skill.promoted",
+  "invoice.paid", "invoice.overdue",
+  "campaign.sent",
+  "any",
+]);
+
+export const webhooks = pgTable("webhooks", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  direction: webhookDirectionEnum("direction").notNull(),
+  name: varchar("name", { length: 200 }).notNull(),
+  // Outbound: where to POST
+  url: varchar("url", { length: 500 }),
+  // Inbound: secret token for the URL /api/hooks/[secret]
+  secret: varchar("secret", { length: 100 }).unique(),
+  // Outbound: which events to fire on
+  events: jsonb("events").$type<string[]>().default([]),
+  // Inbound: optional skill to fire when triggered
+  skillId: uuid("skill_id").references(() => skills.id, { onDelete: "set null" }),
+  active: boolean("active").default(true).notNull(),
+  lastFiredAt: timestamp("last_fired_at"),
+  totalFires: integer("total_fires").default(0).notNull(),
+  failedFires: integer("failed_fires").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_webhooks_direction").on(table.direction),
+  index("idx_webhooks_active").on(table.active),
+]);
+
+export const webhookDeliveries = pgTable("webhook_deliveries", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  webhookId: uuid("webhook_id").references(() => webhooks.id, { onDelete: "cascade" }).notNull(),
+  event: varchar("event", { length: 100 }).notNull(),
+  payload: jsonb("payload"),
+  responseStatus: integer("response_status"),
+  responseBody: text("response_body"),
+  durationMs: integer("duration_ms"),
+  succeeded: boolean("succeeded").default(false).notNull(),
+  attemptCount: integer("attempt_count").default(1).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_webhook_deliveries_hook").on(table.webhookId),
+  index("idx_webhook_deliveries_created").on(table.createdAt),
+]);
+
+export type Webhook = InferSelectModel<typeof webhooks>;
+export type WebhookDelivery = InferSelectModel<typeof webhookDeliveries>;
+
+// ─── Voice Notes (transcribed audio attached to leads/tasks) ───────────────
+
+export const voiceNotes = pgTable("voice_notes", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  leadId: uuid("lead_id").references(() => leads.id, { onDelete: "cascade" }),
+  taskId: uuid("task_id").references(() => tasks.id, { onDelete: "cascade" }),
+  audioUrl: varchar("audio_url", { length: 1000 }),
+  transcript: text("transcript"),
+  summary: text("summary"),
+  extractedActions: jsonb("extracted_actions").$type<string[]>().default([]),
+  durationSec: integer("duration_sec"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_voice_notes_lead").on(table.leadId),
+  index("idx_voice_notes_task").on(table.taskId),
+]);
+
+export type VoiceNote = InferSelectModel<typeof voiceNotes>;
+
+// ─── Content Calendar (scheduled posts by date+channel) ────────────────────
+
+export const contentChannelEnum = pgEnum("content_channel", [
+  "blog", "linkedin", "twitter_x", "facebook", "instagram", "tiktok", "youtube", "email",
+]);
+export const contentScheduleStatusEnum = pgEnum("content_schedule_status", [
+  "draft", "scheduled", "published", "failed", "cancelled",
+]);
+
+export const contentSchedule = pgTable("content_schedule", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  title: varchar("title", { length: 300 }).notNull(),
+  channel: contentChannelEnum("channel").notNull(),
+  status: contentScheduleStatusEnum("status").default("draft").notNull(),
+  scheduledFor: timestamp("scheduled_for").notNull(),
+  contentBody: text("content_body"),
+  contentHtml: text("content_html"),
+  mediaUrls: jsonb("media_urls").$type<string[]>().default([]),
+  campaignId: uuid("campaign_id").references(() => campaigns.id, { onDelete: "set null" }),
+  publishedAt: timestamp("published_at"),
+  externalId: varchar("external_id", { length: 200 }),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_content_schedule_for").on(table.scheduledFor),
+  index("idx_content_schedule_channel").on(table.channel),
+  index("idx_content_schedule_status").on(table.status),
+]);
+
+export type ContentScheduleItem = InferSelectModel<typeof contentSchedule>;
+
+// ─── Workflows (skills chained with conditional branches) ───────────────────
+
+export const workflows = pgTable("workflows", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: varchar("name", { length: 200 }).notNull(),
+  description: text("description"),
+  // DAG of nodes — each node is { id, kind: 'skill'|'condition'|'webhook', skillId?, condition?, next? }
+  graph: jsonb("graph").notNull(),
+  trigger: varchar("trigger", { length: 100 }).default("manual").notNull(), // manual | webhook | cron | event
+  triggerConfig: jsonb("trigger_config"),
+  active: boolean("active").default(true).notNull(),
+  totalRuns: integer("total_runs").default(0).notNull(),
+  successfulRuns: integer("successful_runs").default(0).notNull(),
+  lastRunAt: timestamp("last_run_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type Workflow = InferSelectModel<typeof workflows>;
+
+// ─── Inbound Emails (sync from IMAP / Gmail) ────────────────────────────────
+
+export const inboundEmails = pgTable("inbound_emails", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  leadId: uuid("lead_id").references(() => leads.id, { onDelete: "set null" }),
+  fromEmail: varchar("from_email", { length: 320 }).notNull(),
+  fromName: varchar("from_name", { length: 200 }),
+  toEmail: varchar("to_email", { length: 320 }),
+  subject: varchar("subject", { length: 500 }),
+  bodyText: text("body_text"),
+  bodyHtml: text("body_html"),
+  inReplyTo: varchar("in_reply_to", { length: 320 }),
+  messageId: varchar("message_id", { length: 320 }).unique(),
+  receivedAt: timestamp("received_at").notNull(),
+  processed: boolean("processed").default(false).notNull(),
+  draftReply: text("draft_reply"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_inbound_emails_from").on(table.fromEmail),
+  index("idx_inbound_emails_lead").on(table.leadId),
+  index("idx_inbound_emails_received").on(table.receivedAt),
+]);
+
+export type InboundEmail = InferSelectModel<typeof inboundEmails>;
+
+// ─── Embed Tokens (tokenized client-portal links) ───────────────────────────
+
+export const embedTokens = pgTable("embed_tokens", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  token: varchar("token", { length: 100 }).unique().notNull(),
+  // What the token grants access to
+  resourceKind: varchar("resource_kind", { length: 50 }).notNull(),  // e.g. "lead", "invoice", "project"
+  resourceId: varchar("resource_id", { length: 100 }).notNull(),
+  label: varchar("label", { length: 200 }),
+  expiresAt: timestamp("expires_at"),
+  revokedAt: timestamp("revoked_at"),
+  // Telemetry
+  views: integer("views").default(0).notNull(),
+  lastViewedAt: timestamp("last_viewed_at"),
   createdBy: uuid("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
-  index("idx_enrichment_jobs_status").on(table.status),
+  index("idx_embed_tokens_token").on(table.token),
+  index("idx_embed_tokens_resource").on(table.resourceKind, table.resourceId),
 ]);
 
-export const enrichmentJobsRelations = relations(enrichmentJobs, ({ one, many }) => ({
-  createdByUser: one(users, { fields: [enrichmentJobs.createdBy], references: [users.id] }),
-  logs: many(enrichmentLogs),
-}));
+export type EmbedToken = InferSelectModel<typeof embedTokens>;
 
-// ─── Enrichment Logs (Audit Trail) ────────────────────────────────────────
+// ─── Generative UI specs on skills ──────────────────────────────────────────
+// Each skill can declare a UI component the model fills in via JSON.
+// Stored as jsonb on the skill row so adding new components is data-only.
+// (No new table — extending the existing skills table.)
 
-export const enrichmentLogs = pgTable("enrichment_logs", {
+// Skill evals (Eval Studio) ─────────────────────────────────────────────────
+
+export const evalAssertionTypeEnum = pgEnum("eval_assertion_type", [
+  "contains", "not_contains", "regex", "json_path_equals", "json_valid", "min_length",
+]);
+
+export const skillEvals = pgTable("skill_evals", {
   id: uuid("id").defaultRandom().primaryKey(),
-  jobId: uuid("job_id").references(() => enrichmentJobs.id, { onDelete: "cascade" }).notNull(),
-  leadId: uuid("lead_id").references(() => leads.id, { onDelete: "cascade" }).notNull(),
-  provider: varchar("provider", { length: 100 }).notNull(),
-  fieldName: varchar("field_name", { length: 100 }).notNull(),
-  oldValue: text("old_value"),
-  newValue: text("new_value"),
-  confidence: decimal("confidence", { precision: 3, scale: 2 }),
-  source: varchar("source", { length: 255 }),
+  skillId: uuid("skill_id").references(() => skills.id, { onDelete: "cascade" }).notNull(),
+  name: varchar("name", { length: 200 }).notNull(),
+  inputs: jsonb("inputs").notNull(),
+  assertionType: evalAssertionTypeEnum("assertion_type").default("contains").notNull(),
+  assertionValue: text("assertion_value").notNull(),
+  // Last run results
+  lastRunAt: timestamp("last_run_at"),
+  lastResult: boolean("last_result"),
+  lastOutput: text("last_output"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
-  index("idx_enrichment_logs_job").on(table.jobId),
-  index("idx_enrichment_logs_lead").on(table.leadId),
+  index("idx_skill_evals_skill").on(table.skillId),
 ]);
 
-export const enrichmentLogsRelations = relations(enrichmentLogs, ({ one }) => ({
-  job: one(enrichmentJobs, { fields: [enrichmentLogs.jobId], references: [enrichmentJobs.id] }),
-  lead: one(leads, { fields: [enrichmentLogs.leadId], references: [leads.id] }),
-}));
+export type SkillEval = InferSelectModel<typeof skillEvals>;
+
+// ─── Model performance (for cost-optimized routing) ─────────────────────────
+
+export const modelPerformance = pgTable("model_performance", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  skillId: uuid("skill_id").references(() => skills.id, { onDelete: "cascade" }).notNull(),
+  model: varchar("model", { length: 100 }).notNull(),
+  runs: integer("runs").default(0).notNull(),
+  successes: integer("successes").default(0).notNull(),
+  // Thompson sampling state
+  alpha: decimal("alpha", { precision: 10, scale: 4 }).default("1").notNull(),
+  beta: decimal("beta", { precision: 10, scale: 4 }).default("1").notNull(),
+  totalCostUsd: decimal("total_cost_usd", { precision: 12, scale: 6 }).default("0").notNull(),
+  avgLatencyMs: integer("avg_latency_ms").default(0).notNull(),
+  lastUsedAt: timestamp("last_used_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_model_perf_skill").on(table.skillId),
+  index("idx_model_perf_combo").on(table.skillId, table.model),
+]);
+
+export type ModelPerf = InferSelectModel<typeof modelPerformance>;

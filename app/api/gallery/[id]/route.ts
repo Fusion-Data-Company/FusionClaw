@@ -10,8 +10,8 @@ export async function DELETE(
   try {
     const { id } = await params;
 
-    // The id format is "generationId-imageIndex" - extract the generation id
-    const [generationId] = id.split("-");
+    // The id format is "generationId::imageIndex" - extract the generation id
+    const [generationId] = id.split("::");
 
     if (!generationId) {
       return NextResponse.json({ error: "Invalid ID format" }, { status: 400 });

@@ -1,0 +1,165 @@
+import { NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { skills } from "@/lib/db/schema";
+
+export const dynamic = "force-dynamic";
+
+const SEED_SKILLS = [
+  {
+    name: "Cold Email First Touch",
+    description: "Generate a 3-line opener tailored to the lead's company + jobTitle. No pitch in the first message — only relevance and a soft ask.",
+    category: "outreach" as const,
+    stage: "production" as const,
+    prompt: "You are writing a first-touch cold email. Inputs: company={company}, contact={contact}, jobTitle={jobTitle}, website={website}.\n\nRules:\n- Open with one specific observation about their company (not a compliment).\n- One sentence on why we're reaching out.\n- One soft ask (15-min call? Reply with 'yes'?). No links, no calendars.\n- Total: under 60 words. Plain text. No subject line in the body.",
+    evalCriteria: "Reply rate > 4%. No 'unsubscribe' or 'spam' replies. Lead manually flags 'good fit' on >20% of replies.",
+    reflection: "Replacing the second sentence with a one-liner from their website's About page lifted reply rate from 3.1% to 5.8%.",
+    agentProvider: "openrouter",
+    agentModel: "anthropic/claude-sonnet-4",
+    tags: ["email", "cold", "personalization"],
+    kanbanOrder: 0,
+    runs: 1240,
+    successes: 72,
+  },
+  {
+    name: "ICP Fit Score (1-10)",
+    description: "Score a lead against the ICP rubric. Returns score + 1-line rationale. Scores ≥7 auto-promote to 'qualified'.",
+    category: "qualification" as const,
+    stage: "production" as const,
+    prompt: "Score this lead 1-10 for ICP fit.\n\nICP: SMB (10-200 employees), industries: home services, professional services, B2B SaaS. Decision-maker title (Owner, VP, Director). US/CA.\n\nLead: {leadJson}\n\nReturn JSON: { score: number, rationale: string }",
+    evalCriteria: "Human reviewer agrees with score within ±1 on 80%+ of leads. False-positive rate (score≥7 but unqualified) < 15%.",
+    agentProvider: "openrouter",
+    agentModel: "anthropic/claude-sonnet-4",
+    tags: ["scoring", "icp", "qualification"],
+    kanbanOrder: 1,
+    runs: 8420,
+    successes: 7100,
+  },
+  {
+    name: "Blog Post from Outline",
+    description: "Take a 5-bullet outline + brand voice and output a 1200-word blog post in HTML. Used by Content Studio.",
+    category: "content" as const,
+    stage: "production" as const,
+    prompt: "Write a 1200-word blog post in HTML based on the outline below. Match the brand voice: {brandVoice}. Use H2 for each section, short paragraphs, one bulleted list. End with a 1-sentence CTA.\n\nOutline:\n{outline}",
+    evalCriteria: "Reading grade 7-9. Originality > 85% (no AI-detector flags). H2 count ≥ 4. CTA present.",
+    reflection: "Anthropic models follow the brand voice better than GPT here. Cost is 2x but rewrite rate dropped from 40% to 8%.",
+    agentProvider: "openrouter",
+    agentModel: "anthropic/claude-sonnet-4",
+    tags: ["blog", "long-form", "html"],
+    kanbanOrder: 0,
+    runs: 312,
+    successes: 287,
+  },
+  {
+    name: "LinkedIn Post Variant Generator",
+    description: "Given a blog URL, output 3 LinkedIn post variants — punchy, story, contrarian — each under 1300 chars.",
+    category: "content" as const,
+    stage: "validated" as const,
+    prompt: "Generate 3 LinkedIn variants from this blog: {url}\n\nVariant 1: Punchy hook + 2 numbered insights + question.\nVariant 2: First-person story leading into the insight.\nVariant 3: Contrarian take — what most people get wrong.\n\nEach: under 1300 chars, line breaks every 1-2 sentences, no hashtags except 1-2 at the end.",
+    evalCriteria: "Engagement rate > 2x baseline. Manually rated 'on-brand' on 90%+ of variants.",
+    agentProvider: "openrouter",
+    agentModel: "anthropic/claude-sonnet-4",
+    tags: ["linkedin", "social", "variants"],
+    kanbanOrder: 1,
+    runs: 84,
+    successes: 76,
+  },
+  {
+    name: "Company Intel Brief",
+    description: "Given a company URL, return 5 bullets: what they do, how they make money, recent news, key people, hooks for outreach.",
+    category: "research" as const,
+    stage: "validated" as const,
+    prompt: "Research the company at {url} and return:\n- What they do (1 line)\n- Revenue model (1 line)\n- Recent news / signals (2 bullets, with dates)\n- 2-3 key decision-makers (name, title)\n- 3 conversation hooks tied to their actual situation\n\nNo fluff. If you can't find something, say 'unknown'.",
+    evalCriteria: "Hooks generate ≥30% reply rate when used in outreach. No hallucinated people or revenue claims.",
+    agentProvider: "openrouter",
+    agentModel: "anthropic/claude-sonnet-4",
+    tags: ["research", "intel", "prospecting"],
+    kanbanOrder: 0,
+    runs: 56,
+    successes: 49,
+  },
+  {
+    name: "Follow-up Reply Drafter",
+    description: "Given an inbound email + the lead's history, draft a 4-sentence reply matching the prospect's tone.",
+    category: "outreach" as const,
+    stage: "testing" as const,
+    prompt: "Draft a reply to this email:\n\n{inboundEmail}\n\nLead history: {history}\n\nMatch their tone (formal/casual). Acknowledge what they said. Move the conversation forward (next step or question). 4 sentences max.",
+    evalCriteria: "Approval rate from operator before send > 60%. Time-to-reply drops from 4 hours to under 30 min.",
+    reflection: "Initial version was too eager — kept proposing meetings. Adding 'do not propose a meeting unless they ask' fixed it.",
+    agentProvider: "openrouter",
+    agentModel: "anthropic/claude-sonnet-4",
+    tags: ["email", "follow-up", "reply"],
+    kanbanOrder: 2,
+    runs: 38,
+    successes: 24,
+  },
+  {
+    name: "Daily Pipeline Summary",
+    description: "At 8am every day: scan all leads moved in the last 24h, summarize wins/losses/stalls in 5 bullets, post to /chat.",
+    category: "ops" as const,
+    stage: "validated" as const,
+    prompt: "Summarize the last 24h of pipeline activity. Inputs: {moves}.\n\nOutput 5 bullets max:\n- New qualifications (count + top 2 by deal value)\n- Won deals (count, total $)\n- Stalled (haven't moved in 7+ days at the same stage)\n- Lost (top reason)\n- Tomorrow's focus (the highest-priority follow-up)",
+    evalCriteria: "Operator says 'I read this and acted on it' > 4 days/week.",
+    agentProvider: "openrouter",
+    agentModel: "anthropic/claude-haiku-4-5-20251001",
+    tags: ["pipeline", "daily", "summary"],
+    kanbanOrder: 1,
+    runs: 14,
+    successes: 12,
+  },
+  {
+    name: "Inbound Lead Triage",
+    description: "Classify an inbound contact-form submission into: hot / warm / spam / wrong-fit. Auto-route to assignee.",
+    category: "qualification" as const,
+    stage: "testing" as const,
+    prompt: "Classify this inbound submission:\n\n{submission}\n\nReturn JSON: { class: 'hot'|'warm'|'spam'|'wrong-fit', reason: string, suggestedAssignee: string|null }",
+    evalCriteria: "Spam precision > 95% (no false-positives on real leads). Hot/warm distinction agrees with human on 80%+.",
+    agentProvider: "openrouter",
+    agentModel: "anthropic/claude-haiku-4-5-20251001",
+    tags: ["triage", "classification", "inbound"],
+    kanbanOrder: 0,
+    runs: 22,
+    successes: 18,
+  },
+  {
+    name: "Knowledge Base Q&A",
+    description: "Answer support questions using only the contents of the Knowledge Base. Refuses if the answer isn't in the KB.",
+    category: "support" as const,
+    stage: "validated" as const,
+    prompt: "Answer the user's question using ONLY the provided knowledge base passages. If the answer is not in the KB, reply: 'I don't have that in our knowledge base — let me get a human.'\n\nKB:\n{passages}\n\nQuestion:\n{question}",
+    evalCriteria: "Hallucination rate < 1% (manual audit). Refusal rate matches KB-coverage gap.",
+    agentProvider: "openrouter",
+    agentModel: "anthropic/claude-sonnet-4",
+    tags: ["support", "kb", "rag"],
+    kanbanOrder: 0,
+    runs: 47,
+    successes: 44,
+  },
+  {
+    name: "Reflection Loop (Karpathy)",
+    description: "Weekly: read all skill telemetry, identify the worst-performing skill, propose 3 changes to its prompt, attach to the skill as 'reflection'.",
+    category: "ops" as const,
+    stage: "idea" as const,
+    prompt: "You are reviewing a fleet of agentic skills. Inputs: {skillsTelemetry}.\n\nFind the skill with the lowest success rate that has runs > 10. Read its prompt and reflection. Propose 3 specific edits to the prompt. Output JSON: { skillId, currentSuccessRate, proposedEdits: [{ before, after, why }] }",
+    evalCriteria: "After applying edits, success rate increases on next 50 runs (paired t-test, p<0.10).",
+    agentProvider: "openrouter",
+    agentModel: "anthropic/claude-sonnet-4",
+    tags: ["meta", "karpathy", "reflection", "self-improvement"],
+    kanbanOrder: 0,
+    runs: 0,
+    successes: 0,
+  },
+];
+
+export async function POST() {
+  try {
+    const existing = await db.select().from(skills).limit(1);
+    if (existing.length > 0) {
+      return NextResponse.json({ skipped: true, reason: "Skills table not empty" });
+    }
+    const inserted = await db.insert(skills).values(SEED_SKILLS).returning();
+    return NextResponse.json({ inserted: inserted.length });
+  } catch (err) {
+    console.error("[skills/seed]", err);
+    return NextResponse.json({ error: "Seed failed" }, { status: 500 });
+  }
+}

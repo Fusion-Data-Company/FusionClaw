@@ -31,7 +31,7 @@ export async function getFinancialSummary(period: "month" | "quarter" | "year", 
       .where(and(
         eq(invoices.status, "paid"),
         sql`paid_date >= ${startDate}::timestamp`,
-        sql`paid_date <= ${endDate}::timestamp || ' 23:59:59'`,
+        sql`paid_date <= (${endDate} || ' 23:59:59')::timestamp`,
       )),
     db
       .select({ total: sql<string>`COALESCE(SUM(amount::numeric), 0)` })

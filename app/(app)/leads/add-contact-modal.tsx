@@ -1,8 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { X, ChevronDown, ChevronUp, User, Building2, Mail, Phone, Globe, Briefcase } from "lucide-react";
+import {
+  X, ChevronDown, ChevronUp, User, Building2, Mail, Phone, Globe, Briefcase,
+  Target, Truck, Box, Lightbulb, MoreHorizontal,
+} from "lucide-react";
 import { toast } from "sonner";
+
+const TYPE_META: Record<string, { icon: typeof Target; label: string; desc: string; tint: string; ring: string; glow: string }> = {
+  lead:       { icon: Target,           label: "Lead",       desc: "Prospect in your pipeline",   tint: "text-blue-300",    ring: "border-blue-500/40",    glow: "rgba(96,165,250,0.45)" },
+  vendor:     { icon: Truck,            label: "Vendor",     desc: "Supplies products or services",tint: "text-violet-300",  ring: "border-violet-500/40",  glow: "rgba(167,139,250,0.45)" },
+  supplier:   { icon: Box,              label: "Supplier",   desc: "Provides raw goods or stock", tint: "text-orange-300",  ring: "border-orange-500/40",  glow: "rgba(251,146,60,0.45)" },
+  consultant: { icon: Lightbulb,        label: "Consultant", desc: "Advisor or contract expert",  tint: "text-emerald-300", ring: "border-emerald-500/40", glow: "rgba(52,211,153,0.45)" },
+  other:      { icon: MoreHorizontal,   label: "Other",      desc: "Doesn't fit above",           tint: "text-slate-300",   ring: "border-slate-500/40",   glow: "rgba(148,163,184,0.35)" },
+};
 
 interface AddContactModalProps {
   open: boolean;
@@ -80,7 +91,8 @@ export default function AddContactModal({ open, onClose, onContactAdded }: AddCo
         phone: form.phone.trim() || undefined,
         website: form.website.trim() || undefined,
         jobTitle: form.jobTitle.trim() || undefined,
-        type: form.contactType,
+        // contactType is the enum the filter uses; type stays as a generic free-text label
+        contactType: form.contactType,
         status: form.status,
         priority: form.priority || undefined,
         source: form.source.trim() || undefined,
@@ -157,6 +169,79 @@ export default function AddContactModal({ open, onClose, onContactAdded }: AddCo
               />
             </div>
 
+            {/* Contact Type — rich option-card grid: icon + label + description, glassy + glowing on active */}
+            <div className="md:col-span-2">
+              <label className="text-xs font-medium text-[#8A8580] uppercase tracking-wider mb-2 block">
+                Contact Type
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+                {CONTACT_TYPE_OPTIONS.map((opt) => {
+                  const meta = TYPE_META[opt];
+                  const Icon = meta.icon;
+                  const active = form.contactType === opt;
+                  return (
+                    <button
+                      type="button"
+                      key={opt}
+                      onClick={() => update("contactType", opt)}
+                      className={`group relative overflow-hidden cursor-pointer transition-all text-left ${
+                        active ? "scale-[1.02]" : "hover:scale-[1.01]"
+                      }`}
+                      style={{
+                        clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+                      }}
+                    >
+                      {/* Glassy background + active ring */}
+                      <div
+                        className={`relative px-3 py-2.5 border backdrop-blur-md transition-all ${
+                          active ? `${meta.ring}` : "border-white/8 hover:border-white/15"
+                        }`}
+                        style={{
+                          background: active
+                            ? `linear-gradient(135deg, ${meta.glow.replace(/0\.\d+/, "0.18")} 0%, ${meta.glow.replace(/0\.\d+/, "0.04")} 100%)`
+                            : "linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)",
+                          boxShadow: active ? `0 0 20px ${meta.glow.replace(/0\.\d+/, "0.25")}, inset 0 0 12px ${meta.glow.replace(/0\.\d+/, "0.06")}` : undefined,
+                        }}
+                      >
+                        {/* Holographic shimmer on hover */}
+                        <span
+                          className="pointer-events-none absolute inset-0 -translate-x-full opacity-0 group-hover:opacity-100 group-hover:translate-x-full transition-all duration-1000"
+                          style={{ background: `linear-gradient(110deg, transparent 30%, ${meta.glow.replace(/0\.\d+/, "0.18")} 50%, transparent 70%)` }}
+                        />
+
+                        {/* Corner ticks (active only) */}
+                        {active && (
+                          <>
+                            <span className="pointer-events-none absolute top-1 left-1 w-1.5 h-1.5 border-t border-l opacity-70" style={{ borderColor: meta.glow }} />
+                            <span className="pointer-events-none absolute bottom-1 right-1 w-1.5 h-1.5 border-b border-r opacity-70" style={{ borderColor: meta.glow }} />
+                          </>
+                        )}
+
+                        <div className="relative flex items-center gap-2 mb-1">
+                          <div
+                            className={`w-7 h-7 flex items-center justify-center shrink-0 ${active ? meta.tint : "text-text-muted"}`}
+                            style={{
+                              clipPath: "polygon(15% 0, 100% 0, 100% 85%, 85% 100%, 0 100%, 0 15%)",
+                              background: active ? `linear-gradient(135deg, ${meta.glow.replace(/0\.\d+/, "0.25")} 0%, transparent 100%)` : "rgba(255,255,255,0.03)",
+                              border: `1px solid ${active ? meta.glow.replace(/0\.\d+/, "0.4") : "rgba(255,255,255,0.06)"}`,
+                            }}
+                          >
+                            <Icon className="w-3.5 h-3.5" />
+                          </div>
+                          <span className={`text-[12px] font-bold uppercase tracking-wider ${active ? meta.tint : "text-text-secondary"}`}>
+                            {meta.label}
+                          </span>
+                        </div>
+                        <div className={`text-[10px] leading-tight ${active ? "text-text-secondary" : "text-text-muted"}`}>
+                          {meta.desc}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* Contact Name */}
             <div>
               <label className="flex items-center gap-2 text-xs font-medium text-[#8A8580] uppercase tracking-wider mb-1.5">
@@ -230,24 +315,6 @@ export default function AddContactModal({ open, onClose, onContactAdded }: AddCo
                 placeholder="CEO, Manager, etc."
                 className="w-full px-3 py-2 rounded-lg bg-[#141414] border border-white/10 text-[#F8F5F0] placeholder:text-[#4A4845] text-sm focus:outline-none focus:ring-1 focus:ring-[#DAA520]/40 focus:border-[#DAA520]/30 transition-colors"
               />
-            </div>
-
-            {/* Contact Type */}
-            <div>
-              <label className="text-xs font-medium text-[#8A8580] uppercase tracking-wider mb-1.5 block">
-                Contact Type
-              </label>
-              <select
-                value={form.contactType}
-                onChange={(e) => update("contactType", e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-[#141414] border border-white/10 text-[#F8F5F0] text-sm focus:outline-none focus:ring-1 focus:ring-[#DAA520]/40 focus:border-[#DAA520]/30 transition-colors appearance-none"
-              >
-                {CONTACT_TYPE_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt} className="bg-[#141414]">
-                    {opt.charAt(0).toUpperCase() + opt.slice(1)}
-                  </option>
-                ))}
-              </select>
             </div>
 
             {/* Status */}

@@ -21,14 +21,15 @@ function tsAgo(n: number): Date {
 async function seed() {
   console.log("Seeding database with realistic business data...\n");
 
-  // ─── 1. ADMIN USER ─────────────────────────────────────────────────────────
+  // ─── 1. OWNER USER ─────────────────────────────────────────────────────────
+  // The 'owner' authId sentinel matches lib/auth.ts OWNER_AUTH_ID.
   let adminId: string;
   const [admin] = await db
     .insert(schema.users)
     .values({
-      authId: "admin_gateway",
-      email: process.env.ADMIN_EMAIL || "admin@fusionclaw.local",
-      name: process.env.ADMIN_NAME || "Admin",
+      authId: "owner",
+      email: process.env.OWNER_EMAIL || "owner@localhost",
+      name: process.env.OWNER_NAME || "Owner",
       role: "admin",
     })
     .onConflictDoNothing({ target: schema.users.authId })
@@ -36,13 +37,13 @@ async function seed() {
 
   if (admin) {
     adminId = admin.id;
-    console.log(`+ Admin user: ${admin.name}`);
+    console.log(`+ Owner user: ${admin.name}`);
   } else {
     const existing = await db.query.users.findFirst({
-      where: (u, { eq }) => eq(u.authId, "admin_gateway"),
+      where: (u, { eq }) => eq(u.authId, "owner"),
     });
     adminId = existing!.id;
-    console.log(`  Admin user already exists`);
+    console.log(`  Owner user already exists`);
   }
 
   // ─── 2. EMPLOYEE USERS ─────────────────────────────────────────────────────
