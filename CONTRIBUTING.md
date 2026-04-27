@@ -1,6 +1,8 @@
 # Contributing to FusionClaw
 
-Thank you for your interest in contributing to FusionClaw. This guide will help you get started.
+Thank you for your interest in contributing. Read this document fully before opening a PR.
+
+---
 
 ## Development Setup
 
@@ -18,7 +20,7 @@ git clone https://github.com/Fusion-Data-Company/FusionClaw.git
 cd FusionClaw
 npm install
 npm run onboard   # interactive setup wizard
-npm run dev        # start development server
+npm run dev       # start development server
 ```
 
 ### Project Structure
@@ -42,63 +44,166 @@ mcp-server/        MCP server (separate build)
 tests/             Playwright E2E and API tests
 ```
 
-## How to Contribute
+---
 
-### Reporting Bugs
+## Contribution Rules
+
+### PR Limits
+
+**Hard cap: 10 open pull requests per author at any time.**  
+Exceeding this triggers automatic closure with a `too-many-prs` label. Coordinate larger change sets in a GitHub Discussion or the Discord `#contributors` channel before opening PRs.
+
+### What We Accept
+
+| Type | Accepted |
+|---|---|
+| Bug fixes | Yes — submit directly |
+| Small improvements | Yes — submit directly |
+| New major features | Discuss in a GitHub Issue first; most new features should be self-contained modules |
+| Refactor-only PRs | No — not accepted unless a maintainer explicitly requested it |
+| PRs fixing already-tracked CI failures | No — maintainers track known failures; don't pile in |
+| OSINT / enrichment features | No — permanently excluded from scope |
+| Third-party auth providers | No — self-hosted auth is intentional |
+
+---
+
+## Reporting Bugs
 
 Open a [Bug Report](https://github.com/Fusion-Data-Company/FusionClaw/issues/new?template=bug_report.md) with:
-- Steps to reproduce
+
+- Steps to reproduce (deterministic path, not "sometimes it breaks")
 - Expected vs actual behavior
-- Browser/OS information
+- FusionClaw version, browser, OS
 - Console errors or screenshots
 
-### Suggesting Features
+---
+
+## Suggesting Features
 
 Open a [Feature Request](https://github.com/Fusion-Data-Company/FusionClaw/issues/new?template=feature_request.md) with:
-- Problem description
-- Proposed solution
+
+- Problem it solves (not just the solution)
+- Proposed approach
 - Alternatives considered
 
-### Pull Requests
+For large features that touch multiple modules, open a GitHub Discussion instead of an issue.
 
-1. Fork the repository
-2. Create a feature branch from `claude/awesome-hypatia`
-3. Make your changes
-4. Run `npm run build` to verify no TypeScript errors
-5. Run `npx playwright test` to verify tests pass
-6. Submit a PR with a clear description
+---
 
-### Code Style
+## Pull Requests
 
-- TypeScript strict mode
-- Tailwind CSS for styling (dark mode only, use design tokens)
-- Server actions in `lib/actions/` for data mutations
-- API routes in `app/api/` with Zod validation
-- Wrap cards in `GlassCard` component
-- Use `SpotlightCard` for metric/KPI displays
+### Before Submitting
 
-### Database Changes
+1. Branch from the current dev branch (`claude/awesome-hypatia` or whatever is current)
+2. Keep changes focused — one concern per PR
+3. Run `npm run build` — must pass with zero TypeScript errors
+4. Run `npx playwright test` — must pass
+5. Test manually on the golden path and at least one edge case
+6. Fill out the PR template completely — incomplete templates are closed
 
-- Edit `lib/db/schema.ts` for schema changes
-- Run `npx drizzle-kit push` to apply
-- Add corresponding server actions and API routes
+### PR Naming
 
-### Testing
+| Type | Format |
+|---|---|
+| Bug fix | `fix(module): short description` |
+| Feature | `feat(module): short description` |
+| Docs | `docs: short description` |
+| Chore | `chore: short description` |
+| Security | `security(module): short description` |
+
+### Bot Reviews
+
+If an automated review bot leaves comments, **you are responsible** for resolving every addressed concern. Do not leave cleanup for maintainers. Request re-review only after all bot comments are resolved.
+
+---
+
+## AI-Assisted Contributions
+
+FusionClaw welcomes AI-assisted code. We require transparency:
+
+- **Label your PR** as AI-assisted in the title or description (e.g., `[AI-assisted]`)
+- **Confirm you understand the code.** Do not submit generated code you haven't read.
+- **Testing is your responsibility.** AI confidence is not a substitute for your own verification.
+- **Include prompts or session logs** when possible — this helps reviewers understand intent.
+- **Address all review findings** before requesting re-review, even AI-flagged ones.
+
+PRs that appear AI-generated without disclosure will be closed.
+
+---
+
+## Code Style
+
+- TypeScript strict mode — no `any` without justification
+- Tailwind CSS with design tokens from `globals.css` — never hardcode color hex values
+- Dark mode only — no `light:` variants, no theme toggle
+- Server actions in `lib/actions/` for all data mutations
+- API routes in `app/api/` with Zod validation on every request body
+- Wrap cards in `GlassCard`; wrap KPI metrics in `SpotlightCard`
+- Files over ~600 LOC should be split
+
+See `AGENTS.md` for the full coding standards reference.
+
+---
+
+## Database Changes
+
+- Edit `lib/db/schema.ts`
+- Run `npx drizzle-kit push` to apply to your dev DB
+- Add corresponding server actions and Zod validation
+- Document any new tables or columns in `docs/reference/database-schema.md`
+
+---
+
+## Testing
 
 ```bash
-# Run all tests
+# Full test suite
 npx playwright test
 
-# Run specific test file
-npx playwright test tests/e2e/invoices.spec.ts
+# Specific test file
+npx playwright test tests/e2e/leads.spec.ts
 
-# Run with UI
+# UI mode
 npx playwright test --ui
 ```
+
+New API routes require at minimum: one smoke test for a valid request (200) and one for invalid input (400/422).
+
+---
+
+## Becoming a Maintainer
+
+We selectively expand the maintainer team. If you've made consistent quality contributions and want to take on more responsibility, email **contributing@fusiondataco.com** with:
+
+- Your GitHub profile link
+- Open-source history relevant to this stack
+- What you'd like to own or improve
+- Realistic time availability
+
+---
+
+## Security Vulnerabilities
+
+Do **not** open a public issue for security vulnerabilities.
+
+Report to **security@fusiondataco.com** with:
+
+- Title and severity (Critical / High / Medium / Low)
+- Affected component and version
+- Step-by-step reproduction
+- Demonstrated impact
+- Your environment details
+- Suggested remediation (if any)
+
+See [SECURITY.md](SECURITY.md) for full disclosure policy.
+
+---
 
 ## Code of Conduct
 
 Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before contributing.
+
+---
 
 ## License
 
