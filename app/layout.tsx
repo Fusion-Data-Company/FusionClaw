@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     siteName: 'FusionClaw',
     images: [
       {
-        url: '/hustle-mascot-bg.jpg',
+        url: '/fusionclaw-hero-bg.png',
         width: 1920,
         height: 768,
         alt: 'FusionClaw — All Hustle No Luck',
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     title: 'FusionClaw — Connect Your OpenClaw or Claude Agent Safely to Your Business',
     description:
       'New to AI agents? FusionClaw gives your OpenClaw or Claude agent guardrails, context control, and every tool a solo entrepreneur needs — without exposing your entire business to an unrestricted agent.',
-    images: ['/hustle-mascot-bg.jpg'],
+    images: ['/fusionclaw-hero-bg.png'],
   },
   keywords: [
     'business operating system',

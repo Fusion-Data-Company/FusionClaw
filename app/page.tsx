@@ -171,7 +171,7 @@ export default function LandingPage() {
           style={{ willChange: "transform" }}
         >
           <Image
-            src="/hustle-mascot-bg.jpg"
+            src="/fusionclaw-hero-bg.png"
             alt=""
             fill
             className="object-cover opacity-30"

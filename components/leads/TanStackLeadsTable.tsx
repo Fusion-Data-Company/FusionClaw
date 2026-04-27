@@ -135,10 +135,68 @@ const DEMO_LEADS: Lead[] = [
     source: "Referral",
     tags: ["hot", "enterprise", "decision-maker"],
     dealValue: 75000,
-    lastContactDate: "2026-03-15",
-    nextFollowUpDate: "2026-03-25",
+    lastContactDate: "2026-04-10",
+    nextFollowUpDate: "2026-04-30",
     notes: "Very interested in our services. Scheduled demo next week.",
     timesContacted: 3,
+  },
+  {
+    id: 2,
+    company: "Desert Peak Roofing",
+    type: "Roofing",
+    contactType: "lead",
+    contact: "Maria Gonzalez",
+    jobTitle: "General Manager",
+    phone: "(702) 555-0201",
+    altPhone: "(702) 555-0202",
+    email: "maria@desertpeakroofing.com",
+    email2: "office@desertpeakroofing.com",
+    website: "https://desertpeakroofing.com",
+    linkedin: "https://linkedin.com/in/mariagonzalez",
+    facebook: "https://facebook.com/desertpeakroofing",
+    instagram: "https://instagram.com/desertpeakroofing",
+    twitterX: "https://x.com/desertpeakroof",
+    youtube: "https://youtube.com/@desertpeakroofing",
+    tiktok: "https://tiktok.com/@desertpeakroofing",
+    address: "456 Boulder Hwy, Henderson, NV 89002",
+    status: "negotiation",
+    priority: "high",
+    source: "Cold Call",
+    tags: ["warm", "smb", "decision-maker"],
+    dealValue: 42000,
+    lastContactDate: "2026-04-15",
+    nextFollowUpDate: "2026-04-28",
+    notes: "Needs proposal by end of month. Follow up Thursday.",
+    timesContacted: 5,
+  },
+  {
+    id: 3,
+    company: "Silverline Plumbing LLC",
+    type: "Plumbing",
+    contactType: "lead",
+    contact: "Derek Okafor",
+    jobTitle: "Owner / Operator",
+    phone: "(702) 555-0311",
+    altPhone: "(702) 555-0312",
+    email: "derek@silverlineplumbing.com",
+    email2: "dispatch@silverlineplumbing.com",
+    website: "https://silverlineplumbing.com",
+    linkedin: "https://linkedin.com/in/derekokafor",
+    facebook: "https://facebook.com/silverlineplumbing",
+    instagram: "https://instagram.com/silverlineplumbing",
+    twitterX: "https://x.com/silverlineplumb",
+    youtube: "https://youtube.com/@silverlineplumbing",
+    tiktok: "https://tiktok.com/@silverlineplumbing",
+    address: "789 Industrial Rd, North Las Vegas, NV 89030",
+    status: "contacted",
+    priority: "medium",
+    source: "Website",
+    tags: ["warm", "smb"],
+    dealValue: 18500,
+    lastContactDate: "2026-04-20",
+    nextFollowUpDate: "2026-05-05",
+    notes: "Left voicemail. Sent intro email. Waiting on callback.",
+    timesContacted: 2,
   },
 ];
 
@@ -310,7 +368,9 @@ const createColumns = (
           type="text"
           className="text-text-secondary"
         />
-        <div className="text-[10px] text-text-muted">{row.original.type}</div>
+        {row.original.type && (
+          <div className="text-[10px] text-text-muted">{row.original.type}</div>
+        )}
       </div>
     ),
     size: 200,
@@ -554,7 +614,7 @@ const createColumns = (
             { value: "vip", label: "vip" },
           ]}
         >
-          <div className="grid grid-cols-[1fr_1fr_28px] items-center gap-1 max-w-full overflow-hidden whitespace-nowrap">
+          <div className="flex items-center gap-1 overflow-hidden">
             {[0, 1].map((slot) => {
               const tag = visible[slot];
               if (!tag) return <span key={`empty-${slot}`} />;
@@ -930,7 +990,7 @@ export default function TanStackLeadsTable({
   const rowVirtualizer = useVirtualizer({
     count: table.getRowModel().rows.length,
     getScrollElement: () => tableContainerRef.current,
-    estimateSize: () => 64,
+    estimateSize: () => 56,
     overscan: 5,
   });
 
@@ -981,7 +1041,7 @@ export default function TanStackLeadsTable({
 
       {/* Table — fills viewport width; columns scale proportionally above their min size */}
       <div ref={tableContainerRef} className="flex-1 overflow-auto" style={{ minHeight: 0 }}>
-        <table style={{ width: "100%", minWidth: table.getTotalSize(), tableLayout: "fixed", borderCollapse: "collapse" }}>
+        <table style={{ width: `${table.getTotalSize()}px`, tableLayout: "fixed", borderCollapse: "collapse" }}>
           <colgroup>
             {table.getVisibleLeafColumns().map((column) => (
               <col key={column.id} style={{ width: column.getSize() }} />
