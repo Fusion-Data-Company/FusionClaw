@@ -53,7 +53,8 @@ export async function getTasks(options?: {
   }
 
   const column = tasks[sortBy as keyof typeof tasks] || tasks.dueDate;
-  query = sortOrder === "asc" ? query.orderBy(asc(column as any)) : query.orderBy(desc(column as any));
+  // TODO: type properly - drizzle column types
+  query = sortOrder === "asc" ? query.orderBy(asc(column as Parameters<typeof asc>[0])) : query.orderBy(desc(column as Parameters<typeof desc>[0]));
 
   return query.limit(limit);
 }

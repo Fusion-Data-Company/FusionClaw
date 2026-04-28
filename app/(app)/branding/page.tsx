@@ -20,7 +20,7 @@ interface BrandAsset {
   uploadedAt: string;
 }
 
-const TYPE_ICONS: Record<string, React.ComponentType<any>> = {
+const TYPE_ICONS: Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>>> = {
   image: ImageIcon,
   video: Film,
   document: FileText,

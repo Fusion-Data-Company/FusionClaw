@@ -81,7 +81,7 @@ export async function POST(req: Request) {
     // Create checklist items if template provided
     if (checklistTemplate && Array.isArray(checklistTemplate)) {
       await db.insert(checklistItems).values(
-        checklistTemplate.map((item: any) => ({
+        checklistTemplate.map((item: { key: string; label: string; category: "SOCIAL" | "BLOG"; checkpoint: "AM8" | "PM12" | "PM4"; platform: "BLOG" | "FACEBOOK" | "LINKEDIN" | "INSTAGRAM" | "YOUTUBE" }) => ({
           shiftId: newShift.id,
           key: item.key,
           label: item.label,

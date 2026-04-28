@@ -178,7 +178,7 @@ export default function TodayPage() {
   const updateMetric = async (field: string, delta: number) => {
     if (!shift) return;
 
-    const currentValue = (shift as any)[field] || 0;
+    const currentValue = (shift as unknown as Record<string, number>)[field] || 0;
     const newValue = Math.max(0, currentValue + delta);
 
     // Optimistic update
@@ -355,7 +355,7 @@ export default function TodayPage() {
                       -
                     </button>
                     <span className="text-sm font-bold text-text-primary w-8 text-center">
-                      {(shift as any)[metric.field] || 0}
+                      {(shift as unknown as Record<string, number>)[metric.field] || 0}
                     </span>
                     <button
                       onClick={() => updateMetric(metric.field, 1)}

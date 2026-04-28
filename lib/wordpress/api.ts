@@ -78,7 +78,7 @@ export async function testConnection(
       { headers: { Authorization: authHeader } }
     );
     const categories: WPCategory[] = catRes.ok
-      ? (await catRes.json()).map((c: any) => ({
+      ? (await catRes.json()).map((c: { id: number; name: string; slug: string }) => ({
           id: c.id,
           name: c.name,
           slug: c.slug,
@@ -91,7 +91,7 @@ export async function testConnection(
       { headers: { Authorization: authHeader } }
     );
     const tags: WPTag[] = tagRes.ok
-      ? (await tagRes.json()).map((t: any) => ({
+      ? (await tagRes.json()).map((t: { id: number; name: string; slug: string }) => ({
           id: t.id,
           name: t.name,
           slug: t.slug,
@@ -178,7 +178,7 @@ export async function createOrFindTags(
       const existing = await searchRes.json();
 
       const exactMatch = existing.find(
-        (t: any) => t.name.toLowerCase() === tagName.toLowerCase()
+        (t: { id: number; name: string }) => t.name.toLowerCase() === tagName.toLowerCase()
       );
 
       if (exactMatch) {

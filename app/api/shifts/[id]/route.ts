@@ -51,7 +51,7 @@ export async function PATCH(
     }
 
     // Update shift metrics
-    const updateData: any = { updatedAt: new Date() };
+    const updateData: Record<string, unknown> = { updatedAt: new Date() };
 
     if (body.upworkNewJobs !== undefined) updateData.upworkNewJobs = body.upworkNewJobs;
     if (body.upworkProposals !== undefined) updateData.upworkProposals = body.upworkProposals;

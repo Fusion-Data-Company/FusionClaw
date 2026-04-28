@@ -13,7 +13,7 @@ export async function GET(req: Request) {
     const conditions = [];
     if (completed === "true") conditions.push(eq(tasks.completed, true));
     if (completed === "false") conditions.push(eq(tasks.completed, false));
-    if (priority) conditions.push(eq(tasks.priority, priority as any));
+    if (priority) conditions.push(eq(tasks.priority, priority as "LOW" | "MEDIUM" | "HIGH" | "URGENT"));
 
     const allTasks = await db
       .select({
@@ -36,7 +36,7 @@ export async function GET(req: Request) {
 
     // Get assignee names
     const userIds = [...new Set(allTasks.map(t => t.assignedTo).filter(Boolean))] as string[];
-    let userMap: Record<string, string> = {};
+    const userMap: Record<string, string> = {};
     if (userIds.length > 0) {
       const usersData = await db.select({ id: users.id, name: users.name }).from(users);
       usersData.forEach(u => { userMap[u.id] = u.name || "Unnamed"; });

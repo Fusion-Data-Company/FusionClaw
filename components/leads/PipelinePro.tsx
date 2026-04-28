@@ -443,7 +443,7 @@ function PipelineColumn({ stage, leads, isCollapsed, onToggle, onSelectLead, isR
 
       {/* Droppable Area */}
       <Droppable droppableId={stage.id}>
-        {(provided: DroppableProvided, snapshot: any) => (
+        {(provided: DroppableProvided, snapshot: { isDraggingOver: boolean }) => (
           <div
             {...provided.droppableProps}
             ref={provided.innerRef}
@@ -509,7 +509,7 @@ export default function PipelinePro({ isReadOnly = false }: PipelineProProps) {
         if (res.ok) {
           const data = await res.json();
           if (data.leads && data.leads.length > 0) {
-            const apiLeads = data.leads.map((lead: any) => ({
+            const apiLeads = data.leads.map((lead: Record<string, unknown> & { dealValue?: string; createdAt?: string; updatedAt?: string }) => ({
               id: lead.id,
               company: lead.company || "",
               contact: lead.contact || "",
@@ -548,7 +548,7 @@ export default function PipelinePro({ isReadOnly = false }: PipelineProProps) {
     });
     leadsData.forEach(lead => {
       // Non-lead contacts (vendor, supplier, consultant, other) go to the won/completed column
-      const ct = (lead as any).contactType || "lead";
+      const ct = (lead as Lead & { contactType?: string }).contactType || "lead";
       if (ct !== "lead") {
         grouped["won"].push(lead);
         return;

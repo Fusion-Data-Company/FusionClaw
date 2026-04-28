@@ -244,7 +244,7 @@ const STATUS_CONFIG: Record<string, { bg: string; text: string; border: string }
 };
 
 // Sortable header
-function SortHeader({ column, icon: Icon, label }: { column: any; icon: any; label: string }) {
+function SortHeader({ column, icon: Icon, label }: { column: { toggleSorting: (desc: boolean) => void; getIsSorted: () => false | "asc" | "desc" }; icon: React.ComponentType<React.SVGProps<SVGSVGElement>>; label: string }) {
   return (
     <div
       className="flex items-center gap-1.5 cursor-pointer hover:text-text-primary transition-colors"
@@ -292,7 +292,7 @@ const CONTACT_TYPE_CONFIG: Record<string, { bg: string; text: string; border: st
 
 // Column definitions
 const createColumns = (
-  updateLead: (leadId: number | string, field: string, value: any) => void,
+  updateLead: (leadId: number | string, field: string, value: unknown) => void,
   deleteLead: (leadId: number | string) => void,
   toast: (options: { title: string; description: string; variant?: "destructive" }) => void,
   onLeadSelect?: (leadId: number | string) => void
@@ -838,7 +838,7 @@ export default function TanStackLeadsTable({
           const data = await res.json();
           if (data.leads && data.leads.length > 0) {
             // Transform API response to match our Lead type
-            const apiLeads = data.leads.map((lead: any) => ({
+            const apiLeads = data.leads.map((lead: Record<string, unknown>) => ({
               id: lead.id,
               company: lead.company || "",
               type: lead.type || "",
@@ -861,9 +861,9 @@ export default function TanStackLeadsTable({
               priority: lead.priority || "medium",
               source: lead.source,
               tags: lead.tags || [],
-              dealValue: lead.dealValue ? parseFloat(lead.dealValue) : undefined,
-              lastContactDate: lead.lastContactDate ? new Date(lead.lastContactDate).toISOString().split("T")[0] : undefined,
-              nextFollowUpDate: lead.nextFollowUpDate ? new Date(lead.nextFollowUpDate).toISOString().split("T")[0] : undefined,
+              dealValue: lead.dealValue ? parseFloat(String(lead.dealValue)) : undefined,
+              lastContactDate: lead.lastContactDate ? new Date(String(lead.lastContactDate)).toISOString().split("T")[0] : undefined,
+              nextFollowUpDate: lead.nextFollowUpDate ? new Date(String(lead.nextFollowUpDate)).toISOString().split("T")[0] : undefined,
               notes: lead.notes,
               timesContacted: lead.timesContacted,
             }));
@@ -891,7 +891,7 @@ export default function TanStackLeadsTable({
 
   // Helper functions
   const updateLead = useCallback(
-    async (leadId: number | string, field: string, value: any) => {
+    async (leadId: number | string, field: string, value: unknown) => {
       // Optimistic update
       setLeadsData((prev) => prev.map((lead) => (lead.id === leadId ? { ...lead, [field]: value } : lead)));
 

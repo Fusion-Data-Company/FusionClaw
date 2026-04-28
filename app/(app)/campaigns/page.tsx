@@ -26,7 +26,7 @@ interface Campaign {
   createdAt: string;
 }
 
-const STATUS_CONFIG: Record<string, { bg: string; text: string; border: string; icon: React.ComponentType<any> }> = {
+const STATUS_CONFIG: Record<string, { bg: string; text: string; border: string; icon: React.ComponentType<React.SVGProps<SVGSVGElement>> }> = {
   draft: { bg: "bg-slate-500/10", text: "text-slate-300", border: "border-slate-500/30", icon: Edit },
   scheduled: { bg: "bg-amber-500/10", text: "text-amber-300", border: "border-amber-500/30", icon: Clock },
   sending: { bg: "bg-blue-500/10", text: "text-blue-300", border: "border-blue-500/30", icon: Loader2 },

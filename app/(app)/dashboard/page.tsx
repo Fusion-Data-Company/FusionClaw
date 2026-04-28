@@ -20,7 +20,7 @@ interface ToolConnection {
 }
 
 interface ToolStyle {
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   color: string;
   glowColor: string;
 }
@@ -29,7 +29,7 @@ interface QuickAction {
   label: string;
   description: string;
   href: string;
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   gradient: string;
   glow: string;
 }
@@ -99,9 +99,9 @@ export default function DashboardPage() {
 
       setStats({
         totalLeads: leadsRes.leads?.length || 0,
-        activeTasks: allTasks.filter((t: any) => !t.completed).length,
-        overdueTasks: allTasks.filter((t: any) => !t.completed && t.dueDate < today).length,
-        todayTasks: allTasks.filter((t: any) => t.dueDate === today).length,
+        activeTasks: allTasks.filter((t: { completed?: boolean }) => !t.completed).length,
+        overdueTasks: allTasks.filter((t: { completed?: boolean; dueDate?: string }) => !t.completed && (t.dueDate ?? "") < today).length,
+        todayTasks: allTasks.filter((t: { dueDate?: string }) => t.dueDate === today).length,
         employees: employeesRes.employees?.length || 0,
         openShifts: 0,
       });

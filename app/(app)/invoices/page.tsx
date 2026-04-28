@@ -35,7 +35,7 @@ interface Invoice {
   createdAt: string;
 }
 
-const STATUS_CONFIG: Record<string, { bg: string; text: string; border: string; icon: React.ComponentType<any> }> = {
+const STATUS_CONFIG: Record<string, { bg: string; text: string; border: string; icon: React.ComponentType<React.SVGProps<SVGSVGElement>> }> = {
   draft: { bg: "bg-slate-500/10", text: "text-slate-300", border: "border-slate-500/30", icon: Edit },
   sent: { bg: "bg-blue-500/10", text: "text-blue-300", border: "border-blue-500/30", icon: Send },
   paid: { bg: "bg-emerald-500/10", text: "text-emerald-300", border: "border-emerald-500/30", icon: CheckCircle },
@@ -77,7 +77,7 @@ export default function InvoicesPage() {
 
   const updateLineItem = (idx: number, field: keyof InvoiceItem, value: string | number) => {
     const items = [...form.items];
-    (items[idx] as any)[field] = value;
+    (items[idx] as unknown as Record<string, string | number>)[field as string] = value;
     if (field === "qty" || field === "rate") {
       items[idx].amount = Number(items[idx].qty) * Number(items[idx].rate);
     }

@@ -31,12 +31,12 @@ interface AgentConnection {
   model?: string;
   lastUsed?: string;
   maskedKey?: string;
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   color: string;
   gradient: string;
 }
 
-const AGENT_META: Record<string, { icon: React.ComponentType<any>; color: string; gradient: string; model?: string; endpoint?: string }> = {
+const AGENT_META: Record<string, { icon: React.ComponentType<React.SVGProps<SVGSVGElement>>; color: string; gradient: string; model?: string; endpoint?: string }> = {
   openclaw: { icon: Zap, color: "text-orange-400", gradient: "from-orange-500 to-amber-500" },
   claude: { icon: Brain, color: "text-purple-400", gradient: "from-purple-500 to-violet-500", model: "claude-sonnet-4-20250514" },
   openrouter: { icon: Globe, color: "text-cyan-400", gradient: "from-cyan-500 to-blue-500", endpoint: "https://openrouter.ai/api/v1" },
@@ -51,7 +51,7 @@ function vaultToAgent(entry: VaultEntry): AgentConnection {
     id: entry.provider,
     vaultId: entry.id,
     name: entry.label,
-    type: (PRESET_TYPES.includes(entry.provider as any) ? entry.provider : "custom") as AgentConnection["type"],
+    type: (PRESET_TYPES.includes(entry.provider as typeof PRESET_TYPES[number]) ? entry.provider : "custom") as AgentConnection["type"],
     apiEndpoint: entry.baseUrl || meta.endpoint || "",
     status: entry.status === "active" ? "connected" : "disconnected",
     model: meta.model,

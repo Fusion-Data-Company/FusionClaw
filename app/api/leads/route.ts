@@ -43,12 +43,13 @@ export async function GET(request: NextRequest) {
       "company", "contact", "email", "status", "priority",
       "createdAt", "updatedAt", "dealValue", "lastContactDate",
     ] as const;
-    const safeSortBy = ALLOWED_SORT_FIELDS.includes(sortBy as any) ? sortBy : "createdAt";
+    const safeSortBy = ALLOWED_SORT_FIELDS.includes(sortBy as typeof ALLOWED_SORT_FIELDS[number]) ? sortBy : "createdAt";
     const column = leads[safeSortBy as keyof typeof leads] || leads.createdAt;
+    // TODO: type properly - drizzle column types
     if (sortOrder === "asc") {
-      query = query.orderBy(asc(column as any));
+      query = query.orderBy(asc(column as Parameters<typeof asc>[0]));
     } else {
-      query = query.orderBy(desc(column as any));
+      query = query.orderBy(desc(column as Parameters<typeof desc>[0]));
     }
 
     query = query.limit(limit).offset(offset);

@@ -300,7 +300,12 @@ function GraphView({
   const [linkDistance, setLinkDistance] = useState(80);
   const [chargeStrength, setChargeStrength] = useState(-50);
   const [centerStrength, setCenterStrength] = useState(0.5);
-  const fgRef = useRef<any>(null);
+  // TODO: type properly - ForceGraphMethods from react-force-graph-2d
+  const fgRef = useRef<unknown>(null);
+  type ForceGraphMethodsLike = {
+    d3Force: (name: string) => { distance?: (d: number) => void; strength?: (s: number) => void } | undefined;
+    d3ReheatSimulation: () => void;
+  };
   const [hideOrphans, setHideOrphans] = useState(false);
 
   useEffect(() => {
@@ -316,15 +321,16 @@ function GraphView({
   // Re-tune force parameters when sliders change.
   useEffect(() => {
     if (!fgRef.current) return;
-    const linkForce = fgRef.current.d3Force("link");
-    const chargeForce = fgRef.current.d3Force("charge");
-    const centerForce = fgRef.current.d3Force("center");
-    if (linkForce) linkForce.distance(linkDistance);
-    if (chargeForce) chargeForce.strength(chargeStrength);
+    const fg = fgRef.current as ForceGraphMethodsLike;
+    const linkForce = fg.d3Force("link");
+    const chargeForce = fg.d3Force("charge");
+    const centerForce = fg.d3Force("center");
+    if (linkForce?.distance) linkForce.distance(linkDistance);
+    if (chargeForce?.strength) chargeForce.strength(chargeStrength);
     if (centerForce && typeof centerForce.strength === "function") {
       centerForce.strength(centerStrength);
     }
-    fgRef.current.d3ReheatSimulation();
+    fg.d3ReheatSimulation();
   }, [linkDistance, chargeStrength, centerStrength]);
 
   const visibleNodes = useMemo(
@@ -411,29 +417,30 @@ function GraphView({
           </div>
         ) : (
           <ForceGraph2D
-            ref={fgRef}
+            ref={fgRef as React.MutableRefObject<undefined>}
             graphData={graphData}
             width={dims.width}
             height={dims.height}
             backgroundColor="#050505"
             nodeRelSize={1}
-            nodeVal={(n: any) => n.size}
-            nodeLabel={(n: any) => n.title}
-            nodeColor={(n: any) => (n.degree === 0 ? "rgba(150,150,150,0.5)" : "#e8e8e8")}
+            nodeVal={(n) => (n as unknown as { size: number }).size}
+            nodeLabel={(n) => (n as unknown as { title: string }).title}
+            nodeColor={(n) => ((n as unknown as { degree: number }).degree === 0 ? "rgba(150,150,150,0.5)" : "#e8e8e8")}
             linkColor={() => "rgba(255,255,255,0.12)"}
             linkWidth={0.5}
-            onNodeClick={(n: any) => onNodeClick(n.id)}
+            onNodeClick={(n) => onNodeClick(String((n as unknown as { id: string }).id))}
             cooldownTicks={120}
             warmupTicks={30}
             nodeCanvasObjectMode={() => "after"}
-            nodeCanvasObject={(node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
-              const label = node.title;
+            nodeCanvasObject={(node, ctx: CanvasRenderingContext2D, globalScale: number) => {
+              const n = node as unknown as { title: string; x: number; y: number; size: number };
+              const label = n.title;
               const fontSize = Math.max(10, 12 / Math.sqrt(globalScale));
               ctx.font = `${fontSize}px Inter, sans-serif`;
               ctx.textAlign = "left";
               ctx.textBaseline = "middle";
               ctx.fillStyle = "rgba(232,232,232,0.85)";
-              ctx.fillText(label, node.x + node.size + 3, node.y);
+              ctx.fillText(label, n.x + n.size + 3, n.y);
             }}
           />
         )

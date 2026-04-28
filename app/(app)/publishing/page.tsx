@@ -131,7 +131,7 @@ const TIMEZONES = [
   "Australia/Sydney", "Pacific/Auckland",
 ];
 
-const WP_PLATFORM_CONFIG: Record<string, { icon: React.ComponentType<any>; color: string; bg: string; label: string }> = {
+const WP_PLATFORM_CONFIG: Record<string, { icon: React.ComponentType<React.SVGProps<SVGSVGElement>>; color: string; bg: string; label: string }> = {
   wordpress: { icon: Globe, color: "text-blue-400", bg: "bg-blue-500/10", label: "WordPress" },
   vercel: { icon: Globe, color: "text-white", bg: "bg-white/10", label: "Vercel" },
   wix: { icon: Globe, color: "text-purple-400", bg: "bg-purple-500/10", label: "Wix" },

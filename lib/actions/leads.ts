@@ -51,10 +51,11 @@ export async function getLeads(options?: {
 
   // Apply sorting
   const column = leads[sortBy as keyof typeof leads] || leads.createdAt;
+  // TODO: type properly - drizzle column types
   if (sortOrder === "asc") {
-    query = query.orderBy(asc(column as any));
+    query = query.orderBy(asc(column as Parameters<typeof asc>[0]));
   } else {
-    query = query.orderBy(desc(column as any));
+    query = query.orderBy(desc(column as Parameters<typeof desc>[0]));
   }
 
   // Apply pagination

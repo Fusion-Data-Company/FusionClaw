@@ -158,10 +158,10 @@ export function BrandKitPanel({
           {/* Active profile details */}
           {activeProfile && (
             <div className="space-y-2">
-              {(activeProfile as any).industry && (
+              {(activeProfile as unknown as { industry?: string }).industry && (
                 <div className="text-xs text-text-dim">
                   <span className="text-text-muted">Industry:</span>{" "}
-                  {(activeProfile as any).industry}
+                  {(activeProfile as unknown as { industry?: string }).industry}
                 </div>
               )}
               {(activeProfile.colorPalette as string[] | null)?.length ? (

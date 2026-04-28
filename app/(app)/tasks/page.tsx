@@ -114,7 +114,7 @@ export default function TasksPage() {
     try {
       const res = await fetch("/api/employees");
       const data = await res.json();
-      setEmployees((data.employees || []).map((e: any) => ({ id: e.id, name: e.name, email: e.email })));
+      setEmployees((data.employees || []).map((e: { id: string; name: string; email: string }) => ({ id: e.id, name: e.name, email: e.email })));
     } catch (err) {
       console.error("Failed to fetch employees:", err);
     }
