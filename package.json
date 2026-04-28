@@ -26,7 +26,7 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "NODE_OPTIONS=--max-old-space-size=4096 eslint app components lib",
     "onboard": "npx tsx scripts/onboard.ts",
     "mcp": "node mcp-server/dist/index.js",
     "mcp:build": "cd mcp-server && npm run build",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X, Check, ArrowRight, Sparkles, Network, Settings as SettingsIcon, Bot, BookOpen } from "lucide-react";
+import { X, Check, ArrowRight, Sparkles, Network, Bot, BookOpen } from "lucide-react";
 import { GlassCard } from "@/components/primitives/GlassCard";
 
 /**

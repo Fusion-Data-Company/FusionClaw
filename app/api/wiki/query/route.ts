@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { wikiPages, wikiLog } from "@/lib/db/schema";
-import { sql } from "drizzle-orm";
 import { retrieveFromWiki } from "@/lib/wiki/memory";
 
 export const dynamic = "force-dynamic";

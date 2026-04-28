@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { rawSources, wikiPages, wikiLog } from "@/lib/db/schema";
-import { eq, and, desc, isNull } from "drizzle-orm";
-import { slugify, extractWikilinks } from "@/lib/wiki/links";
+import { eq } from "drizzle-orm";
+import { slugify } from "@/lib/wiki/links";
 import { writeToWiki, syncWikilinks } from "@/lib/wiki/memory";
 
 export const dynamic = "force-dynamic";
@@ -80,7 +80,8 @@ async function callIngestAgent(
   const model = process.env.WIKI_INGEST_MODEL ?? "anthropic/claude-sonnet-4";
 
   const sourceContent = source.rawContent ?? "(binary file — no text extracted)";
-  const sourceContext = `FILENAME: ${source.filename}\nMIME: ${source.mimeType}\nKIND: ${(source.meta as any)?.kind ?? "unknown"}\nSIZE: ${source.sizeBytes} bytes\n${source.blobUrl ? `BLOB_URL: ${source.blobUrl}\n` : ""}\nCONTENT:\n${sourceContent.slice(0, 100_000)}`;
+  const meta = (source.meta ?? {}) as Record<string, unknown>;
+  const sourceContext = `FILENAME: ${source.filename}\nMIME: ${source.mimeType}\nKIND: ${(meta.kind as string | undefined) ?? "unknown"}\nSIZE: ${source.sizeBytes} bytes\n${source.blobUrl ? `BLOB_URL: ${source.blobUrl}\n` : ""}\nCONTENT:\n${sourceContent.slice(0, 100_000)}`;
 
   const indexStr = index
     .slice(0, 200)
@@ -214,7 +215,8 @@ async function processOne(sourceId: string, dryRun: boolean): Promise<{
       }
       const baseTitle = src.filename.replace(/\.[A-Za-z0-9]+$/, "").replace(/[-_]+/g, " ").trim() || src.filename;
       const slug = slugify(baseTitle);
-      const folderPath = ((src.meta as any)?.folderPath as string) || "raw-imports";
+      const srcMeta = (src.meta ?? {}) as Record<string, unknown>;
+      const folderPath = (srcMeta.folderPath as string | undefined) || "raw-imports";
       const body = src.rawContent
         ? src.rawContent
         : `> [!unclear] No text could be extracted from this file. ${src.blobUrl ? `Blob: ${src.blobUrl}` : ""}\n\n_Filename: ${src.filename}_\n_MIME: ${src.mimeType}_\n_Size: ${src.sizeBytes} bytes_\n`;

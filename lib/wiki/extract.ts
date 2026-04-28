@@ -122,12 +122,20 @@ function extToMime(ext: string): string {
   return map[ext] ?? "text/plain";
 }
 
+interface PdfParseModule {
+  default?: (buf: Buffer) => Promise<PdfParseResult>;
+}
+interface PdfParseResult {
+  text?: string;
+  numpages?: number;
+  info?: unknown;
+}
 async function extractPdf(buf: Buffer): Promise<{ text: string; meta: Record<string, unknown>; warnings: string[] }> {
   const warnings: string[] = [];
   try {
     // Lazy import — keeps cold-start cost off non-PDF paths.
-    const mod: any = await import("pdf-parse");
-    const pdfParse = mod.default ?? mod;
+    const mod = (await import("pdf-parse")) as unknown as PdfParseModule & ((b: Buffer) => Promise<PdfParseResult>);
+    const pdfParse = (mod.default ?? (mod as unknown as (b: Buffer) => Promise<PdfParseResult>));
     const result = await pdfParse(buf);
     return {
       text: result.text ?? "",
@@ -140,10 +148,13 @@ async function extractPdf(buf: Buffer): Promise<{ text: string; meta: Record<str
   }
 }
 
+interface MammothModule {
+  extractRawText: (opts: { buffer: Buffer }) => Promise<{ value?: string; messages?: Array<{ message: string }> }>;
+}
 async function extractDocx(buf: Buffer): Promise<{ text: string; meta: Record<string, unknown>; warnings: string[] }> {
   const warnings: string[] = [];
   try {
-    const mod: any = await import("mammoth");
+    const mod = (await import("mammoth")) as unknown as MammothModule;
     const result = await mod.extractRawText({ buffer: buf });
     if (result.messages?.length) {
       for (const m of result.messages.slice(0, 5)) warnings.push(`mammoth: ${m.message}`);

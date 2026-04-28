@@ -30,17 +30,26 @@ const TYPE_META: Record<string, { icon: React.ComponentType<{ className?: string
 export default function WikiLogPage() {
   const [entries, setEntries] = useState<LogEntry[]>([]);
   const [filter, setFilter] = useState<string>("");
-  const [loading, setLoading] = useState(true);
+  const [loadKey, setLoadKey] = useState<string | null>(null);
+
+  // Reset entries cache when filter changes; the effect refetches.
+  const loading = loadKey !== filter;
 
   useEffect(() => {
-    setLoading(true);
+    let cancelled = false;
     fetch(`/api/wiki/log${filter ? `?type=${filter}` : ""}`)
       .then((r) => r.json())
       .then((data) => {
+        if (cancelled) return;
         setEntries(data.entries ?? []);
-        setLoading(false);
+        setLoadKey(filter);
       })
-      .catch(() => setLoading(false));
+      .catch(() => {
+        if (!cancelled) setLoadKey(filter);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [filter]);
 
   return (

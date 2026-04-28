@@ -95,7 +95,7 @@ export default function BindingInterviewPage() {
             </div>
             <h1 className="text-xl font-bold text-text-primary">Interview saved to Wiki Brain</h1>
             <p className="text-sm text-text-muted max-w-md">
-              Your answers are now part of the agent's permanent context. Redirecting you to Wiki Brain…
+              Your answers are now part of the agent&apos;s permanent context. Redirecting you to Wiki Brain…
             </p>
           </div>
         </GlassCard>
@@ -110,8 +110,8 @@ export default function BindingInterviewPage() {
           Binding Interview
         </h1>
         <p className="text-sm text-text-muted mt-1">
-          20 questions. ~5 minutes. Your answers become part of the agent's permanent memory in Wiki Brain.
-          Skip any you don't want to answer — you can always come back.
+          20 questions. ~5 minutes. Your answers become part of the agent&apos;s permanent memory in Wiki Brain.
+          Skip any you don&apos;t want to answer — you can always come back.
         </p>
       </div>
 

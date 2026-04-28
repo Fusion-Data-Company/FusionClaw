@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { wikiLog } from "@/lib/db/schema";
-import { desc, eq, and, sql } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
