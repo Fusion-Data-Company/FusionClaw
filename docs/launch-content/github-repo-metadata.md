@@ -126,10 +126,9 @@ Company over the past [N] months. Released today under MIT.
 
 ## Get Started
 
-- Site: https://fusionclaw.app
-- Demo: https://demo.fusionclaw.app
-- Setup guide: https://docs.fusionclaw.app/setup
-- Discord: [link]
+- Site + demo: https://fusionclaw.app
+- Setup guide: https://github.com/Fusion-Data-Company/FusionClaw/blob/main/docs/start/getting-started.md
+- Discord: [PASTE INVITE URL]
 
 All hustle. No luck. One database.
 ```

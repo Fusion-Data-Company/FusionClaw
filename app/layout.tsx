@@ -22,18 +22,18 @@ export const metadata: Metadata = {
   title: 'FusionClaw — Connect Your OpenClaw or Claude Agent Safely to Your Business',
   description:
     'New to AI agents? FusionClaw gives your OpenClaw or Claude agent guardrails, context control, and every tool a solo entrepreneur needs — CRM, ops, finance, marketing — without exposing your entire business to an unrestricted agent.',
-  metadataBase: new URL('https://fusionclaw.vercel.app'),
+  metadataBase: new URL('https://fusionclaw.app'),
   openGraph: {
     title: 'FusionClaw — Connect Your OpenClaw or Claude Agent Safely to Your Business',
     description:
       'New to AI agents? FusionClaw gives your OpenClaw or Claude agent guardrails, context control, and every tool a solo entrepreneur needs — CRM, ops, finance, marketing — without exposing your entire business to an unrestricted agent.',
-    url: 'https://fusionclaw.vercel.app',
+    url: 'https://fusionclaw.app',
     siteName: 'FusionClaw',
     images: [
       {
         url: '/fusionclaw-hero-bg.png',
-        width: 1920,
-        height: 768,
+        width: 1672,
+        height: 941,
         alt: 'FusionClaw — All Hustle No Luck',
       },
     ],

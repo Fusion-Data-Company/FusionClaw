@@ -103,8 +103,8 @@ The database is the single source of truth. Three things write to it: the human 
 
 | Path       | Command                                              | Time | Guide                              |
 | ---------- | ---------------------------------------------------- | ---- | ---------------------------------- |
-| **Local**  | `curl -fsSL fusionclaw.app/install.sh \| bash`        | ~60s | [install/local](install/local.md)  |
-| **Docker** | `curl -fsSL fusionclaw.app/install-docker.sh \| bash` | ~90s | [install/docker](install/docker.md) |
+| **Local**  | `git clone …/FusionClaw && cd FusionClaw && npm run onboard` | ~60s | [install/local](install/local.md)  |
+| **Docker** | `docker compose up` after cloning                    | ~90s | [install/docker](install/docker.md) |
 | **Vercel** | One-click deploy → fork → live URL                   | ~90s | [install/vercel](install/vercel.md) |
 
 All three produce a working dashboard in under two minutes.

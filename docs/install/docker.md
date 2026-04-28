@@ -20,29 +20,17 @@ That's it. No Node, no Postgres, no Neon account required — Docker spins up it
 
 ---
 
-## One-command install
-
-```bash
-curl -fsSL fusionclaw.app/install-docker.sh | bash
-```
-
-The script:
-
-1. Pulls the FusionClaw `docker-compose.yml`
-2. Pulls the FusionClaw image (or builds locally if you cloned the repo)
-3. Brings up Next.js + Postgres
-4. Runs `drizzle-kit push` against the local Postgres
-5. Opens `http://localhost:3000`
-
----
-
-## Manual install
+## Install
 
 ```bash
 git clone https://github.com/Fusion-Data-Company/FusionClaw.git
 cd FusionClaw
 docker compose up -d
 ```
+
+That's it — open `http://localhost:3000` once the containers are healthy.
+
+> A one-line `curl … | bash` installer is on the v1.1 roadmap.
 
 First run takes ~2 minutes (image pull + build + schema migration). Subsequent runs start in seconds.
 

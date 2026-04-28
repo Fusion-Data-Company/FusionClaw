@@ -32,8 +32,8 @@ This is my first open-source release. The plan is simple: give it to the world, 
 If you've been duct-taping ten SaaS tools together and dreaming of something unified — this is it.
 
 → **Repo:** https://github.com/Fusion-Data-Company/FusionClaw
-→ **Live demo:** https://demo.fusionclaw.app
-→ **One-line install:** see the README
+→ **Live demo:** https://fusionclaw.app
+→ **One-line install:** `git clone https://github.com/Fusion-Data-Company/FusionClaw && cd FusionClaw && npm run onboard`
 
 All hustle. No luck. One database.
 

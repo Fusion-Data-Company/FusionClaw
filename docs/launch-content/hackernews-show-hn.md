@@ -51,8 +51,7 @@ Three install paths: clone+npm, docker compose, Vercel deploy button.
 Happy to answer technical questions or take feedback on architecture, the MCP design, the auth model, anything.
 
 Repo: https://github.com/Fusion-Data-Company/FusionClaw
-Demo (read-only): https://demo.fusionclaw.app
-Site: https://fusionclaw.app
+Site + demo: https://fusionclaw.app
 ```
 
 ---
@@ -73,5 +72,5 @@ The other channels (LinkedIn / FB / IG / YouTube / Discord) are doing the liftin
 
 - Stay in the comments for 4–6 hours.
 - Don't get defensive when someone criticizes the architecture. Even when they're wrong. Especially when they're wrong.
-- Have the live demo ready and verified working. The watchdog should have run on demo.fusionclaw.app within 24 hours of this submission.
+- Have the live demo ready and verified working. Watchdog-verify fusionclaw.app within 24 hours of this submission — incognito tab, no console errors, every CTA loads.
 - Have the install scripts watchdog-verified on a clean machine. The first comments will include "I tried installing and got X" — be ready.

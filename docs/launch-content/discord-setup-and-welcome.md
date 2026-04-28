@@ -53,10 +53,9 @@ You're in the right place if you:
 
 📖 **Start here:**
 • Repo: https://github.com/Fusion-Data-Company/FusionClaw
-• Site: https://fusionclaw.app
-• Demo: https://demo.fusionclaw.app
-• Setup guide: https://docs.fusionclaw.app/setup
-• 60-second install video: [YouTube link]
+• Site + demo: https://fusionclaw.app
+• Setup guide: https://github.com/Fusion-Data-Company/FusionClaw/blob/main/docs/start/getting-started.md
+• 60-second install video: [PASTE YOUTUBE URL OR REMOVE LINE]
 
 🔧 **Help channels:**
 • #install-issues if curl install errors out

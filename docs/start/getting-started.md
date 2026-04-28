@@ -48,10 +48,12 @@ Open [http://localhost:3000](http://localhost:3000), click **Live Demo**, and yo
 Zero Node setup required. You just need Docker.
 
 ```bash
-curl -fsSL fusionclaw.app/install-docker.sh | bash
+git clone https://github.com/Fusion-Data-Company/FusionClaw.git
+cd FusionClaw
+docker compose up
 ```
 
-The script pulls a `docker-compose.yml`, brings up Next.js + Postgres locally, opens your browser to `localhost:3000`.
+This brings up Next.js + Postgres locally; open `http://localhost:3000` when it's ready.
 
 → Full guide: [install/docker](../install/docker.md)
 

@@ -23,8 +23,8 @@ Self-hosted. MIT-licensed. Free. Built for solo founders and agency owners.
 
 ⭐ GitHub: https://github.com/Fusion-Data-Company/FusionClaw
 🌐 Site: https://fusionclaw.app
-🎮 Live demo: https://demo.fusionclaw.app
-💬 Discord: [link goes here once server is live]
+🎮 Live demo: https://fusionclaw.app
+💬 Discord: [PASTE INVITE URL BEFORE PUBLISHING]
 
 📝 What you saw in this video:
 0:00 — What FusionClaw is
@@ -61,9 +61,9 @@ A full walkthrough of FusionClaw — what each module does, how the MCP tools wo
 
 ⭐ Star the repo: https://github.com/Fusion-Data-Company/FusionClaw
 🌐 fusionclaw.app
-🎮 Live demo: https://demo.fusionclaw.app
-💬 Discord: [link]
-📚 Docs: https://docs.fusionclaw.app
+🎮 Live demo: https://fusionclaw.app
+💬 Discord: [PASTE INVITE URL BEFORE PUBLISHING]
+📚 Docs: https://github.com/Fusion-Data-Company/FusionClaw/tree/main/docs
 
 ⏱️ Chapters:
 0:00 — Intro: what FusionClaw is and who it's for

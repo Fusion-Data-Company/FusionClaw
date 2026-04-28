@@ -76,7 +76,7 @@ export function BackgroundDecoration() {
       <div
         className="hidden md:block absolute bottom-0 right-0 w-[420px] h-[420px] opacity-[0.04] pointer-events-none"
         style={{
-          backgroundImage: "url(/hustle-mascot-bg.jpg)",
+          backgroundImage: "url(/fusionclaw-hero-bg.png)",
           backgroundSize: "cover",
           backgroundPosition: "center",
           maskImage:

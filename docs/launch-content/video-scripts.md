@@ -17,8 +17,8 @@ Two YouTube videos for launch. Both go live the moment you flip the repo public.
 | 0:00 | Black → mascot artwork appears (B.Y.O.A. + diamonds) | "FUSIONCLAW" | bass drop |
 | 0:02 | Mascot art holds, tagline appears | "All hustle. No luck. One database." | bass continues |
 | 0:04 | Cut to clean Mac terminal, no commands typed | "Day 1. Empty laptop." | beat |
-| 0:06 | Type the curl one-liner at terminal speed | `curl -fsSL fusionclaw.app/install.sh \| bash` | typing keys |
-| 0:10 | Press Return. Install banner fills the terminal | "Detecting OS… installing Node… cloning repo…" | progress sounds |
+| 0:06 | Type at terminal speed | `git clone https://github.com/Fusion-Data-Company/FusionClaw.git && cd FusionClaw && npm install` | typing keys |
+| 0:10 | Press Return. npm install streams | "cloning repo… installing deps…" | progress sounds |
 | 0:18 | Onboard wizard ASCII banner appears | "FusionClaw onboard wizard" | clean tone |
 | 0:21 | Wizard prompts for DATABASE_URL, paste a Neon URL | "Paste your Neon database URL" | typing |
 | 0:25 | Hit Enter, optional API keys (OpenRouter, fal.ai) — skip both | "Optional keys — skip for now" | beat |
@@ -167,9 +167,9 @@ Two YouTube videos for launch. Both go live the moment you flip the repo public.
 
 > Three install paths.
 
-> One — local. `curl fusionclaw.app/install.sh | bash`. Detects your OS, installs Node if needed, clones, runs the wizard. Sixty seconds.
+> One — local. Clone the repo, run `npm run onboard`. Wizard sets up your DB and keys. Sixty seconds.
 
-> Two — Docker. Same curl, different script. Pulls a docker-compose stack with Postgres included. Zero setup.
+> Two — Docker. Clone, then `docker compose up`. Pulls a stack with Postgres included. Zero Node setup.
 
 > Three — Vercel deploy button on the install page. One click, forks to your GitHub, provisions Neon, deploys. You get a public URL in 90 seconds.
 

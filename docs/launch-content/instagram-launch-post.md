@@ -42,5 +42,5 @@ All hustle. No luck. One database.
 
 - The "🦞 wait, wrong mascot" line is a wink at OpenClaw without naming them. Smart positioning — the IG audience that recognizes it gets the inside joke.
 - 12 hashtags — IG max is 30 but ~12 high-quality is the sweet spot.
-- "Link in bio" — update your bio with `linktr.ee/fusionclaw` (or direct https://fusionclaw.app) day-of.
+- "Link in bio" — update your bio link to https://fusionclaw.app day-of.
 - Reel script is timing guidance, not a frame-by-frame storyboard — Boss/editor adapts.

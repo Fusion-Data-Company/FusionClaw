@@ -20,24 +20,7 @@ Closest to what OpenClaw users are used to. One command, ~60 seconds, working da
 
 ---
 
-## One-command install
-
-```bash
-curl -fsSL fusionclaw.app/install.sh | bash
-```
-
-That's it. The script:
-
-1. Detects your OS (macOS / Linux)
-2. Installs Node via nvm if missing
-3. Clones the repo to `~/FusionClaw`
-4. Runs `npm install`
-5. Runs `npm run onboard` (interactive wizard)
-6. Opens `http://localhost:3000` in your default browser
-
----
-
-## Manual install (if you prefer)
+## Install
 
 ```bash
 git clone https://github.com/Fusion-Data-Company/FusionClaw.git
@@ -46,6 +29,10 @@ npm install
 npm run onboard
 npm run dev
 ```
+
+That's it — open `http://localhost:3000`.
+
+> A one-line `curl … | bash` installer is on the v1.1 roadmap. For now, the four-line clone above is the canonical install.
 
 The wizard prompts:
 

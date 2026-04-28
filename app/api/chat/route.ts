@@ -269,7 +269,7 @@ BEHAVIOR RULES:
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
-        "HTTP-Referer": "https://fusionclaw.vercel.app",
+        "HTTP-Referer": "https://fusionclaw.app",
         "X-Title": "FusionClaw",
       },
       body: JSON.stringify({

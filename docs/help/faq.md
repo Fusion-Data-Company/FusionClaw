@@ -13,7 +13,7 @@ summary: Quick answers to questions that come up before/during install and the f
 Yes. MIT licensed. No SaaS we control. You run it on your own machine, your own Vercel project, your own Neon database. No phone-home telemetry. No emails collected. No tracking.
 
 **Do you have a hosted version?**
-Not in v1.0. The demo at `demo.fusionclaw.app` is a read-only seeded instance for evaluation. To use FusionClaw with your own data, you self-host. Three install paths in [install/](../install/).
+Not as a SaaS. The marketing site at [fusionclaw.app](https://fusionclaw.app) shows you what the platform looks like, but to run FusionClaw with your own data you self-host. Three install paths in [install/](../install/).
 
 **What's the difference between FusionClaw and OpenClaw?**
 [OpenClaw](https://github.com/openclaw/openclaw) is a multi-channel gateway — a personal AI assistant you can message from WhatsApp, Slack, etc. **FusionClaw is the business** that an OpenClaw or Claude Code agent operates. They complement each other. You can use FusionClaw without OpenClaw (with Claude Code or any MCP-compatible agent).

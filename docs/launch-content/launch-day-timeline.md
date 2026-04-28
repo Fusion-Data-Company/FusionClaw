@@ -10,7 +10,7 @@
 
 - [ ] Watchdog runs on all of Phase 0 (PRD §15) — every page renders, every "Add" button works, all integrations honest, install scripts work on a clean machine
 - [ ] Wiki Brain Phase 1.1 ingest pipeline shipped + watchdog confirmed
-- [ ] Demo instance live at `demo.fusionclaw.app` with read-only seeded data
+- [x] Demo strategy resolved — fusionclaw.app/login serves as demo (no separate subdomain)
 - [ ] 60-second install video recorded + uploaded to YouTube as **unlisted** (don't go public until launch hour)
 - [ ] 5–10 min demo walkthrough video recorded + uploaded as unlisted
 - [ ] OG image generated, uploaded to `/public/og.png`, GitHub social preview set
@@ -25,10 +25,10 @@
 ## T-3 DAYS — Final dry runs
 
 - [ ] Watchdog clean install on a fresh VM (or clean macOS user account):
-  - `curl -fsSL fusionclaw.app/install.sh | bash` works end-to-end
+  - `git clone https://github.com/Fusion-Data-Company/FusionClaw.git && cd FusionClaw && npm run onboard` works end-to-end
   - Docker compose path works
   - Vercel deploy button works
-- [ ] Verify demo.fusionclaw.app loads in incognito, all 19 modules render, no console errors
+- [ ] Verify https://fusionclaw.app loads in incognito, every module renders, no console errors
 - [ ] Verify all 234 MCP tools register and at least 5 representative ones work end-to-end against a real DB
 - [ ] Send the 60-second video to 2–3 trusted people for feedback (clarity, pacing, "would I install this?")
 - [ ] Final read of README + setup guide for any remaining doc rot
@@ -51,7 +51,7 @@ All times are local (US Eastern recommended; HN's audience peaks then).
 ### 06:00 — Wake-up checks
 - Confirm dev server, demo instance, marketing site all up
 - Confirm GitHub repo still private (you flip it public at 09:00)
-- Confirm DNS for fusionclaw.app + demo.fusionclaw.app resolves correctly
+- Confirm DNS for fusionclaw.app resolves correctly (already verified live as of 2026-04-28)
 - Confirm YouTube videos still set to "unlisted" (you flip them public at 09:00)
 
 ### 08:55 — Pre-launch
