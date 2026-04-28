@@ -159,6 +159,7 @@ docs/                Setup guide, architecture, MCP reference
 | Document | Description |
 |----------|-------------|
 | [Vision](VISION.md) | Why FusionClaw exists and where it's going |
+| [Roadmap](ROADMAP.md) | What's coming in v1.1 and v1.2 |
 | [Setup Guide](docs/setup-guide.md) | Installation, configuration, deployment |
 | [Architecture](docs/architecture.md) | System design, data flow, schema overview |
 | [MCP Tools Reference](docs/mcp-tools.md) | Complete list of 234 agent tools |

@@ -82,7 +82,7 @@ All hustle. No luck. One database.
 ```
 🚀 **FusionClaw v1.0 is live.**
 
-After [N] months of building this internally for clients, we're releasing the platform as open source under MIT.
+After a year of building this internally for clients, we're releasing the platform as open source under MIT.
 
 **What's shipping today:**
 • Full app: dashboard, CRM, ops, finance, content, marketing

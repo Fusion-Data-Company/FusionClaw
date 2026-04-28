@@ -98,7 +98,7 @@ Cut a `v1.0.0` GitHub Release at launch with these notes:
 # v1.0.0 — Public OSS Launch
 
 The first public release of FusionClaw. Built internally at Fusion Data
-Company over the past [N] months. Released today under MIT.
+Company over the past year. Released today under MIT.
 
 ## Highlights
 

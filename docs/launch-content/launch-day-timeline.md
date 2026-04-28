@@ -1,6 +1,6 @@
 # FusionClaw Launch Day Timeline
 
-**Launch day target:** TBD — pick a Tuesday or Wednesday. Avoid major US holidays, AWS reInvent, OpenAI/Anthropic announcement weeks.
+**Launch day:** Tuesday, 2026-04-28 (today). Repo public, MIT, fusionclaw.app live.
 
 **Audience expectation:** Solo + small launches typically peak at hour 2–4 after the first major post. Plan accordingly.
 
