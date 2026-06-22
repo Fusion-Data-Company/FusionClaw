@@ -50,3 +50,10 @@ next-env.d.ts
 mcp-server/dist/
 mcp-server/.next/
 test-results/
+
+# Internal docs - do not commit
+CLAUDE.md
+NEEDS-ROB-DECISION.md
+LAUNCH-CHECKLIST.md
+WHATS-NEW.md
+LAUNCH_PLAN.md

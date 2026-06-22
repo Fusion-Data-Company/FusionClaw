@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { tasks, users } from "@/lib/db/schema";
+import { tasks } from "@/lib/db/schema";
 import { eq, desc, asc, and, gte, lte, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 

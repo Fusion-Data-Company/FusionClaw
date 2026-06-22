@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { campaigns, users } from "@/lib/db/schema";
+import { campaigns } from "@/lib/db/schema";
 import { eq, desc, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 

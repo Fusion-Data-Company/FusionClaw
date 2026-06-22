@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { aiContentQueue, users } from "@/lib/db/schema";
+import { aiContentQueue } from "@/lib/db/schema";
 import { eq, desc, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 

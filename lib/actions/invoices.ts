@@ -1,8 +1,8 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { invoices, leads } from "@/lib/db/schema";
-import { eq, desc, sql, and, lt, ne, type SQL } from "drizzle-orm";
+import { invoices } from "@/lib/db/schema";
+import { eq, desc, sql, and, ne, type SQL } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 export type { Invoice } from "@/lib/db/schema";

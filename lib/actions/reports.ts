@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { shifts, users } from "@/lib/db/schema";
+import { shifts } from "@/lib/db/schema";
 import { eq, desc, sql, and, gte, lte } from "drizzle-orm";
 
 // Get shift reports for a date range

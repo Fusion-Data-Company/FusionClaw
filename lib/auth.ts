@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { users } from '@/lib/db/schema'
-import { eq, count } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { redirect } from 'next/navigation'
 import { cookies, headers } from 'next/headers'
 import { SignJWT, jwtVerify } from 'jose'

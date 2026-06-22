@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { shifts, checklistItems, users } from "@/lib/db/schema";
+import { shifts, checklistItems } from "@/lib/db/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
@@ -96,7 +96,7 @@ export async function getShiftHistory(userId: string, limit = 30) {
 }
 
 // Get shift stats for reports
-export async function getShiftStats(userId?: string, startDate?: string, endDate?: string) {
+export async function getShiftStats(userId?: string) {
   let query = db
     .select({
       totalShifts: sql<number>`count(*)`,

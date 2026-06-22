@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { GlassCard } from "@/components/primitives";
@@ -48,7 +48,7 @@ export default function ActivityPage() {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [filter, setFilter] = useState<"all" | "skill_run" | "lead_activity" | "webhook_delivery">("all");
   const [paused, setPaused] = useState(false);
-  const [seenIds, setSeenIds] = useState<Set<string>>(new Set());
+  const seenIdsRef = useRef<Set<string>>(new Set());
 
   const load = useCallback(async () => {
     try {
@@ -69,11 +69,7 @@ export default function ActivityPage() {
 
   // Track which events we've already shown so the "new" ring only shows on actually-new ones
   useEffect(() => {
-    setSeenIds((prev) => {
-      const next = new Set(prev);
-      events.forEach((e) => next.add(e.id));
-      return next;
-    });
+    events.forEach((e) => seenIdsRef.current.add(e.id));
     // After first load, mark all as seen with a small delay so the "new" pulse appears
   }, [events]);
 
@@ -164,11 +160,13 @@ export default function ActivityPage() {
           </div>
         ) : (
           <div className="h-full overflow-y-auto divide-y divide-border/60">
-            {filtered.map((e, i) => {
+            {(() => {
+              const now = Date.now();
+              return filtered.map((e, i) => {
               const Icon = KIND_ICON[e.kind];
               const StatusIcon = e.status === "success" ? CheckCircle2 : e.status === "failed" ? XCircle : Clock;
               const statusColor = e.status === "success" ? "text-emerald-400" : e.status === "failed" ? "text-rose-400" : "text-cyan-400";
-              const isNew = i < 3 && Date.now() - new Date(e.at).getTime() < 8000;
+              const isNew = i < 3 && now - new Date(e.at).getTime() < 8000;
               return (
                 <Link key={e.id} href={e.href ?? "#"} className="block hover:bg-elevated/40 transition-colors">
                   <motion.div
