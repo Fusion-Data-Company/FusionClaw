@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { leadActivities, tasks, shifts, studioGenerations, leads } from "@/lib/db/schema";
-import { desc, sql, eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 
 interface ActivityItem {
   id: string;

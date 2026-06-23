@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
-import { put, list, del } from "@vercel/blob";
+import { put, list } from "@vercel/blob";
 import { nanoid } from "nanoid";
 
 // In-memory store for asset metadata (will be replaced with DB table if needed)
 // In production, store metadata in Neon DB alongside the blob URL
-const ASSET_METADATA_KEY = "branding_assets";
 
 interface BrandAssetMeta {
   id: string;

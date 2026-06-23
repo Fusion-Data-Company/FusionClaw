@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { leads, tasks, campaigns, users, knowledgeBase, studioGenerations, invoices, expenses } from "@/lib/db/schema";
-import { eq, sql, and, ne } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 /**
  * Build a real-time business snapshot from the database.
@@ -331,7 +331,7 @@ BEHAVIOR RULES:
     return new Response(stream, {
       headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", Connection: "keep-alive" },
     });
-  } catch (err) {
+  } catch {
     return new Response(JSON.stringify({ error: "Internal server error" }), { status: 500 });
   }
 }

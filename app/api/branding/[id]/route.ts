@@ -3,7 +3,7 @@ import { del } from "@vercel/blob";
 
 export async function DELETE(
   _req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
@@ -20,8 +20,8 @@ export async function DELETE(
 }
 
 export async function PATCH(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  _req: Request,
+  _params: { params: Promise<{ id: string }> },
 ) {
   // Toggle primary status — in production this would update a DB record
   // For now, just acknowledge the request

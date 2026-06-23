@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { leads, googleIntegrations } from "@/lib/db/schema";
+import { leads } from "@/lib/db/schema";
 import { getAuthenticatedClient } from "@/lib/google/client";
 import { google } from "googleapis";
-import { eq } from "drizzle-orm";
 
 export async function POST() {
   try {

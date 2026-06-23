@@ -160,9 +160,8 @@ export default function ActivityPage() {
           </div>
         ) : (
           <div className="h-full overflow-y-auto divide-y divide-border/60">
-            {(() => {
+            {filtered.map((e, i) => {
               const now = Date.now();
-              return filtered.map((e, i) => {
               const Icon = KIND_ICON[e.kind];
               const StatusIcon = e.status === "success" ? CheckCircle2 : e.status === "failed" ? XCircle : Clock;
               const statusColor = e.status === "success" ? "text-emerald-400" : e.status === "failed" ? "text-rose-400" : "text-cyan-400";
@@ -195,7 +194,6 @@ export default function ActivityPage() {
                   </motion.div>
                 </Link>
               );
-              });
             })}
           </div>
         )}

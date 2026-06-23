@@ -62,7 +62,7 @@ const COMPANIES = [
   { company: "Frontier Equine Vet", contact: "Dr. Beth Rasmussen", email: "beth@frontierequine.com", title: "DVM/Owner", industry: "healthcare" },
 ];
 
-const STATUSES = ["new", "contacted", "qualified", "proposal", "negotiation", "won", "lost"] as const;
+type LeadStatus = "new" | "contacted" | "qualified" | "proposal" | "negotiation" | "won" | "lost";
 const PRIORITIES = ["low", "medium", "high", "urgent"] as const;
 const SOURCES = ["website", "referral", "cold-outreach", "linkedin", "trade-show", "google-ads", "podcast"];
 
@@ -142,7 +142,7 @@ export async function POST() {
         jobTitle: c.title,
         phone: `(${200 + i}) ${100 + i * 7}-${1000 + i * 13}`.slice(0, 14),
         website: `https://${c.company.toLowerCase().replace(/[^a-z]/g, "")}.com`,
-        status: status as typeof STATUSES[number],
+        status: status as LeadStatus,
         priority: priority,
         source: pick(SOURCES),
         contactType: "lead" as const,
