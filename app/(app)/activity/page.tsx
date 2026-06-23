@@ -195,6 +195,7 @@ export default function ActivityPage() {
                   </motion.div>
                 </Link>
               );
+              });
             })}
           </div>
         )}
