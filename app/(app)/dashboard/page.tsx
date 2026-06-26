@@ -270,11 +270,11 @@ export default function DashboardPage() {
             <DollarSign className="w-4 h-4 text-emerald-400/60" />
           </div>
           <div className="text-3xl font-extrabold text-emerald-400 mb-1" style={{ fontFamily: "var(--font-display)" }}>
-            {finSummary ? `$${Number(finSummary.revenue).toLocaleString(0)}` : loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "$0"}
+            {finSummary ? `$${Number(finSummary.revenue).toLocaleString()}` : loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "$0"}
           </div>
           <div className="flex items-center gap-4 text-[11px] text-text-muted">
-            <span>Profit: <span className="text-emerald-400 font-bold">{finSummary ? `$${Number(finSummary.profit).toLocaleString(0)}` : "—"}</span></span>
-            <span>Expenses: <span className="text-rose-400 font-bold">{finSummary ? `$${Number(finSummary.expenses).toLocaleString(0)}` : "—"}</span></span>
+            <span>Profit: <span className="text-emerald-400 font-bold">{finSummary ? `$${Number(finSummary.profit).toLocaleString()}` : "—"}</span></span>
+            <span>Expenses: <span className="text-rose-400 font-bold">{finSummary ? `$${Number(finSummary.expenses).toLocaleString()}` : "—"}</span></span>
           </div>
         </GlassCard>
 
@@ -304,7 +304,7 @@ export default function DashboardPage() {
                     </span>
                   </div>
                   <div className="w-24 text-[11px] text-text-muted text-right shrink-0 font-mono">
-                    ${stage.value.toLocaleString(0)}
+                    ${stage.value.toLocaleString()}
                   </div>
                 </div>
               ))}
@@ -362,7 +362,7 @@ export default function DashboardPage() {
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${LEAD_STATUS_TINT[lead.status] || LEAD_STATUS_TINT.new}`}>
                       {lead.status}
                     </span>
-                    <span className="text-[11px] font-mono text-emerald-400 font-bold">${Number(lead.dealValue).toLocaleString(0)}</span>
+                    <span className="text-[11px] font-mono text-emerald-400 font-bold">${Number(lead.dealValue).toLocaleString()}</span>
                   </div>
                 </Link>
               ))}
