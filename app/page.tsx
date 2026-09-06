@@ -119,6 +119,7 @@ export default function LandingPage() {
             <a href="#features" className="hover:text-cyan-400 transition-colors">Features</a>
             <a href="#install" className="hover:text-cyan-400 transition-colors">Install</a>
             <a href="#mcp" className="hover:text-cyan-400 transition-colors">MCP Tools</a>
+            <a href="#pricing" className="hover:text-amber-400 transition-colors">Pricing</a>
             <a
               href="https://github.com/Fusion-Data-Company/FusionClaw"
               target="_blank"
@@ -432,6 +433,42 @@ export default function LandingPage() {
       </section>
 
       {/* ─── CTA ─── */}
+      {/* Pricing */}
+      <section id="pricing" className="relative py-24 border-t border-white/5">
+        <div className="mx-auto max-w-5xl px-6">
+          <h2 className="text-center text-3xl font-bold sm:text-4xl" style={{ fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)" }}>
+            Free to run. Paid if you would rather not.
+          </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-center text-white/50">
+            The code is MIT and always will be. The hosted tier exists for people who want it running today without touching a server.
+          </p>
+          <div className="mt-12 grid gap-6 md:grid-cols-2">
+            <div className="rounded-2xl border border-white/10 bg-[#0D0D0D]/80 p-8">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-400">Self-hosted</p>
+              <p className="mt-4 text-4xl font-bold">$0 <span className="text-base font-medium text-white/40">forever</span></p>
+              <ul className="mt-6 space-y-2 text-sm text-white/60">
+                <li>Full source, MIT licence</li>
+                <li>All 234 MCP tools, CRM, ops, finance, content</li>
+                <li>Bring your own Postgres and LLM key</li>
+                <li>Community support on GitHub Discussions</li>
+              </ul>
+              <a href="https://github.com/Fusion-Data-Company/FusionClaw" target="_blank" rel="noopener noreferrer" className="mt-8 inline-block rounded-xl border border-cyan-500/30 px-6 py-3 text-sm font-bold text-cyan-400 hover:bg-cyan-500/10 transition-colors">Clone it</a>
+            </div>
+            <div className="rounded-2xl border border-amber-400/40 bg-[#0D0D0D]/80 p-8 shadow-[0_0_60px_-20px_rgba(251,191,36,0.5)]">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-400">Hosted</p>
+              <p className="mt-4 text-4xl font-bold">$99 <span className="text-base font-medium text-white/40">per month</span></p>
+              <ul className="mt-6 space-y-2 text-sm text-white/60">
+                <li>Your own instance on yourname.fusionclaw.app or your domain</li>
+                <li>Managed Postgres, backups, updates and TLS</li>
+                <li>Provisioned within 1 business day</li>
+                <li>14-day free trial, cancel any time</li>
+              </ul>
+              <a href="https://buy.stripe.com/bJe00j7Hdcy87wb8h8aAw0c" target="_blank" rel="noopener noreferrer" className="mt-8 inline-block rounded-xl bg-amber-400 px-6 py-3 text-sm font-bold text-black hover:bg-amber-300 transition-colors">Start hosted trial</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="relative py-24 border-t border-white/5">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,rgba(6,182,212,0.08)_0%,transparent_60%)]" />
         <div className="relative mx-auto max-w-3xl px-6 text-center">

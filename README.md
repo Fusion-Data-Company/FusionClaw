@@ -6,8 +6,6 @@
 
 **The agent-native business operating system.** Bring your own AI agent. Run your own business. CRM, operations, content, finance, marketing — one Postgres database, 234 MCP tools, dark-mode-only.
 
-<!-- TODO: replace with hosted YouTube install video embed once recorded -->
-<!-- [![FusionClaw 60-second install](docs/assets/install-video-thumb.png)](https://youtu.be/PLACEHOLDER) -->
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript)](https://typescriptlang.org)
@@ -17,7 +15,7 @@
 [![CI](https://github.com/Fusion-Data-Company/FusionClaw/actions/workflows/ci.yml/badge.svg)](https://github.com/Fusion-Data-Company/FusionClaw/actions/workflows/ci.yml)
 [![GitHub stars](https://img.shields.io/github/stars/Fusion-Data-Company/FusionClaw?style=social)](https://github.com/Fusion-Data-Company/FusionClaw)
 
-[fusionclaw.app](https://fusionclaw.app) · [Docs](docs/index.md) · [Discussions](https://github.com/Fusion-Data-Company/FusionClaw/discussions) · [Vision](VISION.md) · [Contributing](CONTRIBUTING.md)
+[fusionclaw.app](https://fusionclaw.app) · [Hosted tier — $99/mo, 14-day trial](https://buy.stripe.com/bJe00j7Hdcy87wb8h8aAw0c) · [Docs](docs/index.md) · [Discussions](https://github.com/Fusion-Data-Company/FusionClaw/discussions) · [Vision](VISION.md) · [Contributing](CONTRIBUTING.md)
 
 </div>
 
