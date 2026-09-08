@@ -15,7 +15,7 @@
 [![CI](https://github.com/Fusion-Data-Company/FusionClaw/actions/workflows/ci.yml/badge.svg)](https://github.com/Fusion-Data-Company/FusionClaw/actions/workflows/ci.yml)
 [![GitHub stars](https://img.shields.io/github/stars/Fusion-Data-Company/FusionClaw?style=social)](https://github.com/Fusion-Data-Company/FusionClaw)
 
-[fusionclaw.app](https://fusionclaw.app) · [Hosted tier — $99/mo, 14-day trial](https://buy.stripe.com/bJe00j7Hdcy87wb8h8aAw0c) · [Docs](docs/index.md) · [Discussions](https://github.com/Fusion-Data-Company/FusionClaw/discussions) · [Vision](VISION.md) · [Contributing](CONTRIBUTING.md)
+[fusionclaw.app](https://fusionclaw.app) · [Live demo, no login](https://fusionclaw-demo.vercel.app/dashboard) · [Hosted tier — $99/mo, 14-day trial](https://buy.stripe.com/bJe00j7Hdcy87wb8h8aAw0c) · [Docs](docs/index.md) · [Discussions](https://github.com/Fusion-Data-Company/FusionClaw/discussions) · [Vision](VISION.md) · [Contributing](CONTRIBUTING.md)
 
 </div>
 
