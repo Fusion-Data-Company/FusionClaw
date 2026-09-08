@@ -240,7 +240,24 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen bg-bg">
       <BackgroundDecoration />
       <CommandPalette />
-      <OnboardingFlow />
+      {process.env.NEXT_PUBLIC_DEMO_MODE === "true" ? (
+        <div
+          role="note"
+          className="fixed bottom-0 left-0 right-0 z-[60] border-t border-amber-500/40 bg-[#0b0f14]/95 px-4 py-2 text-center text-xs text-white/80 backdrop-blur"
+        >
+          FusionClaw public demo: every company, contact, invoice and task here is fictional, and nothing you change is saved.{" "}
+          <a href="https://buy.stripe.com/bJe00j7Hdcy87wb8h8aAw0c" className="font-semibold text-amber-400 hover:text-amber-300">
+            Get your own hosted instance — $99/mo, 14-day trial
+          </a>{" "}
+          or{" "}
+          <a href="https://github.com/Fusion-Data-Company/FusionClaw" className="font-semibold text-cyan-400 hover:text-cyan-300">
+            self-host free (MIT)
+          </a>
+          .
+        </div>
+      ) : (
+        <OnboardingFlow />
+      )}
       {/* Mobile Menu Backdrop */}
       {mobileMenuOpen && (
         <div
@@ -429,7 +446,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-bold text-text-primary truncate">Admin</div>
-                  <div className="text-[10px] text-text-muted truncate">rob@fusiondataco.com</div>
+                  <div className="text-[10px] text-text-muted truncate">{process.env.NEXT_PUBLIC_DEMO_MODE === "true" ? "demo@fusionclaw.local" : "owner"}</div>
                 </div>
               </div>
             </div>

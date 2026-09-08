@@ -74,10 +74,33 @@ async function hasValidSession(req: NextRequest): Promise<boolean> {
   }
 }
 
+// ─── Public read-only demo ──────────────────────────────────────────────────
+// NEXT_PUBLIC_DEMO_MODE=true turns a deployment into a stranger-safe showcase:
+// every visitor is the owner, every write is refused. Only ever set this on a
+// throwaway instance seeded with fictional data — never on a real one.
+
+const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
+const DEMO_READ_METHODS = new Set(['GET', 'HEAD', 'OPTIONS'])
+const DEMO_WRITE_ALLOW = [/^\/api\/auth\//, /^\/api\/demo\/seed$/]
+
 // ─── Main middleware ────────────────────────────────────────────────────────
 
 export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
+
+  // 0. Public demo: reads pass through as the owner, writes are refused.
+  if (DEMO_MODE) {
+    if (isApi(pathname) && !DEMO_READ_METHODS.has(req.method) && !DEMO_WRITE_ALLOW.some((re) => re.test(pathname))) {
+      return NextResponse.json(
+        { error: 'This is a read-only demo of FusionClaw. Nothing is saved here. Get your own instance at https://fusionclaw.app/#pricing.' },
+        { status: 403, headers: { 'x-fusionclaw-demo': 'read-only' } },
+      )
+    }
+    if (pathname === '/login' || pathname.startsWith('/login/')) {
+      return NextResponse.redirect(new URL('/dashboard', req.url))
+    }
+    return NextResponse.next()
+  }
 
   // 1. MCP agent path — API route with valid Bearer token bypasses everything.
   if (isApi(pathname)) {

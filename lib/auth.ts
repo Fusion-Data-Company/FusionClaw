@@ -145,7 +145,7 @@ async function readSessionUser() {
  * cookie (issued via invite link from the admin).
  */
 export async function getCurrentUser() {
-  if (await isLocalhostRequest()) {
+  if (await isLocalhostRequest() || process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
     return await getOrCreateOwner()
   }
   return await readSessionUser()

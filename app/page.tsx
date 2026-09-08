@@ -131,7 +131,7 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-3">
             <Link
-              href="/login"
+              href={process.env.NEXT_PUBLIC_DEMO_URL || "/login"}
               className="rounded-lg bg-cyan-500 px-5 py-2 text-sm font-semibold text-black hover:bg-cyan-400 transition-colors"
             >
               Live Demo
@@ -238,7 +238,7 @@ export default function LandingPage() {
               Star on GitHub
             </a>
             <Link
-              href="/login"
+              href={process.env.NEXT_PUBLIC_DEMO_URL || "/login"}
               className="rounded-xl border border-cyan-500/30 px-8 py-3.5 text-sm font-bold text-cyan-400 hover:bg-cyan-500/10 transition-colors"
             >
               Try Live Demo
@@ -495,7 +495,7 @@ export default function LandingPage() {
               Get Started on GitHub
             </a>
             <Link
-              href="/login"
+              href={process.env.NEXT_PUBLIC_DEMO_URL || "/login"}
               className="rounded-xl border border-white/10 px-8 py-3.5 text-sm font-bold text-white/70 hover:text-white hover:border-white/20 transition-colors"
             >
               Try the Live Demo
