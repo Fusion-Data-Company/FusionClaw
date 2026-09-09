@@ -15,7 +15,11 @@ export function getQueryTools(): ToolDefinition[] {
     // Raw SQL (read-only)
     {
       name: "query_raw_sql",
-      description: "Execute a raw SQL query (read-only). Use parameterized queries for safety.",
+      description:
+        "Run one read-only SQL SELECT against the business database. Requires scope read:sql. " +
+        "Use this ONLY for a question the typed db_* tools cannot answer — a join across tables, a window function, " +
+        "a group-by no analytics_* tool covers. Always parameterise with $1, $2 and the params array; never build a " +
+        "literal from user text. Anything that is not a SELECT is refused here.",
       inputSchema: {
         type: "object",
         properties: {
@@ -50,7 +54,9 @@ export function getQueryTools(): ToolDefinition[] {
             success: false,
             error: {
               code: "WRITE_BLOCKED",
-              message: "Write operations not allowed. Use query_raw_sql_write instead.",
+              message:
+                "Write operations are not allowed here. If this genuinely needs a write, use a typed db_* tool; " +
+                "query_raw_sql_write exists but needs the admin:sql scope and a confirmation token.",
             },
           });
         }
@@ -77,7 +83,11 @@ export function getQueryTools(): ToolDefinition[] {
     // Raw SQL (write enabled)
     {
       name: "query_raw_sql_write",
-      description: "Execute a raw SQL query with write permissions. Use with caution!",
+      description:
+        "Run arbitrary SQL WITH WRITE PERMISSION. Requires scope admin:sql, which is deliberately not granted by " +
+        "default and should almost never be granted to an agent at all — it can change or destroy any table and no " +
+        "typed tool can guard it. DESTRUCTIVE: the first call returns a preview and a one-time confirm_token; call " +
+        "again with the same sql plus that token to execute. If a db_* tool can do the job, use the db_* tool.",
       inputSchema: {
         type: "object",
         properties: {
@@ -88,6 +98,10 @@ export function getQueryTools(): ToolDefinition[] {
           params: {
             type: "array",
             description: "Parameter values for $1, $2, etc. placeholders",
+          },
+          confirm_token: {
+            type: "string",
+            description: "The token returned by the unconfirmed call.",
           },
         },
         required: ["sql"],

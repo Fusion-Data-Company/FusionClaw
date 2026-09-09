@@ -9,6 +9,7 @@ import { getQueryTools } from "./query/index.js";
 import { getAnalyticsTools } from "./analytics/index.js";
 import { getAiTools } from "./ai/index.js";
 import { getSystemTools } from "./system/index.js";
+import { getMetaTools } from "./meta/index.js";
 
 export interface ToolDefinition {
   name: string;
@@ -33,5 +34,6 @@ export function getAllTools(): ToolDefinition[] {
     ...getAnalyticsTools(),
     ...getAiTools(),
     ...getSystemTools(),
+    ...getMetaTools(),
   ];
 }

@@ -1,13 +1,23 @@
 {
-  "name": "@fusionclaw/mcp-server",
-  "version": "1.0.0",
-  "description": "MCP server for FusionClaw - 234 tools for complete platform control",
-  "main": "dist/index.js",
+  "name": "fusionclaw-mcp",
+  "version": "2.0.0",
+  "description": "Give an agent your real business data — customers, jobs, invoices, expenses, notes — over MCP, with scoped keys, confirmation on destructive tools, and an audit log.",
+  "keywords": ["mcp", "model-context-protocol", "agent", "crm", "invoices", "postgres", "hermes", "openclaw", "claude"],
+  "homepage": "https://github.com/Fusion-Data-Company/FusionClaw#readme",
+  "repository": { "type": "git", "url": "git+https://github.com/Fusion-Data-Company/FusionClaw.git", "directory": "mcp-server" },
+  "bugs": "https://github.com/Fusion-Data-Company/FusionClaw/issues",
+  "license": "MIT",
+  "author": "Fusion Data Company <rob@fusiondataco.com>",
   "type": "module",
+  "main": "dist/index.js",
+  "bin": { "fusionclaw-mcp": "dist/index.js" },
+  "files": ["dist", "README.md"],
+  "engines": { "node": ">=20" },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
