@@ -6,6 +6,11 @@ Customers, jobs, invoices, expenses, notes and an agent-writable wiki, on one
 Postgres, exposed to any MCP client as 276 typed tools with scoped keys,
 confirmation on destructive calls, per-key rate limits and an audit log.
 
+> **Status: publish-ready, not yet published.** `npx -y fusionclaw-mcp` is the
+> shape this takes once it is on npm. Today: clone the repo, `npm install &&
+> npm run mcp:build`, and run `node mcp-server/dist/index.js`. Every command
+> below works either way — substitute one for the other.
+
 ```bash
 npx -y fusionclaw-mcp doctor      # check the environment
 npx -y fusionclaw-mcp keygen --name my-agent --scopes "read:*"

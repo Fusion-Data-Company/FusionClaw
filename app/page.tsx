@@ -121,7 +121,11 @@ const TABS: SetupTab[] = [
 
 # or, from the shell
 #   hermes mcp add fusionclaw --command npx --arg -y --arg fusionclaw-mcp
-#   hermes mcp test fusionclaw`,
+#   hermes mcp test fusionclaw
+#
+# until the package is on npm, point it at the clone instead:
+#   command: node
+#   args: ["/path/to/FusionClaw/mcp-server/dist/index.js"]`,
   },
   {
     id: "openclaw",
@@ -310,8 +314,13 @@ export default function Page() {
 
             <div className="fc-install hero-rise">
               <span>$</span>
-              <span>npx -y fusionclaw-mcp</span>
+              <span>git clone … && npm run mcp:build && node mcp-server/dist/index.js</span>
             </div>
+            <p className="elite-t6 hero-rise" style={{ color: "var(--elite-ink-3)", marginTop: 10 }}>
+              Packaged for npm as <b style={{ color: "var(--elite-trim)", fontWeight: 400 }}>fusionclaw-mcp</b> — not published
+              yet, so today it installs from the repo. When it lands, that line becomes{" "}
+              <b style={{ color: "var(--elite-trim)", fontWeight: 400 }}>npx -y fusionclaw-mcp</b>.
+            </p>
           </div>
         </div>
 
@@ -574,7 +583,7 @@ export default function Page() {
           </h2>
           <p className="fc-lede fc-narrow" style={{ marginBottom: 34 }}>
             Scopes read <code style={{ fontFamily: "var(--elite-font-mono)", color: "var(--elite-accent)" }}>action:resource</code>.
-            Mint one with <code style={{ fontFamily: "var(--elite-font-mono)", color: "var(--elite-accent)" }}>npx fusionclaw-mcp keygen</code>;
+            Mint one with <code style={{ fontFamily: "var(--elite-font-mono)", color: "var(--elite-accent)" }}>fusionclaw-mcp keygen</code>;
             the secret is printed once and stored only as a hash.
           </p>
         </Reveal>
@@ -670,10 +679,15 @@ export default function Page() {
             One line, then the config your runtime already uses.
           </h2>
           <p className="fc-lede fc-narrow" style={{ marginBottom: 34 }}>
-            The server is on npm as{" "}
-            <code style={{ fontFamily: "var(--elite-font-mono)", color: "var(--elite-accent)" }}>fusionclaw-mcp</code>. It speaks
-            stdio, needs a Postgres URL and a key, and nothing else. Point it at Neon or at the
-            Postgres in the repo&apos;s docker-compose — both work.
+            The server is packaged for npm as{" "}
+            <code style={{ fontFamily: "var(--elite-font-mono)", color: "var(--elite-accent)" }}>fusionclaw-mcp</code> — a bin,
+            an engines field and a prepublish build — but it is <strong style={{ color: "var(--elite-ink)" }}>not published
+            yet</strong>, so the configs below use{" "}
+            <code style={{ fontFamily: "var(--elite-font-mono)", color: "var(--elite-trim)" }}>npx -y fusionclaw-mcp</code> as
+            the shape they will take and{" "}
+            <code style={{ fontFamily: "var(--elite-font-mono)", color: "var(--elite-trim)" }}>node …/mcp-server/dist/index.js</code>{" "}
+            as what works today. It speaks stdio, needs a Postgres URL and a key, and nothing else.
+            Point it at Neon or at the Postgres in the repo&apos;s docker-compose — both work.
           </p>
         </Reveal>
         <Reveal delay={100}>
@@ -685,7 +699,7 @@ export default function Page() {
         <Reveal delay={140}>
           <div className="fc-grid-2" style={{ marginTop: 18 }}>
             <div className="card fc-panel">
-              <Code label="Mint a key for one agent">{`$ npx fusionclaw-mcp keygen \\
+              <Code label="Mint a key for one agent">{`$ node mcp-server/dist/index.js keygen \\
     --name hermes-bookkeeper \\
     --scopes "read:*,write:expenses,write:invoices"
 
@@ -696,7 +710,7 @@ export default function Page() {
   FUSIONCLAW_MCP_KEY=fcw_sk_9c41ab_…`}</Code>
             </div>
             <div className="card fc-panel">
-              <Code label="Check it before an agent depends on it">{`$ npx fusionclaw-mcp doctor
+              <Code label="Check it before an agent depends on it">{`$ node mcp-server/dist/index.js doctor
 
   fusionclaw-mcp v2.0.0
     DATABASE_URL        set

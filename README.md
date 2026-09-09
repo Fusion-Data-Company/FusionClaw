@@ -83,16 +83,21 @@ the Hermes / OpenClaw / Claude Code configs are in
 [`mcp-server/README.md`](mcp-server/README.md).
 
 ```bash
-npx -y fusionclaw-mcp keygen --name my-agent --scopes "read:*"
-npx -y fusionclaw-mcp doctor
+npm install && npm run mcp:build          # until the package is on npm
+node mcp-server/dist/index.js keygen --name my-agent --scopes "read:*"
+node mcp-server/dist/index.js doctor
 ```
+
+The package is publish-ready (`bin`, `files`, `engines`, `prepublishOnly`) but
+**not published yet**, so `npx -y fusionclaw-mcp` does not resolve today. Every
+config snippet shows both spellings.
 
 ```json
 {
   "mcpServers": {
     "fusionclaw": {
-      "command": "npx",
-      "args": ["-y", "fusionclaw-mcp"],
+      "command": "node",
+      "args": ["/path/to/FusionClaw/mcp-server/dist/index.js"],
       "env": {
         "DATABASE_URL": "postgres://…",
         "FUSIONCLAW_MCP_KEY": "fcw_sk_…"
