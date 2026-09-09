@@ -439,10 +439,10 @@ export default function Page() {
               <div className="elite-scroll-x">
                 <svg
                   className="fc-diagram"
-                  viewBox="0 0 1080 430"
+                  viewBox="0 0 1180 452"
                   role="img"
                   aria-label="An agent's request enters the FusionClaw MCP server, passes authentication, scope, rate limit and confirmation checks, then reaches Postgres. Every outcome, allowed or refused, is written to the audit log."
-                  style={{ minWidth: 760 }}
+                  style={{ minWidth: 900 }}
                 >
                   <defs>
                     <marker id="fcArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -454,70 +454,71 @@ export default function Page() {
                   </defs>
 
                   {/* lane labels */}
-                  <text x="14" y="30" fill="var(--elite-ink-3)" fontSize="11" letterSpacing="2.4">RUNTIME</text>
-                  <text x="286" y="30" fill="var(--elite-ink-3)" fontSize="11" letterSpacing="2.4">FUSIONCLAW MCP SERVER</text>
-                  <text x="946" y="30" fill="var(--elite-ink-3)" fontSize="11" letterSpacing="2.4">DATA</text>
+                  <text x="14" y="28" fill="var(--elite-ink-3)" fontSize="11" letterSpacing="2.4">RUNTIME</text>
+                  <text x="288" y="28" fill="var(--elite-ink-3)" fontSize="11" letterSpacing="2.4">FUSIONCLAW MCP SERVER</text>
+                  <text x="990" y="28" fill="var(--elite-ink-3)" fontSize="11" letterSpacing="2.4">DATA</text>
 
                   {/* the server envelope */}
-                  <rect x="272" y="46" width="612" height="268" rx="16" fill="none" stroke="var(--elite-rule-1)" strokeDasharray="4 5" />
+                  <rect x="278" y="44" width="676" height="288" rx="16" fill="none" stroke="var(--elite-rule-1)" strokeDasharray="4 5" />
 
                   {/* runtime box */}
-                  <rect x="14" y="96" width="216" height="98" rx="12" fill="color-mix(in srgb, var(--elite-ink) 5%, transparent)" stroke="var(--elite-rule-1)" />
-                  <text x="34" y="130" fill="var(--elite-ink)" fontSize="15" fontWeight="600">Hermes · OpenClaw</text>
-                  <text x="34" y="152" fill="var(--elite-ink-2)" fontSize="12.5">Claude Code · any client</text>
-                  <text x="34" y="174" fill="var(--elite-accent)" fontSize="11.5">holds FUSIONCLAW_MCP_KEY</text>
+                  <rect x="14" y="96" width="236" height="104" rx="12" fill="color-mix(in srgb, var(--elite-ink) 5%, transparent)" stroke="var(--elite-rule-1)" />
+                  <text x="32" y="128" fill="var(--elite-ink)" fontSize="15" fontWeight="600">Hermes · OpenClaw</text>
+                  <text x="32" y="152" fill="var(--elite-ink-2)" fontSize="12">Claude Code · any client</text>
+                  <text x="32" y="178" fill="var(--elite-accent)" fontSize="11">holds FUSIONCLAW_MCP_KEY</text>
 
-                  <line x1="230" y1="145" x2="286" y2="145" stroke="var(--elite-ink-3)" strokeWidth="1.5" markerEnd="url(#fcArrow)" />
-                  <text x="232" y="136" fill="var(--elite-ink-3)" fontSize="10.5">stdio</text>
+                  <line x1="250" y1="148" x2="292" y2="148" stroke="var(--elite-ink-3)" strokeWidth="1.5" markerEnd="url(#fcArrow)" />
+                  <text x="252" y="139" fill="var(--elite-ink-3)" fontSize="10">stdio</text>
 
                   {/* the four gates */}
                   {[
-                    { x: 300, n: "1", t: "Authenticate", s: "hash + timingSafeEqual" },
-                    { x: 442, n: "2", t: "Scope", s: "action : resource" },
-                    { x: 584, n: "3", t: "Rate limit", s: "writes counted apart" },
-                    { x: 726, n: "4", t: "Confirm", s: "preview + one-time token" },
+                    { x: 300, n: "1", t: "Authenticate", a: "SHA-256 hash,", b: "timing-safe compare" },
+                    { x: 462, n: "2", t: "Scope", a: "action : resource,", b: "unknown \u21d2 admin" },
+                    { x: 624, n: "3", t: "Rate limit", a: "per key, sliding,", b: "writes counted apart" },
+                    { x: 786, n: "4", t: "Confirm", a: "a preview of the rows", b: "and a one-use token" },
                   ].map((g) => (
                     <g key={g.n}>
-                      <rect x={g.x} y="96" width="128" height="98" rx="12" fill="color-mix(in srgb, var(--elite-ink) 4%, transparent)" stroke="var(--elite-rule-1)" />
-                      <circle cx={g.x + 22} cy="122" r="11" fill="var(--elite-accent)" />
-                      <text x={g.x + 22} y="126" textAnchor="middle" fill="var(--elite-accent-on)" fontSize="11.5" fontWeight="700">{g.n}</text>
-                      <text x={g.x + 42} y="126" fill="var(--elite-ink)" fontSize="13.5" fontWeight="600">{g.t}</text>
-                      <text x={g.x + 16} y="156" fill="var(--elite-ink-2)" fontSize="11">{g.s}</text>
-                      <text x={g.x + 16} y="176" fill="var(--elite-bad)" fontSize="10.5">refuses → audit</text>
+                      <rect x={g.x} y="96" width="150" height="104" rx="12" fill="color-mix(in srgb, var(--elite-ink) 4%, transparent)" stroke="var(--elite-rule-1)" />
+                      <circle cx={g.x + 22} cy="122" r="10.5" fill="var(--elite-accent)" />
+                      <text x={g.x + 22} y="126" textAnchor="middle" fill="var(--elite-accent-on)" fontSize="11" fontWeight="700">{g.n}</text>
+                      <text x={g.x + 40} y="126" fill="var(--elite-ink)" fontSize="13" fontWeight="600">{g.t}</text>
+                      <text x={g.x + 14} y="152" fill="var(--elite-ink-2)" fontSize="9.5">{g.a}</text>
+                      <text x={g.x + 14} y="166" fill="var(--elite-ink-2)" fontSize="9.5">{g.b}</text>
+                      <text x={g.x + 14} y="186" fill="var(--elite-bad)" fontSize="9.5">refuses → audit</text>
                     </g>
                   ))}
 
-                  {[428, 570, 712].map((x) => (
-                    <line key={x} x1={x} y1="145" x2={x + 14} y2="145" stroke="var(--elite-ink-3)" strokeWidth="1.5" markerEnd="url(#fcArrow)" />
+                  {[450, 612, 774].map((x) => (
+                    <line key={x} x1={x} y1="148" x2={x + 12} y2="148" stroke="var(--elite-ink-3)" strokeWidth="1.5" markerEnd="url(#fcArrow)" />
                   ))}
 
-                  <line x1="854" y1="145" x2="922" y2="145" stroke="var(--elite-accent)" strokeWidth="1.6" markerEnd="url(#fcArrowA)" />
-                  <text x="858" y="136" fill="var(--elite-accent)" fontSize="10.5">5 · run</text>
+                  <line x1="936" y1="148" x2="984" y2="148" stroke="var(--elite-accent)" strokeWidth="1.6" markerEnd="url(#fcArrowA)" />
+                  <text x="940" y="134" fill="var(--elite-accent)" fontSize="9.5">5 · run</text>
 
                   {/* postgres */}
-                  <rect x="922" y="96" width="144" height="98" rx="12" fill="color-mix(in srgb, var(--elite-accent) 8%, transparent)" stroke="color-mix(in srgb, var(--elite-accent) 40%, transparent)" />
-                  <text x="942" y="130" fill="var(--elite-ink)" fontSize="15" fontWeight="600">Postgres</text>
-                  <text x="942" y="152" fill="var(--elite-ink-2)" fontSize="12">31 tables</text>
-                  <text x="942" y="172" fill="var(--elite-ink-3)" fontSize="11">Neon or your own</text>
+                  <rect x="984" y="96" width="182" height="104" rx="12" fill="color-mix(in srgb, var(--elite-accent) 8%, transparent)" stroke="color-mix(in srgb, var(--elite-accent) 40%, transparent)" />
+                  <text x="1004" y="128" fill="var(--elite-ink)" fontSize="15" fontWeight="600">Postgres</text>
+                  <text x="1004" y="152" fill="var(--elite-ink-2)" fontSize="12">31 tables</text>
+                  <text x="1004" y="176" fill="var(--elite-ink-3)" fontSize="11">Neon or your own</text>
 
                   {/* audit spine */}
-                  <path d="M364 194 L364 250 L992 250 L992 194" fill="none" stroke="var(--elite-trim)" strokeWidth="1.4" strokeDasharray="3 4" />
-                  {[364, 506, 648, 790, 992].map((x) => (
-                    <circle key={x} cx={x} cy="250" r="3.5" fill="var(--elite-trim)" />
+                  <path d="M375 200 L375 244 L1075 244 L1075 200" fill="none" stroke="var(--elite-trim)" strokeWidth="1.4" strokeDasharray="3 4" />
+                  {[375, 537, 699, 861, 1075].map((x) => (
+                    <circle key={x} cx={x} cy="244" r="3.5" fill="var(--elite-trim)" />
                   ))}
-                  <rect x="440" y="266" width="290" height="42" rx="10" fill="color-mix(in srgb, var(--elite-trim) 12%, transparent)" stroke="color-mix(in srgb, var(--elite-trim) 38%, transparent)" />
-                  <text x="585" y="292" textAnchor="middle" fill="var(--elite-trim)" fontSize="12.5" fontWeight="600">
+                  <rect x="401" y="264" width="430" height="44" rx="10" fill="color-mix(in srgb, var(--elite-trim) 12%, transparent)" stroke="color-mix(in srgb, var(--elite-trim) 38%, transparent)" />
+                  <text x="616" y="291" textAnchor="middle" fill="var(--elite-trim)" fontSize="12" fontWeight="600">
                     6 · agent_audit_log — every outcome, allowed or not
                   </text>
 
                   {/* footnote row */}
-                  <text x="14" y="356" fill="var(--elite-ink-3)" fontSize="11.5">
+                  <text x="14" y="378" fill="var(--elite-ink-3)" fontSize="11.5">
                     A key only sees the tools it may run: tools/list is filtered by scope, so a read-only agent is handed 77 tools, not 276.
                   </text>
-                  <text x="14" y="380" fill="var(--elite-ink-3)" fontSize="11.5">
+                  <text x="14" y="402" fill="var(--elite-ink-3)" fontSize="11.5">
                     The confirm token is bound to a hash of the arguments it previewed, so a token issued for one row cannot be replayed against another.
                   </text>
-                  <text x="14" y="404" fill="var(--elite-ink-3)" fontSize="11.5">
+                  <text x="14" y="426" fill="var(--elite-ink-3)" fontSize="11.5">
                     If the database is the thing that broke, the audit log falls back to JSONL on disk rather than being lost.
                   </text>
                 </svg>
