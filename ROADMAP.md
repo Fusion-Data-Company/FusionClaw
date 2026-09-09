@@ -19,9 +19,12 @@ If you want to contribute one of these, open a Discussion in the **Show and tell
 
 ## Already shipped in v1.0
 
-- 234-tool MCP server, every CRUD module wired
+- 276-tool MCP server over 31 tables, with scoped keys, a confirmation gate on
+  destructive tools, per-key rate limits and an audit log (v2 of the server;
+  v1's 234 tools covered 26 tables and left invoices, expenses, skills and the
+  wiki unreachable)
 - Self-hosted auth (localhost trust + `OWNER_PASSWORD` cookie session)
-- 37k+ row TanStack virtual table, drag-and-drop kanban
+- TanStack virtual table sized for large lead imports, drag-and-drop kanban
 - OpenRouter streaming chat, fal.ai image generation
 - Three-card hero, full marketing site at `fusionclaw.app`
 - MIT license, GitHub Discussions, public repo

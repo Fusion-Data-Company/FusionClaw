@@ -1,527 +1,887 @@
-"use client";
-
-import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import { Menu, X } from "lucide-react";
+import { KenBurns, Grain, Reveal, Marquee, Counter, StatusChip, PLATES } from "@/elite/motion";
+import SetupTabs, { type SetupTab } from "@/components/marketing/SetupTabs";
+import Code from "@/components/marketing/Code";
 
-// Elite agent-native capabilities — the differentiators that justify the launch
-const ELITE_FEATURES: Array<{ tag: string; title: string; desc: string }> = [
-  { tag: "Forge", title: "Skills that write themselves", desc: "Type a one-line goal. The platform generates a working skill — prompt, eval criteria, model, seed test cases — in 5 seconds." },
-  { tag: "Karpathy", title: "Self-improving via reflection loop", desc: "Every Monday at 6am, the worst-performing skill gets analyzed and 3 prompt edits proposed. Wake up to a smarter platform." },
-  { tag: "Live", title: "Watch agents think", desc: "Click Run on any skill. A side panel streams tokens, expands tool calls, and renders the final output as an interactive UI component — not a wall of text." },
-  { tag: "Council", title: "3 agents debate every deal", desc: "Sales, Researcher, and Closer personas argue over a lead in real time, then synthesize a verdict. All grounded in your wiki notes." },
-  { tag: "Voice", title: "Talk to your CRM", desc: "Full-duplex voice agent via OpenAI Realtime. \"Move Cedar & Pine to negotiation and book a follow-up Tuesday\" — and it does both." },
-  { tag: "Browser", title: "Skills that browse the web", desc: "Hand a URL to any skill. It reads, follows links, and returns structured intel. Zero-dependency baseline; ready to swap to Stagehand for full automation." },
-];
+/* ═══════════════════════════════════════════════════════════════════════════
+ * The pitch, cut to what is true.
+ *
+ * What came off this page: the content studio, the campaigns, the voice notes,
+ * the "37,000+ row virtual table", "234 tools = full programmatic control over
+ * your entire business", and the old H1's promise of "guardrails and context
+ * control" — which the code contradicted, since hasPermission() returned true
+ * for everything and query_raw_sql_write shipped unguarded.
+ *
+ * What is left is one claim, and it is now backed by code: an agent can read
+ * and write your real business data, safely, and you can see what it did.
+ *
+ * Every figure below is measured, not estimated. The tool and table counts are
+ * what `fusionclaw-mcp doctor` prints. Every code block and every JSON payload
+ * is a verbatim capture from a real session against a real Postgres — the
+ * lead, the invoice and the audit rows are fictional records in a scratch
+ * database, but the shapes, timings and messages are exactly what the server
+ * emits.
+ * ═════════════════════════════════════════════════════════════════════════ */
 
-const FEATURES = [
-  {
-    icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z",
-    title: "CRM & Pipeline",
-    desc: "37,000+ row virtual table. Drag-and-drop kanban pipeline. Full lead lifecycle tracking.",
-  },
-  {
-    icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4",
-    title: "Operations",
-    desc: "Shift tracking, daily checklists, task management, and employee accountability reports.",
-  },
-  {
-    icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
-    title: "Finance",
-    desc: "Invoices with line items, expense tracking, P&L dashboard with quarterly tax estimates.",
-  },
-  {
-    icon: "M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z",
-    title: "Marketing",
-    desc: "Email campaigns, AI content queue with approval workflow, WordPress publishing.",
-  },
-  {
-    icon: "M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z",
-    title: "Content Studio",
-    desc: "AI text generation via OpenRouter. Image creation with 3 models. Built-in gallery.",
-  },
-  {
-    icon: "M13 10V3L4 14h7v7l9-11h-7z",
-    title: "234 MCP Tools",
-    desc: "Give any AI agent full programmatic control over your entire business. One API key.",
-  },
-];
+export const metadata = {
+  alternates: { canonical: "/" },
+};
 
-const STEPS = [
-  {
-    num: "01",
-    title: "Clone & Install",
-    code: "git clone https://github.com/Fusion-Data-Company/FusionClaw.git && cd FusionClaw && npm install",
-  },
-  {
-    num: "02",
-    title: "Configure",
-    code: "npm run onboard",
-  },
-  {
-    num: "03",
-    title: "Launch",
-    code: "npm run dev",
-  },
-];
+const REPO = "https://github.com/Fusion-Data-Company/FusionClaw";
+const DEMO = process.env.NEXT_PUBLIC_DEMO_URL || "https://fusionclaw-demo.vercel.app";
 
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-  return (
-    <button
-      onClick={() => {
-        navigator.clipboard.writeText(text);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      }}
-      className="ml-3 shrink-0 rounded-md bg-white/5 px-3 py-1.5 text-xs font-medium text-cyan-400 hover:bg-white/10 transition-colors border border-cyan-400/20"
-    >
-      {copied ? "Copied!" : "Copy"}
-    </button>
-  );
+/* ── the artefacts: captured, not composed ──────────────────────────────── */
+
+const CALL_LIST = `→ db_invoices_list  { "filters": { "status": "overdue" }, "limit": 5 }
+
+{
+  "success": true,
+  "data": [
+    {
+      "invoice_number": "INV-2026-0041",
+      "client_name": "Cedar & Pine Realty",
+      "client_email": "dana@cedarpine.example",
+      "total": "4250.00",
+      "status": "overdue",
+      "due_date": "2026-08-29T00:00:00.000Z",
+      "paid_date": null
+    }
+  ],
+  "pagination": { "total": 1, "limit": 5, "offset": 0, "hasMore": false }
+}`;
+
+const CALL_DELETE = `→ db_leads_delete  { "id": "7b341f0e-3c29-4b52-9c47-e16bb819d760" }
+
+{
+  "success": false,
+  "error": {
+    "code": "CONFIRMATION_REQUIRED",
+    "message": "Permanently deletes 1 leads row from leads. Rows that
+       reference it may cascade. Nothing has changed yet."
+  },
+  "preview": {
+    "affected": 1,
+    "sample": [
+      { "company": "Harbourline Freight", "contact": "Tomas Reyes",
+        "status": "new", "source": "cold call" }
+    ]
+  },
+  "confirm_token": "cfm_ZusiwZHz0kjPnILN",
+  "expires_in_seconds": 300
+}`;
+
+const CALL_AUDIT = `→ fusionclaw_audit_tail  { "limit": 3 }
+
+[
+  { "at": "01:24:28.038Z", "key_name": "hermes-bookkeeper",
+    "client": "hermes@0.4.1", "tool": "db_leads_delete",
+    "outcome": "confirm_required", "row_count": 1, "duration_ms": 2 },
+
+  { "at": "01:24:28.029Z", "key_name": "hermes-bookkeeper",
+    "client": "hermes@0.4.1", "tool": "db_leads_list",
+    "outcome": "ok", "row_count": 1, "duration_ms": 2 },
+
+  { "at": "01:24:28.018Z", "key_name": "hermes-bookkeeper",
+    "client": "hermes@0.4.1", "tool": "db_invoices_list",
+    "outcome": "ok", "row_count": 1, "duration_ms": 28 }
+]`;
+
+const CALL_DENIED = `→ db_invoices_create  { "data": { "clientName": "…" } }
+
+{
+  "success": false,
+  "error": {
+    "code": "SCOPE_DENIED",
+    "message": "This key (\\"hermes-readonly\\") is not allowed to run
+       db_invoices_create. It inserts one row and needs the scope
+       write:invoices. This key holds: read:leads, read:meta, read:audit.
+       Do not retry — ask the operator to widen the key.",
+    "required": "write:invoices",
+    "granted": ["read:leads", "read:meta", "read:audit"]
+  }
+}`;
+
+/* ── the three runtimes ─────────────────────────────────────────────────── */
+
+const TABS: SetupTab[] = [
+  {
+    id: "hermes",
+    label: "Hermes",
+    file: "~/.hermes/config.yaml",
+    note: "top-level mcp_servers key — tools arrive as mcp_fusionclaw_*",
+    code: `mcp_servers:
+  fusionclaw:
+    command: npx
+    args: ["-y", "fusionclaw-mcp"]
+    env:
+      DATABASE_URL: "postgres://…"
+      FUSIONCLAW_MCP_KEY: "fcw_sk_…"
+    tools:
+      exclude: ["*_bulk_delete", "query_raw_sql_write"]
+
+# or, from the shell
+#   hermes mcp add fusionclaw --command npx --arg -y --arg fusionclaw-mcp
+#   hermes mcp test fusionclaw`,
+  },
+  {
+    id: "openclaw",
+    label: "OpenClaw",
+    file: "~/.openclaw/openclaw.json",
+    note: "JSON5 under mcp.servers — stdio, streamable-http or sse",
+    code: `{
+  mcp: {
+    servers: {
+      fusionclaw: {
+        command: "npx",
+        args: ["-y", "fusionclaw-mcp"],
+        enabled: true,
+        requestTimeoutMs: 20000,
+        toolFilter: { include: ["db_leads_*", "db_invoices_*", "fusionclaw_*"] },
+      },
+    },
+  },
 }
 
-export default function LandingPage() {
-  const parallaxRef = useRef<HTMLDivElement>(null);
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (parallaxRef.current) {
-        const y = window.scrollY;
-        parallaxRef.current.style.transform = `translateY(${y * 0.4}px)`;
+// or, from the shell
+//   openclaw mcp add fusionclaw --command npx --arg -y --arg fusionclaw-mcp
+//   openclaw mcp configure fusionclaw --approval prompt`,
+  },
+  {
+    id: "claude",
+    label: "Claude Code",
+    file: ".mcp.json  /  claude_desktop_config.json",
+    note: "the same shape every MCP client understands",
+    code: `{
+  "mcpServers": {
+    "fusionclaw": {
+      "command": "npx",
+      "args": ["-y", "fusionclaw-mcp"],
+      "env": {
+        "DATABASE_URL": "postgres://…",
+        "FUSIONCLAW_MCP_KEY": "fcw_sk_…"
       }
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  return (
-    <div className="min-h-screen bg-[#050505] text-white overflow-x-hidden">
-      {/* ─── NAV ─── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-[#050505]/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
-          <div className="flex items-center gap-3">
-            <Image
-              src="/fusionclaw-logo.png"
-              alt="FusionClaw"
-              width={40}
-              height={40}
-              className="rounded-lg"
-            />
-            <span className="text-xl font-bold tracking-tight text-white" style={{ fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)" }}>
-              FusionClaw
-            </span>
-          </div>
-          <div className="hidden md:flex items-center gap-8 text-sm text-white/60">
-            <a href="#agent" className="hover:text-amber-400 transition-colors">Agent</a>
-            <a href="#features" className="hover:text-cyan-400 transition-colors">Features</a>
-            <a href="#install" className="hover:text-cyan-400 transition-colors">Install</a>
-            <a href="#mcp" className="hover:text-cyan-400 transition-colors">MCP Tools</a>
-            <a href="#pricing" className="hover:text-amber-400 transition-colors">Pricing</a>
-            <a
-              href="https://github.com/Fusion-Data-Company/FusionClaw"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-cyan-400 transition-colors"
-            >
-              GitHub
-            </a>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href={process.env.NEXT_PUBLIC_DEMO_URL || "/login"}
-              className="rounded-lg bg-cyan-500 px-5 py-2 text-sm font-semibold text-black hover:bg-cyan-400 transition-colors"
-            >
-              Live Demo
-            </Link>
-            <button
-              onClick={() => setMobileNavOpen(!mobileNavOpen)}
-              className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg text-white/70 hover:text-white transition-colors"
-              aria-label="Toggle menu"
-            >
-              {mobileNavOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-          </div>
-        </div>
-        {/* Mobile nav dropdown */}
-        {mobileNavOpen && (
-          <div className="md:hidden border-t border-white/5 bg-[#050505]/95 backdrop-blur-xl px-4 py-4 space-y-3">
-            <a href="#features" onClick={() => setMobileNavOpen(false)} className="block text-sm text-white/60 hover:text-cyan-400 transition-colors">Features</a>
-            <a href="#install" onClick={() => setMobileNavOpen(false)} className="block text-sm text-white/60 hover:text-cyan-400 transition-colors">Install</a>
-            <a href="#mcp" onClick={() => setMobileNavOpen(false)} className="block text-sm text-white/60 hover:text-cyan-400 transition-colors">MCP Tools</a>
-            <a
-              href="https://github.com/Fusion-Data-Company/FusionClaw"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block text-sm text-white/60 hover:text-cyan-400 transition-colors"
-            >
-              GitHub
-            </a>
-          </div>
-        )}
-      </nav>
-
-      {/* ─── HERO with parallax background ─── */}
-      <section className="relative flex min-h-[90vh] items-center justify-center overflow-hidden pt-16">
-        {/* Parallax BG */}
-        <div
-          ref={parallaxRef}
-          className="absolute inset-0 -top-20 -bottom-20"
-          style={{ willChange: "transform" }}
-        >
-          <Image
-            src="/fusionclaw-hero-bg.png"
-            alt=""
-            fill
-            className="object-cover opacity-30"
-            priority
-          />
-          {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-[#050505] via-[#050505]/60 to-[#050505]" />
-          {/* Blue glow */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(6,182,212,0.12)_0%,transparent_65%)]" />
-        </div>
-
-        <div className="relative z-10 mx-auto max-w-4xl px-4 sm:px-6 text-center">
-          {/* Logo */}
-          <div className="mb-6 sm:mb-8 flex justify-center">
-            <Image
-              src="/fusionclaw-logo.png"
-              alt="FusionClaw"
-              width={120}
-              height={120}
-              className="w-20 h-20 sm:w-[120px] sm:h-[120px] rounded-2xl drop-shadow-[0_0_40px_rgba(6,182,212,0.3)]"
-            />
-          </div>
-
-          <h1
-            className="text-3xl font-extrabold tracking-tight sm:text-4xl md:text-6xl"
-            style={{ fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)" }}
-          >
-            <span className="text-white">Connect Your OpenClaw or Claude Agent</span>
-            <br />
-            <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-              Safely to Your Business
-            </span>
-          </h1>
-
-          <p className="mx-auto mt-6 max-w-2xl text-base sm:text-lg text-white/60 leading-relaxed">
-            New to AI agents? FusionClaw gives your agent guardrails, context control, and every tool
-            a solo entrepreneur needs — CRM, ops, finance, marketing — without exposing your entire
-            business to an unrestricted agent.
-          </p>
-
-          {/* One-liner install */}
-          <div className="mx-auto mt-10 max-w-2xl">
-            <div className="flex items-center rounded-xl border border-cyan-500/20 bg-[#0D0D0D]/80 px-3 sm:px-5 py-3 sm:py-4 backdrop-blur-sm overflow-hidden">
-              <span className="mr-2 sm:mr-3 text-cyan-500 font-mono text-xs sm:text-sm shrink-0">$</span>
-              <code className="flex-1 text-left font-mono text-xs sm:text-sm text-white/80 overflow-x-auto whitespace-nowrap">
-                git clone https://github.com/Fusion-Data-Company/FusionClaw.git && cd FusionClaw && npm run onboard
-              </code>
-              <CopyButton text="git clone https://github.com/Fusion-Data-Company/FusionClaw.git && cd FusionClaw && npm run onboard" />
-            </div>
-          </div>
-
-          {/* CTA buttons */}
-          <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-            <a
-              href="https://github.com/Fusion-Data-Company/FusionClaw"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 rounded-xl bg-white px-8 py-3.5 text-sm font-bold text-black hover:bg-white/90 transition-colors"
-            >
-              <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z" />
-              </svg>
-              Star on GitHub
-            </a>
-            <Link
-              href={process.env.NEXT_PUBLIC_DEMO_URL || "/login"}
-              className="rounded-xl border border-cyan-500/30 px-8 py-3.5 text-sm font-bold text-cyan-400 hover:bg-cyan-500/10 transition-colors"
-            >
-              Try Live Demo
-            </Link>
-          </div>
-
-          {/* Badges */}
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3 opacity-60">
-            <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/50">Next.js 16</span>
-            <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/50">TypeScript</span>
-            <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/50">Tailwind v4</span>
-            <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/50">Drizzle ORM</span>
-            <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/50">Neon PostgreSQL</span>
-            <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/50">MCP SDK</span>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── ELITE / AGENT-NATIVE CAPABILITIES ─── */}
-      <section id="agent" className="relative py-24 border-t border-white/5">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-amber-400/30 bg-amber-400/5 text-[10px] uppercase tracking-[0.25em] font-bold text-amber-300 mb-4">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.7)]" />
-              What sets it apart
-            </div>
-            <h2 className="text-3xl font-bold sm:text-4xl" style={{ fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)" }}>
-              Agents that write their own skills,{" "}
-              <span className="bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 bg-clip-text text-transparent">improve overnight</span>
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-white/60">
-              Most CRMs added a chat sidebar. FusionClaw is built around a self-improving agent fleet: skills define themselves, evaluate themselves with real test cases, and reflect on their own failures every Monday.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {ELITE_FEATURES.map((f) => (
-              <div
-                key={f.title}
-                className="group relative overflow-hidden border border-white/8 bg-gradient-to-br from-white/[0.03] to-transparent p-5 transition-all hover:border-amber-400/40"
-                style={{ clipPath: "polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px))" }}
-              >
-                {/* Holographic shimmer on hover */}
-                <span
-                  className="pointer-events-none absolute inset-0 -translate-x-full opacity-0 group-hover:opacity-100 group-hover:translate-x-full transition-all duration-1000"
-                  style={{ background: "linear-gradient(110deg, transparent 30%, rgba(251,191,36,0.18) 50%, transparent 70%)" }}
-                />
-                {/* Corner brackets */}
-                <span className="pointer-events-none absolute top-2 left-2 w-2 h-2 border-t border-l border-amber-400/40" />
-                <span className="pointer-events-none absolute bottom-2 right-2 w-2 h-2 border-b border-r border-amber-400/40" />
-
-                <div className="relative">
-                  <div className="inline-block px-2 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-widest border border-amber-400/30 bg-amber-400/10 text-amber-300 mb-3">
-                    {f.tag}
-                  </div>
-                  <h3 className="text-base font-bold text-white mb-1.5" style={{ fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)" }}>
-                    {f.title}
-                  </h3>
-                  <p className="text-[13px] text-white/60 leading-relaxed">{f.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="text-center mt-8 text-[11px] text-white/40 font-mono">
-            Plus eval studio · cost-optimized model routing · live activity stream · skill marketplace · wiki memory layer
-          </div>
-        </div>
-      </section>
-
-      {/* ─── FEATURES ─── */}
-      <section id="features" className="relative py-24 border-t border-white/5">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold sm:text-4xl" style={{ fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)" }}>
-              Everything your business needs.{" "}
-              <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">One platform.</span>
-            </h2>
-            <p className="mx-auto mt-4 max-w-xl text-white/50">
-              Stop paying for 10 SaaS tools. FusionClaw puts CRM, ops, content, finance, and marketing in one database that your AI agent can see.
-            </p>
-          </div>
-
-          <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map((f) => (
-              <div
-                key={f.title}
-                className="group rounded-2xl border border-white/5 bg-[#0D0D0D] p-8 transition-all duration-300 hover:border-cyan-500/20 hover:shadow-[0_0_30px_rgba(6,182,212,0.08)]"
-              >
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-cyan-500/10">
-                  <svg
-                    className="h-6 w-6 text-cyan-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d={f.icon} />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-semibold text-white">{f.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-white/50">{f.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── 3-STEP INSTALL ─── */}
-      <section id="install" className="relative py-24 border-t border-white/5">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(6,182,212,0.06)_0%,transparent_60%)]" />
-        <div className="relative mx-auto max-w-4xl px-6">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold sm:text-4xl" style={{ fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)" }}>
-              Running in{" "}
-              <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">3 commands</span>
-            </h2>
-            <p className="mt-4 text-white/50">Clone. Configure. Launch. That&apos;s it.</p>
-          </div>
-
-          <div className="mt-16 space-y-6">
-            {STEPS.map((s) => (
-              <div
-                key={s.num}
-                className="flex items-start gap-3 sm:gap-6 rounded-2xl border border-white/5 bg-[#0D0D0D] p-4 sm:p-6 transition-all hover:border-cyan-500/20"
-              >
-                <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 text-base sm:text-lg font-black text-black">
-                  {s.num}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-base sm:text-lg font-semibold text-white">{s.title}</h3>
-                  <div className="mt-3 flex items-center rounded-lg bg-[#050505] px-3 sm:px-4 py-2.5 sm:py-3 border border-white/5 overflow-hidden">
-                    <span className="mr-2 text-cyan-500 font-mono text-xs sm:text-sm shrink-0">$</span>
-                    <code className="flex-1 font-mono text-xs sm:text-sm text-white/70 overflow-x-auto whitespace-nowrap">
-                      {s.code}
-                    </code>
-                    <CopyButton text={s.code} />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── MCP TOOLS ─── */}
-      <section id="mcp" className="relative py-24 border-t border-white/5">
-        <div className="mx-auto max-w-5xl px-6">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold sm:text-4xl" style={{ fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)" }}>
-              <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">234 MCP Tools.</span>{" "}
-              One API Key.
-            </h2>
-            <p className="mx-auto mt-4 max-w-xl text-white/50">
-              Connect Claude Code, or any MCP-compatible agent, and give it full programmatic access to your entire business.
-            </p>
-          </div>
-
-          <div className="mt-12 rounded-2xl border border-cyan-500/10 bg-[#0D0D0D] p-4 sm:p-8 font-mono text-xs sm:text-sm">
-            <div className="text-white/30 mb-2">~/.claude/mcp_servers.json</div>
-            <pre className="text-cyan-400/80 overflow-x-auto">
-{`{
-  "fusionclaw": {
-    "command": "node",
-    "args": ["./mcp-server/dist/index.js"],
-    "env": {
-      "MCP_API_KEY": "your-key",
-      "DATABASE_URL": "your-db-url"
     }
   }
-}`}
-            </pre>
-          </div>
+}`,
+  },
+];
 
-          <div className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+/* ── scope grammar ──────────────────────────────────────────────────────── */
+
+const SCOPES: Array<{
+  scope: string;
+  reach: string;
+  gate: string;
+  status: "ok" | "warn" | "bad" | "info";
+  verdict: string;
+}> = [
+  {
+    scope: "read:*",
+    reach: "Every table, read only",
+    gate: "none needed",
+    status: "ok",
+    verdict: "Safe default",
+  },
+  {
+    scope: "read:leads",
+    reach: "One table, read only",
+    gate: "none needed",
+    status: "ok",
+    verdict: "Narrowest useful",
+  },
+  {
+    scope: "write:invoices",
+    reach: "Create and update invoices",
+    gate: "rate limited",
+    status: "info",
+    verdict: "Per-table",
+  },
+  {
+    scope: "delete:leads",
+    reach: "Remove leads",
+    gate: "preview + token",
+    status: "warn",
+    verdict: "Two-step",
+  },
+  {
+    scope: "admin:system",
+    reach: "Settings, roles, schedules",
+    gate: "preview + token",
+    status: "warn",
+    verdict: "Operator only",
+  },
+  {
+    scope: "admin:sql",
+    reach: "Arbitrary SQL, write enabled",
+    gate: "preview + token",
+    status: "bad",
+    verdict: "Grant to a person",
+  },
+];
+
+const TABLES: Array<{ group: string; tables: string; tools: number; note: string }> = [
+  { group: "Pipeline", tables: "leads, leadNotes, leadActivities, doNotCallLeads, badContactLeads", tools: 40, note: "Suppression list included — check it before any outreach" },
+  { group: "Money", tables: "invoices, expenses", tools: 16, note: "Both were unreachable over MCP until v2" },
+  { group: "Work", tables: "tasks, projects, shifts, checklistItems, uploads", tools: 40, note: "Time, jobs and the files attached to them" },
+  { group: "Memory", tables: "wikiPages, wikiLinks, knowledgeBase", tools: 24, note: "Agent-writable. This is where a run records what it learned" },
+  { group: "Agent layer", tables: "skills, skillRuns, workflows, notifications", tools: 32, note: "What ran, what it cost, what needs a human" },
+  { group: "Correspondence", tables: "campaigns, emailOutreach, inboundEmails, messages, chatMessages", tools: 40, note: "Both directions, so an agent can see it already replied" },
+  { group: "Instance", tables: "users, settings, savedViews, cronJobs, cronJobRuns, content, brandProfiles", tools: 56, note: "Role changes go through the audited system_* tools, not here" },
+];
+
+export default function Page() {
+  return (
+    <div className="fc-marketing">
+      {/* ── nav ─────────────────────────────────────────────────────────── */}
+      <header className="fc-nav">
+        <div className="fc-wrap" style={{ display: "flex", alignItems: "center", gap: 18, height: 62 }}>
+          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span className="fc-mark logo-shine">F</span>
+            <span
+              style={{
+                fontFamily: "var(--font-space-grotesk), system-ui",
+                fontWeight: 700,
+                letterSpacing: "-0.02em",
+                fontSize: 16,
+                color: "var(--elite-ink)",
+              }}
+            >
+              FusionClaw
+            </span>
+          </Link>
+          <nav
+            className="elite-t5"
+            style={{ marginLeft: "auto", display: "flex", gap: 22, alignItems: "center" }}
+          >
+            <a href="#how" className="hidden sm:inline">How it works</a>
+            <a href="#safety" className="hidden sm:inline">Safety</a>
+            <a href="#setup" className="hidden sm:inline">Install</a>
+            <a href="#price" className="hidden sm:inline">Price</a>
+            <a className="btn btn-ghost" href={REPO} rel="noopener">
+              GitHub
+            </a>
+          </nav>
+        </div>
+      </header>
+
+      {/* ── hero ────────────────────────────────────────────────────────── */}
+      <section className="fc-hero">
+        <div className="fc-hero__plate">
+          {/* mode="settle" is finite: an infinite animation on the LCP element
+              keeps the page off idle and inflates the measured LCP. */}
+          <KenBurns plate={PLATES.desk} mode="settle" priority />
+        </div>
+        <div className="fc-hero__scrim" />
+        <Grain grain dust sweep />
+
+        <div className="fc-wrap" style={{ paddingTop: "clamp(72px, 12vh, 148px)", paddingBottom: "clamp(64px, 10vh, 120px)" }}>
+          <div style={{ maxWidth: 760 }}>
+            <p className="eyebrow hero-rise" style={{ marginBottom: 20 }}>
+              Open source · MIT · Model Context Protocol
+            </p>
+
+            {/* hero-rise moves transform only; opacity stays 1, because the
+                browser will not count a fully transparent element as painted
+                and an opacity fade here would gate the LCP. */}
+            <h1 className="fc-h1 hero-rise" style={{ marginBottom: 22 }}>
+              Your agent already runs your&nbsp;machine.
+              <br />
+              <span className="elite-heading-gradient">This is how it reads your business.</span>
+            </h1>
+
+            <p className="fc-lede hero-rise" style={{ maxWidth: 620, marginBottom: 30 }}>
+              Customers, jobs, invoices, expenses and notes — on one Postgres you own, exposed to
+              your agent over MCP. Per-agent keys instead of one password. A preview and a
+              one-time token before anything is deleted. A log of every call it made, including
+              the ones you refused.
+            </p>
+
+            <div
+              className="hero-rise"
+              style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", marginBottom: 26 }}
+            >
+              <a className="btn btn-primary" href="#setup">
+                Connect an agent
+              </a>
+              <a className="btn btn-trim" href={DEMO} rel="noopener">
+                Open the live demo
+              </a>
+            </div>
+
+            <div className="fc-install hero-rise">
+              <span>$</span>
+              <span>npx -y fusionclaw-mcp</span>
+            </div>
+          </div>
+        </div>
+
+        {/* stat rail */}
+        <div className="fc-wrap" style={{ paddingBottom: 56 }}>
+          <div
+            className="card inner-ring"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+              gap: 2,
+              overflow: "hidden",
+            }}
+          >
             {[
-              { count: "208", label: "CRUD Tools", desc: "Full database access" },
-              { count: "7", label: "Analytics", desc: "Dashboards & forecasting" },
-              { count: "5", label: "AI Tools", desc: "Chat, images, humanizer" },
-              { count: "10", label: "System", desc: "Settings, cron, health" },
-            ].map((t) => (
-              <div key={t.label} className="rounded-xl border border-white/5 bg-[#0A0A0A] p-5 text-center">
-                <div className="text-3xl font-black text-cyan-400">{t.count}</div>
-                <div className="mt-1 text-sm font-semibold text-white">{t.label}</div>
-                <div className="text-xs text-white/40">{t.desc}</div>
+              { n: 276, label: "MCP tools", suffix: "" },
+              { n: 31, label: "Tables exposed", suffix: "" },
+              { n: 4, label: "Scope actions", suffix: "" },
+              { n: 1, label: "Database to own", suffix: "" },
+            ].map((s) => (
+              <div key={s.label} style={{ padding: "22px 24px" }}>
+                <div className="stat-value tabular" style={{ color: "var(--elite-accent)" }}>
+                  <Counter to={s.n} />
+                  {s.suffix}
+                </div>
+                <div className="stat-label">{s.label}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ─── CTA ─── */}
-      {/* Pricing */}
-      <section id="pricing" className="relative py-24 border-t border-white/5">
-        <div className="mx-auto max-w-5xl px-6">
-          <h2 className="text-center text-3xl font-bold sm:text-4xl" style={{ fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)" }}>
-            Free to run. Paid if you would rather not.
+      {/* ── runtime marquee ─────────────────────────────────────────────── */}
+      <div style={{ padding: "18px 0", boxShadow: "inset 0 1px 0 var(--elite-rule-1), inset 0 -1px 0 var(--elite-rule-1)" }}>
+        <Marquee speed={38}>
+          <span className="eyebrow" style={{ paddingRight: 44 }}>Hermes Agent</span>
+          <span className="eyebrow" style={{ paddingRight: 44, color: "var(--elite-accent)" }}>◆</span>
+          <span className="eyebrow" style={{ paddingRight: 44 }}>OpenClaw</span>
+          <span className="eyebrow" style={{ paddingRight: 44, color: "var(--elite-accent)" }}>◆</span>
+          <span className="eyebrow" style={{ paddingRight: 44 }}>Claude Code</span>
+          <span className="eyebrow" style={{ paddingRight: 44, color: "var(--elite-accent)" }}>◆</span>
+          <span className="eyebrow" style={{ paddingRight: 44 }}>Claude Desktop</span>
+          <span className="eyebrow" style={{ paddingRight: 44, color: "var(--elite-accent)" }}>◆</span>
+          <span className="eyebrow" style={{ paddingRight: 44 }}>Cursor</span>
+          <span className="eyebrow" style={{ paddingRight: 44, color: "var(--elite-accent)" }}>◆</span>
+          <span className="eyebrow" style={{ paddingRight: 44 }}>Any MCP client</span>
+          <span className="eyebrow" style={{ paddingRight: 44, color: "var(--elite-accent)" }}>◆</span>
+        </Marquee>
+      </div>
+
+      {/* ── the problem ─────────────────────────────────────────────────── */}
+      <section className="fc-wrap" style={{ paddingTop: 92, paddingBottom: 20 }}>
+        <Reveal>
+          <p className="eyebrow-pill" style={{ marginBottom: 22 }}>The gap</p>
+          <h2 className="fc-h2" style={{ maxWidth: 720, marginBottom: 16 }}>
+            An agent that cannot see your books is guessing, and one that can see everything is a
+            liability.
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-center text-white/50">
-            The code is MIT and always will be. The hosted tier exists for people who want it running today without touching a server.
+          <p className="fc-lede fc-narrow" style={{ marginBottom: 40 }}>
+            There are two ways this usually goes, and both are bad.
           </p>
-          <div className="mt-12 grid gap-6 md:grid-cols-2">
-            <div className="rounded-2xl border border-white/10 bg-[#0D0D0D]/80 p-8">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-400">Self-hosted</p>
-              <p className="mt-4 text-4xl font-bold">$0 <span className="text-base font-medium text-white/40">forever</span></p>
-              <ul className="mt-6 space-y-2 text-sm text-white/60">
-                <li>Full source, MIT licence</li>
-                <li>All 234 MCP tools, CRM, ops, finance, content</li>
-                <li>Bring your own Postgres and LLM key</li>
-                <li>Community support on GitHub Discussions</li>
-              </ul>
-              <a href="https://github.com/Fusion-Data-Company/FusionClaw" target="_blank" rel="noopener noreferrer" className="mt-8 inline-block rounded-xl border border-cyan-500/30 px-6 py-3 text-sm font-bold text-cyan-400 hover:bg-cyan-500/10 transition-colors">Clone it</a>
-            </div>
-            <div className="rounded-2xl border border-amber-400/40 bg-[#0D0D0D]/80 p-8 shadow-[0_0_60px_-20px_rgba(251,191,36,0.5)]">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-400">Hosted</p>
-              <p className="mt-4 text-4xl font-bold">$99 <span className="text-base font-medium text-white/40">per month</span></p>
-              <ul className="mt-6 space-y-2 text-sm text-white/60">
-                <li>Your own instance on yourname.fusionclaw.app or your domain</li>
-                <li>Managed Postgres, backups, updates and TLS</li>
-                <li>Provisioned within 1 business day</li>
-                <li>14-day free trial, cancel any time</li>
-              </ul>
-              <a href="https://buy.stripe.com/bJe00j7Hdcy87wb8h8aAw0c" target="_blank" rel="noopener noreferrer" className="mt-8 inline-block rounded-xl bg-amber-400 px-6 py-3 text-sm font-bold text-black hover:bg-amber-300 transition-colors">Start hosted trial</a>
-            </div>
-          </div>
+        </Reveal>
+
+        <div className="fc-grid-3">
+          {[
+            {
+              t: "It has no idea who your customers are",
+              b: "So it writes plausible things. It invents a client name, a total, a due date. The output looks like work and cannot be used.",
+              chip: "Common" as const,
+              status: "warn" as const,
+            },
+            {
+              t: "Or you hand it the database URL",
+              b: "Which is the same as handing it every table, every column and every DELETE. There is no scope on a connection string.",
+              chip: "Worse" as const,
+              status: "bad" as const,
+            },
+            {
+              t: "And nobody can say what it did",
+              b: "A run finished, a row changed, and the only record is a chat transcript somebody has already closed.",
+              chip: "Unrecoverable" as const,
+              status: "bad" as const,
+            },
+          ].map((c, i) => (
+            <Reveal key={c.t} delay={i * 90}>
+              <article className="card fc-panel hover-lift corner-ticks" style={{ height: "100%" }}>
+                <StatusChip status={c.status}>{c.chip}</StatusChip>
+                <h3 className="fc-h3" style={{ marginTop: 14 }}>{c.t}</h3>
+                <p className="elite-t4" style={{ color: "var(--elite-ink-2)" }}>{c.b}</p>
+              </article>
+            </Reveal>
+          ))}
         </div>
       </section>
 
-      <section className="relative py-24 border-t border-white/5">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,rgba(6,182,212,0.08)_0%,transparent_60%)]" />
-        <div className="relative mx-auto max-w-3xl px-6 text-center">
-          <Image
-            src="/fusionclaw-logo.png"
-            alt="FusionClaw"
-            width={80}
-            height={80}
-            className="mx-auto mb-6 rounded-xl"
-          />
-          <h2 className="text-3xl font-bold sm:text-4xl" style={{ fontFamily: "var(--font-display, 'Space Grotesk', sans-serif)" }}>
-            Stop duct-taping SaaS tools together.
-          </h2>
-          <p className="mt-4 text-white/50">
-            Self-host for free. White-label for clients. Let your AI agent run the rest.
-          </p>
-          <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-            <a
-              href="https://github.com/Fusion-Data-Company/FusionClaw"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 rounded-xl bg-cyan-500 px-8 py-3.5 text-sm font-bold text-black hover:bg-cyan-400 transition-colors"
-            >
-              Get Started on GitHub
-            </a>
-            <Link
-              href={process.env.NEXT_PUBLIC_DEMO_URL || "/login"}
-              className="rounded-xl border border-white/10 px-8 py-3.5 text-sm font-bold text-white/70 hover:text-white hover:border-white/20 transition-colors"
-            >
-              Try the Live Demo
-            </Link>
-          </div>
+      {/* ── the diagram ─────────────────────────────────────────────────── */}
+      <section id="how" style={{ position: "relative", isolation: "isolate", overflow: "clip", marginTop: 92 }}>
+        <div style={{ position: "absolute", inset: 0, zIndex: -2 }}>
+          <KenBurns plate={PLATES.zinc} mode="drift" />
+        </div>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: -1,
+            background:
+              "linear-gradient(90deg, var(--elite-bg) 0%, color-mix(in srgb, var(--elite-bg) 92%, transparent) 55%, color-mix(in srgb, var(--elite-bg) 78%, transparent) 100%)",
+          }}
+        />
+        <div className="fc-wrap" style={{ paddingTop: 88, paddingBottom: 88 }}>
+          <Reveal>
+            <p className="eyebrow-pill" style={{ marginBottom: 22 }}>How it works</p>
+            <h2 className="fc-h2" style={{ maxWidth: 700, marginBottom: 14 }}>
+              Six checks between a sentence and a row.
+            </h2>
+            <p className="fc-lede fc-narrow" style={{ marginBottom: 40 }}>
+              Every tool call takes the same path, and every branch of it — including the
+              refusals — writes an audit row. A denial nobody recorded is a denial nobody can
+              investigate.
+            </p>
+          </Reveal>
+
+          <Reveal delay={120}>
+            <div className="card glossy-top" style={{ padding: "clamp(18px, 3vw, 34px)" }}>
+              <div className="elite-scroll-x">
+                <svg
+                  className="fc-diagram"
+                  viewBox="0 0 1080 430"
+                  role="img"
+                  aria-label="An agent's request enters the FusionClaw MCP server, passes authentication, scope, rate limit and confirmation checks, then reaches Postgres. Every outcome, allowed or refused, is written to the audit log."
+                  style={{ minWidth: 760 }}
+                >
+                  <defs>
+                    <marker id="fcArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                      <path d="M0,0 L10,5 L0,10 z" fill="var(--elite-ink-3)" />
+                    </marker>
+                    <marker id="fcArrowA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                      <path d="M0,0 L10,5 L0,10 z" fill="var(--elite-accent)" />
+                    </marker>
+                  </defs>
+
+                  {/* lane labels */}
+                  <text x="14" y="30" fill="var(--elite-ink-3)" fontSize="11" letterSpacing="2.4">RUNTIME</text>
+                  <text x="286" y="30" fill="var(--elite-ink-3)" fontSize="11" letterSpacing="2.4">FUSIONCLAW MCP SERVER</text>
+                  <text x="946" y="30" fill="var(--elite-ink-3)" fontSize="11" letterSpacing="2.4">DATA</text>
+
+                  {/* the server envelope */}
+                  <rect x="272" y="46" width="612" height="268" rx="16" fill="none" stroke="var(--elite-rule-1)" strokeDasharray="4 5" />
+
+                  {/* runtime box */}
+                  <rect x="14" y="96" width="216" height="98" rx="12" fill="color-mix(in srgb, var(--elite-ink) 5%, transparent)" stroke="var(--elite-rule-1)" />
+                  <text x="34" y="130" fill="var(--elite-ink)" fontSize="15" fontWeight="600">Hermes · OpenClaw</text>
+                  <text x="34" y="152" fill="var(--elite-ink-2)" fontSize="12.5">Claude Code · any client</text>
+                  <text x="34" y="174" fill="var(--elite-accent)" fontSize="11.5">holds FUSIONCLAW_MCP_KEY</text>
+
+                  <line x1="230" y1="145" x2="286" y2="145" stroke="var(--elite-ink-3)" strokeWidth="1.5" markerEnd="url(#fcArrow)" />
+                  <text x="232" y="136" fill="var(--elite-ink-3)" fontSize="10.5">stdio</text>
+
+                  {/* the four gates */}
+                  {[
+                    { x: 300, n: "1", t: "Authenticate", s: "hash + timingSafeEqual" },
+                    { x: 442, n: "2", t: "Scope", s: "action : resource" },
+                    { x: 584, n: "3", t: "Rate limit", s: "writes counted apart" },
+                    { x: 726, n: "4", t: "Confirm", s: "preview + one-time token" },
+                  ].map((g) => (
+                    <g key={g.n}>
+                      <rect x={g.x} y="96" width="128" height="98" rx="12" fill="color-mix(in srgb, var(--elite-ink) 4%, transparent)" stroke="var(--elite-rule-1)" />
+                      <circle cx={g.x + 22} cy="122" r="11" fill="var(--elite-accent)" />
+                      <text x={g.x + 22} y="126" textAnchor="middle" fill="var(--elite-accent-on)" fontSize="11.5" fontWeight="700">{g.n}</text>
+                      <text x={g.x + 42} y="126" fill="var(--elite-ink)" fontSize="13.5" fontWeight="600">{g.t}</text>
+                      <text x={g.x + 16} y="156" fill="var(--elite-ink-2)" fontSize="11">{g.s}</text>
+                      <text x={g.x + 16} y="176" fill="var(--elite-bad)" fontSize="10.5">refuses → audit</text>
+                    </g>
+                  ))}
+
+                  {[428, 570, 712].map((x) => (
+                    <line key={x} x1={x} y1="145" x2={x + 14} y2="145" stroke="var(--elite-ink-3)" strokeWidth="1.5" markerEnd="url(#fcArrow)" />
+                  ))}
+
+                  <line x1="854" y1="145" x2="922" y2="145" stroke="var(--elite-accent)" strokeWidth="1.6" markerEnd="url(#fcArrowA)" />
+                  <text x="858" y="136" fill="var(--elite-accent)" fontSize="10.5">5 · run</text>
+
+                  {/* postgres */}
+                  <rect x="922" y="96" width="144" height="98" rx="12" fill="color-mix(in srgb, var(--elite-accent) 8%, transparent)" stroke="color-mix(in srgb, var(--elite-accent) 40%, transparent)" />
+                  <text x="942" y="130" fill="var(--elite-ink)" fontSize="15" fontWeight="600">Postgres</text>
+                  <text x="942" y="152" fill="var(--elite-ink-2)" fontSize="12">31 tables</text>
+                  <text x="942" y="172" fill="var(--elite-ink-3)" fontSize="11">Neon or your own</text>
+
+                  {/* audit spine */}
+                  <path d="M364 194 L364 250 L992 250 L992 194" fill="none" stroke="var(--elite-trim)" strokeWidth="1.4" strokeDasharray="3 4" />
+                  {[364, 506, 648, 790, 992].map((x) => (
+                    <circle key={x} cx={x} cy="250" r="3.5" fill="var(--elite-trim)" />
+                  ))}
+                  <rect x="440" y="266" width="290" height="42" rx="10" fill="color-mix(in srgb, var(--elite-trim) 12%, transparent)" stroke="color-mix(in srgb, var(--elite-trim) 38%, transparent)" />
+                  <text x="585" y="292" textAnchor="middle" fill="var(--elite-trim)" fontSize="12.5" fontWeight="600">
+                    6 · agent_audit_log — every outcome, allowed or not
+                  </text>
+
+                  {/* footnote row */}
+                  <text x="14" y="356" fill="var(--elite-ink-3)" fontSize="11.5">
+                    A key only sees the tools it may run: tools/list is filtered by scope, so a read-only agent is handed 77 tools, not 276.
+                  </text>
+                  <text x="14" y="380" fill="var(--elite-ink-3)" fontSize="11.5">
+                    The confirm token is bound to a hash of the arguments it previewed, so a token issued for one row cannot be replayed against another.
+                  </text>
+                  <text x="14" y="404" fill="var(--elite-ink-3)" fontSize="11.5">
+                    If the database is the thing that broke, the audit log falls back to JSONL on disk rather than being lost.
+                  </text>
+                </svg>
+              </div>
+            </div>
+          </Reveal>
         </div>
       </section>
 
-      {/* ─── FOOTER ─── */}
-      <footer className="border-t border-white/5 py-10">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 sm:flex-row">
-          <div className="flex items-center gap-2 text-sm text-white/30">
-            <Image src="/fusionclaw-logo.png" alt="" width={20} height={20} className="rounded" />
-            Built by Fusion Data Company
+      {/* ── artefacts ───────────────────────────────────────────────────── */}
+      <section className="fc-wrap" style={{ paddingTop: 92 }}>
+        <Reveal>
+          <p className="eyebrow-pill" style={{ marginBottom: 22 }}>What it looks like</p>
+          <h2 className="fc-h2" style={{ maxWidth: 720, marginBottom: 14 }}>
+            Four real calls, and what came back.
+          </h2>
+          <p className="fc-lede fc-narrow" style={{ marginBottom: 40 }}>
+            Captured from a live session — a Hermes client against a Postgres holding three
+            fictional leads and one overdue invoice. Nothing below is illustrative.
+          </p>
+        </Reveal>
+
+        <div className="fc-grid-2">
+          <Reveal>
+            <div className="card fc-panel hairline-trim" style={{ height: "100%" }}>
+              <Code label="The easy one — a read inside scope">{CALL_LIST}</Code>
+            </div>
+          </Reveal>
+          <Reveal delay={90}>
+            <div className="card fc-panel hairline-trim" style={{ height: "100%" }}>
+              <Code label="A write outside scope — refused, with the reason">{CALL_DENIED}</Code>
+            </div>
+          </Reveal>
+          <Reveal delay={140}>
+            <div className="card fc-panel hairline-trim" style={{ height: "100%" }}>
+              <Code label="A delete — nothing removed, a preview returned">{CALL_DELETE}</Code>
+            </div>
+          </Reveal>
+          <Reveal delay={190}>
+            <div className="card fc-panel hairline-trim" style={{ height: "100%" }}>
+              <Code label="The log the operator reads afterwards">{CALL_AUDIT}</Code>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ── safety / scope table ────────────────────────────────────────── */}
+      <section id="safety" className="fc-wrap" style={{ paddingTop: 92 }}>
+        <Reveal>
+          <p className="eyebrow-pill" style={{ marginBottom: 22 }}>Safety</p>
+          <h2 className="fc-h2" style={{ maxWidth: 700, marginBottom: 14 }}>
+            One key per agent, and the key decides what exists.
+          </h2>
+          <p className="fc-lede fc-narrow" style={{ marginBottom: 34 }}>
+            Scopes read <code style={{ fontFamily: "var(--elite-font-mono)", color: "var(--elite-accent)" }}>action:resource</code>.
+            Mint one with <code style={{ fontFamily: "var(--elite-font-mono)", color: "var(--elite-accent)" }}>npx fusionclaw-mcp keygen</code>;
+            the secret is printed once and stored only as a hash.
+          </p>
+        </Reveal>
+
+        <Reveal delay={100}>
+          <div className="elite-table-wrap">
+            <table className="elite-table">
+              <thead>
+                <tr>
+                  <th>Scope</th>
+                  <th>What it reaches</th>
+                  <th>Extra gate</th>
+                  <th style={{ textAlign: "right" }}>Verdict</th>
+                </tr>
+              </thead>
+              <tbody>
+                {SCOPES.map((s) => (
+                  <tr key={s.scope}>
+                    <td style={{ fontFamily: "var(--elite-font-mono)", color: "var(--elite-accent)", whiteSpace: "nowrap" }}>
+                      {s.scope}
+                    </td>
+                    <td>{s.reach}</td>
+                    <td style={{ color: "var(--elite-ink-2)" }}>{s.gate}</td>
+                    <td style={{ textAlign: "right" }}>
+                      <StatusChip status={s.status}>{s.verdict}</StatusChip>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-          <div className="flex items-center gap-6 text-sm text-white/30">
-            <a href="https://github.com/Fusion-Data-Company/FusionClaw" target="_blank" rel="noopener noreferrer" className="hover:text-cyan-400 transition-colors">
-              GitHub
-            </a>
-            <a href="https://github.com/Fusion-Data-Company/FusionClaw/discussions" target="_blank" rel="noopener noreferrer" className="hover:text-cyan-400 transition-colors">
-              Discussions
-            </a>
-            <a href="https://github.com/Fusion-Data-Company/FusionClaw/blob/main/VISION.md" target="_blank" rel="noopener noreferrer" className="hover:text-cyan-400 transition-colors">
-              Vision
-            </a>
+        </Reveal>
+
+        <div className="fc-grid-2" style={{ marginTop: 20 }}>
+          {[
+            {
+              t: "Rate limits shaped for a loop, not an attacker",
+              b: "120 calls a minute, 30 of them writes, 2,000 an hour — per key. The failure that actually happens is an agent stuck in a plan, and a refusal names the window and returns a retryAfterMs it can wait out.",
+            },
+            {
+              t: "The things v1 got wrong, named",
+              b: "hasPermission() returned true for every key. Keys were minted with Math.random(). sortBy went straight into the SQL string. query_raw_sql_write was reachable by anything that could reach the process. All four are fixed, and the fixes are the product.",
+            },
+          ].map((c, i) => (
+            <Reveal key={c.t} delay={i * 90}>
+              <article className="card fc-panel inner-ring" style={{ height: "100%" }}>
+                <h3 className="fc-h3">{c.t}</h3>
+                <p className="elite-t4" style={{ color: "var(--elite-ink-2)" }}>{c.b}</p>
+              </article>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* ── the held note: one full-bleed statement ─────────────────────── */}
+      <section style={{ position: "relative", isolation: "isolate", overflow: "clip", marginTop: 96 }}>
+        <div style={{ position: "absolute", inset: 0, zIndex: -2 }}>
+          <KenBurns plate={PLATES.lock} mode="breathe" />
+        </div>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: -1,
+            background:
+              "linear-gradient(90deg, var(--elite-bg) 4%, color-mix(in srgb, var(--elite-bg) 84%, transparent) 46%, color-mix(in srgb, var(--elite-bg) 30%, transparent) 100%)",
+          }}
+        />
+        <Grain grain />
+        <div className="fc-wrap" style={{ paddingTop: 120, paddingBottom: 120 }}>
+          <Reveal>
+            <div style={{ maxWidth: 560 }}>
+              <p className="eyebrow" style={{ marginBottom: 18 }}>The two-step</p>
+              <h2 className="fc-h2" style={{ marginBottom: 18 }}>
+                Nothing is deleted on the first ask.
+              </h2>
+              <p className="fc-lede">
+                A delete, a bulk update or a raw SQL write returns the rows it would touch and a
+                token that works once, matches only those arguments, and expires in five minutes.
+                The agent has to look at what it is about to do and say so again. A trusted
+                automation can turn this off per key; nothing turns it off globally.
+              </p>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ── setup ───────────────────────────────────────────────────────── */}
+      <section id="setup" className="fc-wrap" style={{ paddingTop: 92 }}>
+        <Reveal>
+          <p className="eyebrow-pill" style={{ marginBottom: 22 }}>Install</p>
+          <h2 className="fc-h2" style={{ maxWidth: 700, marginBottom: 14 }}>
+            One line, then the config your runtime already uses.
+          </h2>
+          <p className="fc-lede fc-narrow" style={{ marginBottom: 34 }}>
+            The server is on npm as{" "}
+            <code style={{ fontFamily: "var(--elite-font-mono)", color: "var(--elite-accent)" }}>fusionclaw-mcp</code>. It speaks
+            stdio, needs a Postgres URL and a key, and nothing else. Point it at Neon or at the
+            Postgres in the repo&apos;s docker-compose — both work.
+          </p>
+        </Reveal>
+        <Reveal delay={100}>
+          <div className="card fc-panel">
+            <SetupTabs tabs={TABS} />
           </div>
+        </Reveal>
+
+        <Reveal delay={140}>
+          <div className="fc-grid-2" style={{ marginTop: 18 }}>
+            <div className="card fc-panel">
+              <Code label="Mint a key for one agent">{`$ npx fusionclaw-mcp keygen \\
+    --name hermes-bookkeeper \\
+    --scopes "read:*,write:expenses,write:invoices"
+
+  Scopes               read:*, write:expenses, write:invoices
+  Confirm destructive  yes (5-minute single-use tokens)
+  Rate limit           120/min, 30 writes/min, 2000/hour
+
+  FUSIONCLAW_MCP_KEY=fcw_sk_9c41ab_…`}</Code>
+            </div>
+            <div className="card fc-panel">
+              <Code label="Check it before an agent depends on it">{`$ npx fusionclaw-mcp doctor
+
+  fusionclaw-mcp v2.0.0
+    DATABASE_URL        set
+    keys configured     2
+    this process's key  "hermes-bookkeeper" -> read:*, write:invoices
+    tools registered    276
+    audit sink          agent_audit_log
+    database            reachable (1 row)`}</Code>
+            </div>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* ── coverage table ──────────────────────────────────────────────── */}
+      <section className="fc-wrap" style={{ paddingTop: 92 }}>
+        <Reveal>
+          <p className="eyebrow-pill" style={{ marginBottom: 22 }}>Coverage</p>
+          <h2 className="fc-h2" style={{ maxWidth: 700, marginBottom: 14 }}>
+            Thirty-one tables, eight verbs each.
+          </h2>
+          <p className="fc-lede fc-narrow" style={{ marginBottom: 34 }}>
+            List, get, create, update, delete and the three bulk forms — generated from one factory,
+            so a new table is governed by the same scope rules the moment it exists.
+          </p>
+        </Reveal>
+        <Reveal delay={100}>
+          <div className="elite-table-wrap">
+            <table className="elite-table is-compact">
+              <thead>
+                <tr>
+                  <th className="sticky-col">Group</th>
+                  <th>Tables</th>
+                  <th style={{ textAlign: "right" }} className="num">Tools</th>
+                  <th>Worth knowing</th>
+                </tr>
+              </thead>
+              <tbody>
+                {TABLES.map((r) => (
+                  <tr key={r.group}>
+                    <td className="sticky-col" style={{ fontWeight: 600, whiteSpace: "nowrap" }}>{r.group}</td>
+                    <td style={{ fontFamily: "var(--elite-font-mono)", fontSize: 12.5, color: "var(--elite-ink-2)" }}>{r.tables}</td>
+                    <td className="num" style={{ textAlign: "right" }}>{r.tools}</td>
+                    <td style={{ color: "var(--elite-ink-2)" }}>{r.note}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* ── what this is not ────────────────────────────────────────────── */}
+      <section className="fc-wrap" style={{ paddingTop: 92 }}>
+        <Reveal>
+          <p className="eyebrow-pill" style={{ marginBottom: 22 }}>Honest limits</p>
+          <h2 className="fc-h2" style={{ maxWidth: 700, marginBottom: 14 }}>
+            What this is not.
+          </h2>
+          <p className="fc-lede fc-narrow" style={{ marginBottom: 34 }}>
+            If one of these is what you came for, buy something else — there are good options and
+            they cost less than the time you would lose finding out here.
+          </p>
+        </Reveal>
+        <div className="fc-grid-3">
+          {[
+            {
+              t: "Not a client-facing suite",
+              b: "No proposals, no contracts, no e-signature, no client portal. HoneyBook, Bonsai and Moxie all have those from $12 to $36 a month and they are better at it.",
+            },
+            {
+              t: "Not a hosted product yet",
+              b: "There is a public demo and a repo you can run. There is no self-serve signup, and a hosted instance is provisioned by a human. Nothing on this page pretends otherwise.",
+            },
+            {
+              t: "Not a remote MCP endpoint",
+              b: "The server is stdio, so it runs next to your agent and holds your database URL. That is fine on your own machine and wrong for a hosted tenant. HTTP transport is the next piece of work, not a shipped feature.",
+            },
+            {
+              t: "Not a content studio",
+              b: "The repo still contains image generation, a publishing queue and a campaign builder. They are half-built, they are not the product, and they are no longer part of the pitch.",
+            },
+            {
+              t: "Not multi-tenant",
+              b: "One instance, one business, one Postgres. That is a deliberate shape — it is why a scope can be a table name — but it means one deployment per customer.",
+            },
+            {
+              t: "Not a guarantee against your own agent",
+              b: "Scopes bound what an agent may do. They do not make a bad plan good. Grant read first, watch the audit log, and widen it when you have seen what it does.",
+            },
+          ].map((c, i) => (
+            <Reveal key={c.t} delay={(i % 3) * 80}>
+              <article className="card fc-panel" style={{ height: "100%" }}>
+                <h3 className="fc-h3">{c.t}</h3>
+                <p className="elite-t4" style={{ color: "var(--elite-ink-2)" }}>{c.b}</p>
+              </article>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* ── price ───────────────────────────────────────────────────────── */}
+      <section id="price" className="fc-wrap" style={{ paddingTop: 92, paddingBottom: 40 }}>
+        <Reveal>
+          <p className="eyebrow-pill" style={{ marginBottom: 22 }}>Price</p>
+          <h2 className="fc-h2" style={{ maxWidth: 700, marginBottom: 34 }}>
+            The server is free. The only thing worth charging for is the setup.
+          </h2>
+        </Reveal>
+        <div className="fc-grid-3">
+          <Reveal>
+            <article className="card fc-panel corner-ticks" style={{ height: "100%" }}>
+              <p className="eyebrow" style={{ marginBottom: 10 }}>Self-hosted</p>
+              <div className="stat-value" style={{ color: "var(--elite-ink)" }}>$0</div>
+              <p className="elite-t5" style={{ color: "var(--elite-ink-3)", marginBottom: 16 }}>MIT, forever</p>
+              <p className="elite-t4" style={{ color: "var(--elite-ink-2)" }}>
+                Clone it, run <code style={{ fontFamily: "var(--elite-font-mono)" }}>docker compose up</code>, point your
+                agent at it. Every safety feature on this page is in the free version; none of them
+                are the paid tier.
+              </p>
+              <a className="btn btn-ghost" href={REPO} rel="noopener" style={{ marginTop: 18 }}>
+                Read the source
+              </a>
+            </article>
+          </Reveal>
+          <Reveal delay={90}>
+            <article className="card fc-panel inner-ring glossy-top" style={{ height: "100%" }}>
+              <p className="eyebrow" style={{ marginBottom: 10, color: "var(--elite-accent)" }}>Hosted</p>
+              <div className="stat-value" style={{ color: "var(--elite-accent)" }}>$24</div>
+              <p className="elite-t5" style={{ color: "var(--elite-ink-3)", marginBottom: 16 }}>per month, one business</p>
+              <p className="elite-t4" style={{ color: "var(--elite-ink-2)" }}>
+                We run the Postgres and the app; you keep your own keys. Priced against Twenty at
+                $9 a seat and Moxie at $12, because a single-tenant instance is worth more than a
+                seat and nowhere near the $99 this used to ask.
+              </p>
+              <span className="elite-t6" style={{ color: "var(--elite-warn)", display: "block", marginTop: 18 }}>
+                Not self-serve yet — provisioning is still a person.
+              </span>
+            </article>
+          </Reveal>
+          <Reveal delay={140}>
+            <article className="card fc-panel corner-ticks" style={{ height: "100%" }}>
+              <p className="eyebrow" style={{ marginBottom: 10 }}>Set up with us</p>
+              <div className="stat-value" style={{ color: "var(--elite-ink)" }}>$490</div>
+              <p className="elite-t5" style={{ color: "var(--elite-ink-3)", marginBottom: 16 }}>once, then hosting</p>
+              <p className="elite-t4" style={{ color: "var(--elite-ink-2)" }}>
+                Your data imported, the scopes cut to your agent&apos;s actual job, the runtime
+                configured, and one real workflow running before we leave. This is the part that
+                takes a person, so it is the part with a price on it.
+              </p>
+              <a className="btn btn-primary" href="mailto:rob@fusiondataco.com?subject=FusionClaw%20setup" style={{ marginTop: 18 }}>
+                Email Rob
+              </a>
+            </article>
+          </Reveal>
+        </div>
+        <Reveal delay={180}>
+          <p className="elite-t5" style={{ color: "var(--elite-ink-3)", marginTop: 22, maxWidth: 760 }}>
+            Full working against the field — Twenty, Odoo, HoneyBook, Bonsai, Moxie, Attio and the
+            agent-runtime wave — is in{" "}
+            <a href={`${REPO}/blob/main/COMPS.md`} style={{ color: "var(--elite-accent)" }} rel="noopener">COMPS.md</a>{" "}
+            and{" "}
+            <a href={`${REPO}/blob/main/MODEL.md`} style={{ color: "var(--elite-accent)" }} rel="noopener">MODEL.md</a>{" "}
+            in the repo, with every price cited.
+          </p>
+        </Reveal>
+      </section>
+
+      {/* ── footer ──────────────────────────────────────────────────────── */}
+      <footer style={{ marginTop: 72, boxShadow: "inset 0 1px 0 var(--elite-rule-1)" }}>
+        <div
+          className="fc-wrap"
+          style={{ paddingTop: 34, paddingBottom: 44, display: "flex", flexWrap: "wrap", gap: 20, alignItems: "center" }}
+        >
+          <span className="fc-mark">F</span>
+          <div style={{ marginRight: "auto" }}>
+            <div style={{ fontFamily: "var(--font-space-grotesk), system-ui", fontWeight: 700 }}>FusionClaw</div>
+            <div className="elite-t6" style={{ color: "var(--elite-ink-3)" }}>
+              The business-data layer for an agent runtime. Built by Fusion Data Company.
+            </div>
+          </div>
+          <nav className="elite-t5" style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+            <a href={REPO} rel="noopener" style={{ color: "var(--elite-ink-2)" }}>GitHub</a>
+            <a href={`${REPO}/tree/main/mcp-server`} rel="noopener" style={{ color: "var(--elite-ink-2)" }}>MCP server</a>
+            <a href={DEMO} rel="noopener" style={{ color: "var(--elite-ink-2)" }}>Demo</a>
+            <a href="mailto:rob@fusiondataco.com" style={{ color: "var(--elite-ink-2)" }}>rob@fusiondataco.com</a>
+          </nav>
         </div>
       </footer>
     </div>

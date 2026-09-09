@@ -1,3 +1,12 @@
+/**
+ * Seed the skill catalogue.
+ *
+ * The run counters and the reflections used to ship with invented values —
+ * `runs: 1240, successes: 72`, and reflections claiming things like a reply
+ * rate lifted "from 3.1% to 5.8%". A stranger looking at the demo would have
+ * read those as a track record. They are zeroed and nulled: a skill that has
+ * never run says so, and a reflection is written by a run or not at all.
+ */
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { skills } from "@/lib/db/schema";
@@ -12,13 +21,13 @@ const SEED_SKILLS = [
     stage: "production" as const,
     prompt: "You are writing a first-touch cold email. Inputs: company={company}, contact={contact}, jobTitle={jobTitle}, website={website}.\n\nRules:\n- Open with one specific observation about their company (not a compliment).\n- One sentence on why we're reaching out.\n- One soft ask (15-min call? Reply with 'yes'?). No links, no calendars.\n- Total: under 60 words. Plain text. No subject line in the body.",
     evalCriteria: "Reply rate > 4%. No 'unsubscribe' or 'spam' replies. Lead manually flags 'good fit' on >20% of replies.",
-    reflection: "Replacing the second sentence with a one-liner from their website's About page lifted reply rate from 3.1% to 5.8%.",
+    reflection: null,
     agentProvider: "openrouter",
     agentModel: "anthropic/claude-sonnet-4",
     tags: ["email", "cold", "personalization"],
     kanbanOrder: 0,
-    runs: 1240,
-    successes: 72,
+    runs: 0,
+    successes: 0,
   },
   {
     name: "ICP Fit Score (1-10)",
@@ -31,8 +40,8 @@ const SEED_SKILLS = [
     agentModel: "anthropic/claude-sonnet-4",
     tags: ["scoring", "icp", "qualification"],
     kanbanOrder: 1,
-    runs: 8420,
-    successes: 7100,
+    runs: 0,
+    successes: 0,
   },
   {
     name: "Blog Post from Outline",
@@ -41,13 +50,13 @@ const SEED_SKILLS = [
     stage: "production" as const,
     prompt: "Write a 1200-word blog post in HTML based on the outline below. Match the brand voice: {brandVoice}. Use H2 for each section, short paragraphs, one bulleted list. End with a 1-sentence CTA.\n\nOutline:\n{outline}",
     evalCriteria: "Reading grade 7-9. Originality > 85% (no AI-detector flags). H2 count ≥ 4. CTA present.",
-    reflection: "Anthropic models follow the brand voice better than GPT here. Cost is 2x but rewrite rate dropped from 40% to 8%.",
+    reflection: null,
     agentProvider: "openrouter",
     agentModel: "anthropic/claude-sonnet-4",
     tags: ["blog", "long-form", "html"],
     kanbanOrder: 0,
-    runs: 312,
-    successes: 287,
+    runs: 0,
+    successes: 0,
   },
   {
     name: "LinkedIn Post Variant Generator",
@@ -60,8 +69,8 @@ const SEED_SKILLS = [
     agentModel: "anthropic/claude-sonnet-4",
     tags: ["linkedin", "social", "variants"],
     kanbanOrder: 1,
-    runs: 84,
-    successes: 76,
+    runs: 0,
+    successes: 0,
   },
   {
     name: "Company Intel Brief",
@@ -74,8 +83,8 @@ const SEED_SKILLS = [
     agentModel: "anthropic/claude-sonnet-4",
     tags: ["research", "intel", "prospecting"],
     kanbanOrder: 0,
-    runs: 56,
-    successes: 49,
+    runs: 0,
+    successes: 0,
   },
   {
     name: "Follow-up Reply Drafter",
@@ -84,13 +93,13 @@ const SEED_SKILLS = [
     stage: "testing" as const,
     prompt: "Draft a reply to this email:\n\n{inboundEmail}\n\nLead history: {history}\n\nMatch their tone (formal/casual). Acknowledge what they said. Move the conversation forward (next step or question). 4 sentences max.",
     evalCriteria: "Approval rate from operator before send > 60%. Time-to-reply drops from 4 hours to under 30 min.",
-    reflection: "Initial version was too eager — kept proposing meetings. Adding 'do not propose a meeting unless they ask' fixed it.",
+    reflection: null,
     agentProvider: "openrouter",
     agentModel: "anthropic/claude-sonnet-4",
     tags: ["email", "follow-up", "reply"],
     kanbanOrder: 2,
-    runs: 38,
-    successes: 24,
+    runs: 0,
+    successes: 0,
   },
   {
     name: "Daily Pipeline Summary",
@@ -103,8 +112,8 @@ const SEED_SKILLS = [
     agentModel: "anthropic/claude-haiku-4-5-20251001",
     tags: ["pipeline", "daily", "summary"],
     kanbanOrder: 1,
-    runs: 14,
-    successes: 12,
+    runs: 0,
+    successes: 0,
   },
   {
     name: "Inbound Lead Triage",
@@ -117,8 +126,8 @@ const SEED_SKILLS = [
     agentModel: "anthropic/claude-haiku-4-5-20251001",
     tags: ["triage", "classification", "inbound"],
     kanbanOrder: 0,
-    runs: 22,
-    successes: 18,
+    runs: 0,
+    successes: 0,
   },
   {
     name: "Knowledge Base Q&A",
@@ -131,8 +140,8 @@ const SEED_SKILLS = [
     agentModel: "anthropic/claude-sonnet-4",
     tags: ["support", "kb", "rag"],
     kanbanOrder: 0,
-    runs: 47,
-    successes: 44,
+    runs: 0,
+    successes: 0,
   },
   {
     name: "Reflection Loop (Karpathy)",

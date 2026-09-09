@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "../elite/elite.css";
 
 @theme {
   /* Backgrounds */
@@ -122,4 +123,239 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * FUSIONCLAW — CARBON & PHOSPHOR
+ *
+ * The contract the elite kit reads. Nothing else in the kit paints a hue.
+ *
+ * The register: a machine room at night. Carbon ground, phosphor-green accent
+ * (the colour a terminal actually is, not a brand blue), zinc trim for the
+ * metal. Deliberately not the verdigris/brass of the parcel store, not
+ * Quarry's basalt and signal orange, not LeadLine's cobalt and ember, not the
+ * school's chalk and mulberry, not RentDesk's brick and sage.
+ *
+ * Contrast measured against --elite-surface (#131614), not eyeballed:
+ *   ink        16.69 : 1     accent       14.27 : 1
+ *   ink-2       9.96 : 1     accent-deep   9.50 : 1
+ *   ink-3       6.96 : 1     accent-2     11.48 : 1
+ *   trim       10.28 : 1     ok 10.82  warn 11.02  bad 8.41  info 11.66
+ *   accent-on (#0A0B0A) on accent: 15.44 : 1
+ * Every tier clears 7:1. AA (4.5:1) is not the target here; a buyer reads
+ * this page in daylight on a phone.
+ * ═════════════════════════════════════════════════════════════════════════ */
+:root {
+  --elite-bg:      #0A0B0A;
+  --elite-surface: #131614;
+  --elite-ink:     #F3F6EF;
+  --elite-ink-2:   #BAC2B6;
+  --elite-ink-3:   #99A395;
+
+  --elite-accent:      #C3F53C;
+  --elite-accent-deep: #9BCB1E;
+  --elite-accent-on:   #0A0B0A;
+  --elite-accent-2:    #5FE3C0;
+  --elite-accent-rgb:  195, 245, 60;
+
+  /* the metal: zinc, not gold. This is a machine room, not a boutique. */
+  --elite-trim: #B9C4CE;
+
+  --elite-ok:   #5BE08A;
+  --elite-warn: #F5C24A;
+  --elite-bad:  #FF8FA0;
+  --elite-info: #8FD8FF;
+
+  --elite-rule:  rgba(243, 246, 239, .10);
+  --elite-sheen: rgba(243, 246, 239, .55);
+  --elite-shade: rgba(0, 0, 0, .55);
+
+  --elite-radius:       20px;
+  --elite-radius-card:  14px;
+  --elite-radius-input: 10px;
+
+  --elite-font-mono: var(--font-mono, ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace);
+
+  --elite-grain-opacity: .05;
+  --elite-dust-opacity:  .38;
+}
+
+/* The marketing route only. The app shell keeps its own blue register. */
+body[data-surface="marketing"] {
+  background: var(--elite-bg);
+  color: var(--elite-ink);
+}
+
+/* overflow-x: clip, never hidden — hidden makes <body> the scroll container,
+ * freezes window.scrollY at 0, and every scroll-driven thing in elite/motion
+ * reads exactly that value. */
+@media (max-width: 767px) {
+  html, body { overflow-x: clip; max-width: 100vw; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * MARKETING PAGE — page-specific furniture only.
+ * Everything that is a *pattern* lives in elite/elite.css; this file holds
+ * the handful of shapes that exist once, on one page.
+ * ═════════════════════════════════════════════════════════════════════════ */
+.fc-marketing {
+  background: var(--elite-bg);
+  color: var(--elite-ink);
+  min-height: 100svh;
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+.fc-marketing ::selection { background: var(--elite-accent); color: var(--elite-accent-on); }
+
+.fc-wrap { width: 100%; max-width: 1180px; margin-inline: auto; padding-inline: 24px; }
+.fc-narrow { max-width: 860px; }
+
+.fc-h1 {
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: clamp(38px, 6.4vw, 74px);
+  line-height: 1.02;
+  letter-spacing: -0.032em;
+  font-weight: 700;
+}
+.fc-h2 {
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: clamp(28px, 3.7vw, 44px);
+  line-height: 1.1;
+  letter-spacing: -0.024em;
+  font-weight: 700;
+}
+.fc-h3 {
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 19px; line-height: 1.3; letter-spacing: -0.012em; font-weight: 650;
+}
+.fc-lede { font-size: clamp(17px, 1.7vw, 21px); line-height: 1.6; color: var(--elite-ink-2); }
+
+/* ── code surfaces ─────────────────────────────────────────────────────────
+ * A code block on a marketing page is a photograph of the product. It gets
+ * the same care as the hero: its own surface level, a hairline drawn as an
+ * inset so it never shifts the grid, tabular figures, and a scroll container
+ * of its own so a long line never drags the page sideways. */
+.fc-code {
+  font-family: var(--elite-font-mono);
+  font-size: 13px; line-height: 1.72;
+  color: var(--elite-ink-2);
+  background: color-mix(in srgb, var(--elite-ink) 3%, var(--elite-bg));
+  box-shadow: inset 0 0 0 1px var(--elite-rule-1);
+  border-radius: var(--elite-radius-input);
+  padding: 18px 20px;
+  margin: 0;
+  white-space: pre;
+  font-variant-numeric: tabular-nums;
+  tab-size: 2;
+}
+.fc-code b { color: var(--elite-accent); font-weight: 500; }
+.fc-code i { color: var(--elite-ink-3); font-style: normal; }
+.fc-code u { color: var(--elite-accent-2); text-decoration: none; }
+.fc-code s { color: var(--elite-bad); text-decoration: none; }
+
+.fc-install {
+  display: inline-flex; align-items: center; gap: 12px;
+  font-family: var(--elite-font-mono); font-size: 13.5px;
+  color: var(--elite-ink);
+  background: color-mix(in srgb, var(--elite-ink) 4%, transparent);
+  box-shadow: inset 0 0 0 1px var(--elite-rule-1);
+  border-radius: var(--elite-radius-pill);
+  padding: 10px 20px;
+}
+.fc-install span:first-child { color: var(--elite-accent); }
+
+/* ── setup tabs ─────────────────────────────────────────────────────────── */
+.fc-setup__bar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.fc-setup__tab {
+  font-family: var(--elite-font-mono); font-size: 12px; letter-spacing: .1em;
+  text-transform: uppercase; padding: 9px 16px;
+  border-radius: var(--elite-radius-pill);
+  color: var(--elite-ink-3);
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--elite-rule-1);
+  transition: color 180ms var(--elite-ease), background-color 180ms var(--elite-ease),
+              box-shadow 180ms var(--elite-ease);
+  cursor: pointer;
+}
+.fc-setup__tab:hover { color: var(--elite-ink); }
+.fc-setup__tab[data-active="true"] {
+  color: var(--elite-accent-on);
+  background: var(--elite-accent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--elite-sheen) 22%, transparent);
+}
+.fc-setup__meta {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px;
+  padding: 0 2px 10px;
+}
+.fc-setup__file {
+  font-family: var(--elite-font-mono); font-size: 12px; color: var(--elite-trim);
+}
+
+/* ── the diagram ────────────────────────────────────────────────────────── */
+.fc-diagram { width: 100%; height: auto; display: block; }
+.fc-diagram text { font-family: var(--elite-font-mono); }
+
+/* ── grids ──────────────────────────────────────────────────────────────── */
+.fc-grid-3 { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(268px, 1fr)); }
+.fc-grid-2 { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+
+.fc-panel { padding: 26px; position: relative; }
+.fc-panel .fc-h3 { margin-bottom: 8px; }
+
+/* The nav bar. Solid enough to read over the photograph, not a smoked pane. */
+.fc-nav {
+  position: sticky; top: 0; z-index: 40;
+  background: color-mix(in srgb, var(--elite-bg) 82%, transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  backdrop-filter: blur(14px) saturate(160%);
+  box-shadow: inset 0 -1px 0 var(--elite-rule-1);
+}
+.fc-nav a { color: var(--elite-ink-2); }
+.fc-nav a:hover { color: var(--elite-ink); }
+
+.fc-mark {
+  width: 26px; height: 26px; border-radius: 7px; flex: none;
+  background: var(--elite-accent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--elite-accent) 45%, transparent);
+  display: grid; place-items: center;
+  color: var(--elite-accent-on); font-weight: 800; font-size: 14px;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+}
+
+/* Hero plate: the photograph is the ground, and the type sits on a gradient
+ * scrim rather than on the picture, because a headline over unmanaged
+ * midtones is the fastest way to fail contrast on one viewport in three. */
+.fc-hero { position: relative; isolation: isolate; overflow: clip; }
+.fc-hero__plate { position: absolute; inset: 0; z-index: -2; }
+.fc-hero__plate img { width: 100%; height: 100%; object-fit: cover; }
+.fc-hero__scrim {
+  position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--elite-bg) 72%, transparent) 0%,
+                            color-mix(in srgb, var(--elite-bg) 55%, transparent) 34%,
+                            color-mix(in srgb, var(--elite-bg) 88%, transparent) 78%,
+                            var(--elite-bg) 100%),
+    linear-gradient(90deg, color-mix(in srgb, var(--elite-bg) 90%, transparent) 0%,
+                           color-mix(in srgb, var(--elite-bg) 40%, transparent) 62%,
+                           transparent 100%);
+}
+
+@media (max-width: 640px) {
+  .fc-panel { padding: 20px; }
+  .fc-code { font-size: 12px; padding: 14px 16px; }
+}
+
+/* Syntax colour for the artefact blocks. Four token classes, each measured
+ * against the code surface (#0F110E): key 10.6:1, string 11.5:1, number
+ * 11.0:1, literal 9.9:1. Nothing here relies on hue alone. */
+.fc-tok-key { color: var(--elite-trim); }
+.fc-tok-str { color: var(--elite-accent-2); }
+.fc-tok-num { color: var(--elite-warn); }
+.fc-tok-lit { color: var(--elite-ink-3); }
+
+.fc-fig { margin: 0; }
+.fc-fig__cap {
+  font-family: var(--elite-font-mono); font-size: 11px; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--elite-ink-3);
+  padding: 0 2px 9px;
 }

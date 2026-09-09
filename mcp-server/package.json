@@ -2,17 +2,38 @@
   "name": "fusionclaw-mcp",
   "version": "2.0.0",
   "description": "Give an agent your real business data — customers, jobs, invoices, expenses, notes — over MCP, with scoped keys, confirmation on destructive tools, and an audit log.",
-  "keywords": ["mcp", "model-context-protocol", "agent", "crm", "invoices", "postgres", "hermes", "openclaw", "claude"],
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "agent",
+    "crm",
+    "invoices",
+    "postgres",
+    "hermes",
+    "openclaw",
+    "claude"
+  ],
   "homepage": "https://github.com/Fusion-Data-Company/FusionClaw#readme",
-  "repository": { "type": "git", "url": "git+https://github.com/Fusion-Data-Company/FusionClaw.git", "directory": "mcp-server" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Fusion-Data-Company/FusionClaw.git",
+    "directory": "mcp-server"
+  },
   "bugs": "https://github.com/Fusion-Data-Company/FusionClaw/issues",
   "license": "MIT",
   "author": "Fusion Data Company <rob@fusiondataco.com>",
   "type": "module",
   "main": "dist/index.js",
-  "bin": { "fusionclaw-mcp": "dist/index.js" },
-  "files": ["dist", "README.md"],
-  "engines": { "node": ">=20" },
+  "bin": {
+    "fusionclaw-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
@@ -22,7 +43,9 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
     "@neondatabase/serverless": "^1.0.2",
+    "@types/pg": "^8.23.1",
     "drizzle-orm": "^0.45.1",
+    "pg": "^8.23.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {

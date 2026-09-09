@@ -4,7 +4,7 @@
 
 ### All hustle. No luck. One database.
 
-**The agent-native business operating system.** Bring your own AI agent. Run your own business. CRM, operations, content, finance, marketing — one Postgres database, 234 MCP tools, dark-mode-only.
+**The business-data layer for an agent runtime.** Your agent already runs your machine; this is how it reads and writes your business — customers, jobs, invoices, expenses and notes — over MCP, on one Postgres you own. Per-agent scoped keys, a confirmation gate on anything destructive, rate limits, and an audit log of every call it made.
 
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
@@ -43,7 +43,7 @@ Most CRMs added a chat sidebar. FusionClaw is built around a self-improving agen
 
 ### Standard business capabilities
 
-- **CRM & Pipeline** — 37k+ row TanStack Virtual table with full inline editing, drag-and-drop kanban, complete lead lifecycle
+- **CRM & Pipeline** — virtualised lead table that stays responsive on large imports, full inline editing, drag-and-drop kanban, complete lead lifecycle
 - **Employee Ops** — Shift tracking, daily checklists, task management, accountability reports
 - **Content Studio** — OpenRouter streaming chat, fal.ai image generation, WordPress publishing
 - **Marketing** — Email campaigns, AI content queue with approval workflow, content calendar
@@ -71,34 +71,53 @@ npm run dev        # http://localhost:3000 — no login required on localhost
 | ------------- | ----------------------------------------------------------- | ----------------------------------------------------------- |
 | **Command**   | Dashboard, Today, Tasks, Employees, Reports                 | Daily operations hub with shift tracking and accountability |
 | **Finance**   | Invoices, Expenses, Financials                              | Bookkeeping with P&L charts, tax estimates, overdue alerts  |
-| **Contacts**  | Leads Database, Pipeline                                    | CRM with 37k+ row virtual table and kanban pipeline         |
+| **Contacts**  | Leads Database, Pipeline                                    | CRM with a virtualised lead table and a kanban pipeline     |
 | **Marketing** | Campaigns, AI Queue, Studio, Gallery, Publishing            | Content creation and distribution pipeline                  |
 | **System**    | Knowledge Base, Chat, Agents, Cron Jobs, Branding, Settings | AI assistant, automation, and platform configuration        |
 
-## MCP Server — 234 Tools
+## MCP server — `fusionclaw-mcp`
 
-The built-in MCP server gives AI agents complete programmatic access to your business:
+276 tools over 31 tables, published to npm. Install is one line and the config
+is whatever your runtime already uses. Full documentation, scope grammar and
+the Hermes / OpenClaw / Claude Code configs are in
+[`mcp-server/README.md`](mcp-server/README.md).
+
+```bash
+npx -y fusionclaw-mcp keygen --name my-agent --scopes "read:*"
+npx -y fusionclaw-mcp doctor
+```
 
 ```json
 {
-  "fusionclaw": {
-    "command": "node",
-    "args": ["./mcp-server/dist/index.js"],
-    "env": {
-      "MCP_API_KEY": "your-key",
-      "DATABASE_URL": "your-db-url"
+  "mcpServers": {
+    "fusionclaw": {
+      "command": "npx",
+      "args": ["-y", "fusionclaw-mcp"],
+      "env": {
+        "DATABASE_URL": "postgres://…",
+        "FUSIONCLAW_MCP_KEY": "fcw_sk_…"
+      }
     }
   }
 }
 ```
 
-| Category  | Tools | Examples                                                          |
-| --------- | ----- | ----------------------------------------------------------------- |
-| CRUD      | 208   | `leads_list`, `invoices_create`, `tasks_update`, `expenses_delete` |
-| Query     | 4     | `query_custom`, `query_aggregate`, `query_raw_sql`                |
-| Analytics | 7     | `dashboard_metrics`, `pipeline_summary`, `revenue_forecast`       |
-| AI        | 5     | `chat_send`, `image_generate`, `content_humanize`                 |
-| System    | 10    | `settings_get`, `cron_trigger`, `health_check`                    |
+Every call passes the same gate: authenticate, scope, rate limit, confirm, run,
+audit. A key only sees the tools it may run — a read-only agent is handed 77
+tools, not 276.
+
+| Category    | Tools | Real names |
+| ----------- | ----- | ---------- |
+| CRUD        | 248   | `db_leads_list`, `db_invoices_create`, `db_expenses_bulk_create`, `db_wikiPages_update` |
+| Query       | 4     | `query_raw_sql` (SELECT only), `query_aggregate` |
+| Analytics   | 7     | `analytics_dashboard`, `analytics_leads_pipeline`, `analytics_leads_forecast` |
+| AI          | 5     | `ai_chat`, `ai_analyze_data`, `ai_humanize` |
+| System      | 10    | `system_schema_info`, `system_db_health`, `system_cron_list` |
+| Meta        | 2     | `fusionclaw_whoami`, `fusionclaw_audit_tail` |
+
+Earlier versions of this table listed `leads_list`, `invoices_create` and
+`expenses_delete`. Two of those names never existed and the other was wrong;
+invoices and expenses were not exposed over MCP at all until v2.
 
 ## Tech Stack
 
@@ -134,7 +153,7 @@ lib/
   validations/       Zod schemas for all mutations
   images/            fal.ai client
   openrouter/        AI prompt templates
-mcp-server/          234-tool MCP server (separate build)
+mcp-server/          fusionclaw-mcp — 276-tool MCP server (separate build, published to npm)
 tests/               Playwright E2E and API tests
 docs/                Setup guide, architecture, MCP reference
 ```
@@ -160,7 +179,7 @@ docs/                Setup guide, architecture, MCP reference
 | [Roadmap](ROADMAP.md) | What's coming in v1.1 and v1.2 |
 | [Setup Guide](docs/setup-guide.md) | Installation, configuration, deployment |
 | [Architecture](docs/architecture.md) | System design, data flow, schema overview |
-| [MCP Tools Reference](docs/mcp-tools.md) | Complete list of 234 agent tools |
+| [MCP server README](mcp-server/README.md) | Scopes, confirmation gate, audit log, and the Hermes / OpenClaw / Claude Code configs |
 | [Contributing](CONTRIBUTING.md) | How to contribute, code style, PR process |
 | [Changelog](CHANGELOG.md) | Version history and release notes |
 | [Security](SECURITY.md) | Vulnerability reporting policy |

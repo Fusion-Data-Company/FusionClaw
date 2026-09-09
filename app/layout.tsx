@@ -19,22 +19,22 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'FusionClaw — Connect Your OpenClaw or Claude Agent Safely to Your Business',
+  title: 'FusionClaw — the business-data layer for your agent',
   description:
-    'New to AI agents? FusionClaw gives your OpenClaw or Claude agent guardrails, context control, and every tool a solo entrepreneur needs — CRM, ops, finance, marketing — without exposing your entire business to an unrestricted agent.',
+      'Your agent already runs your terminal. FusionClaw gives it your customers, jobs, invoices, expenses and notes over MCP — with per-agent scoped keys, a confirmation gate on anything destructive, rate limits and an audit log of everything it did. Open source, self-hosted, one Postgres. Works with Hermes, OpenClaw and Claude Code.',
   metadataBase: new URL('https://fusionclaw.app'),
   openGraph: {
-    title: 'FusionClaw — Connect Your OpenClaw or Claude Agent Safely to Your Business',
+    title: 'FusionClaw — the business-data layer for your agent',
     description:
-      'New to AI agents? FusionClaw gives your OpenClaw or Claude agent guardrails, context control, and every tool a solo entrepreneur needs — CRM, ops, finance, marketing — without exposing your entire business to an unrestricted agent.',
+      'Your agent already runs your terminal. FusionClaw gives it your customers, jobs, invoices, expenses and notes over MCP — with per-agent scoped keys, a confirmation gate on anything destructive, rate limits and an audit log of everything it did. Open source, self-hosted, one Postgres. Works with Hermes, OpenClaw and Claude Code.',
     url: 'https://fusionclaw.app',
     siteName: 'FusionClaw',
     images: [
       {
-        url: '/fusionclaw-hero-bg.png',
-        width: 1672,
-        height: 941,
-        alt: 'FusionClaw — All Hustle No Luck',
+        url: '/img/hero-desk.jpg',
+        width: 1600,
+        height: 893,
+        alt: 'FusionClaw — an after-hours desk of invoices and a ledger lit by a terminal',
       },
     ],
     locale: 'en_US',
@@ -42,22 +42,22 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'FusionClaw — Connect Your OpenClaw or Claude Agent Safely to Your Business',
+    title: 'FusionClaw — the business-data layer for your agent',
     description:
-      'New to AI agents? FusionClaw gives your OpenClaw or Claude agent guardrails, context control, and every tool a solo entrepreneur needs — without exposing your entire business to an unrestricted agent.',
-    images: ['/fusionclaw-hero-bg.png'],
+      'Your agent already runs your terminal. FusionClaw gives it your customers, jobs, invoices, expenses and notes over MCP — with per-agent scoped keys, a confirmation gate on anything destructive, rate limits and an audit log of everything it did. Open source, self-hosted, one Postgres. Works with Hermes, OpenClaw and Claude Code.',
+    images: ['/img/hero-desk.jpg'],
   },
   keywords: [
-    'business operating system',
-    'AI agent',
-    'MCP tools',
-    'CRM',
-    'self-hosted',
+    'MCP server',
+    'model context protocol',
+    'agent business data',
+    'Hermes agent',
+    'OpenClaw',
+    'Claude Code',
+    'scoped API keys',
+    'audit log',
+    'self-hosted CRM',
     'open source',
-    'small business',
-    'solo entrepreneur',
-    'Next.js',
-    'guardrails',
   ],
 }
 

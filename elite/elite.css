@@ -1,0 +1,1646 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+ * FDC ELITE KIT v2 — the polish layer, palette-agnostic.
+ *
+ * THE POINT: products must NOT look the same. Each keeps its own palette and
+ * its own personality. What this file equalises is the LEVEL — the heroes with
+ * video and logos and visual effects, the ambient glows, the shimmer, the
+ * trim, the animations that otherwise get added by hand, one at a time, on
+ * every build.
+ *
+ * SO THIS FILE DECLARES NO COLOURS. Every hue is `var(--elite-*, <fallback>)`
+ * and every fallback resolves through `currentColor`, so an unconfigured page
+ * renders in its own ink rather than somebody else's brand. A product sets the
+ * contract in its own `:root` (see README.md and example/tokens.css) and the
+ * whole kit reskins.
+ *
+ * Two literals survive, and neither paints a hue: `#000` inside the ring
+ * masks, where only the alpha channel is read and the colour is discarded;
+ * and `black` as the second operand of a color-mix that DARKENS the product's
+ * own accent for a pressed state. Grep for a hex and you will find nothing
+ * else.
+ *
+ * Harvested from shipped FDC code, not reinvented:
+ *   rucofence               buttons, reveal, fields, pin track, the rAF story
+ *   appredding              glow pulses, solar rotation, rays, mesh, borders,
+ *                           marquee, logo shine, the conic "watt-run" ring
+ *   stillroof               film bars, lens float, orb drift, hero breathe,
+ *                           scroll cue, the CSS-only sundown reveal
+ *   stain-and-seal-supply   Ken Burns, hero dust, film grain, wood grain,
+ *                           sheen, text shimmer, skeleton trace, load bar
+ *   savvy-fsbo-WL           the luxury trim layer: corner ticks, hairline,
+ *                           inner ring, glossy top, section rule, hover lift
+ *   padlock-park            hero-rise / hero-zoom and their LCP reasoning
+ *   flash-repair            speed trails, energy pulse, border flow, the
+ *                           conic hero beam, corner pulse, grain shift
+ *   fusion-overwatch        HUD scan lines, neon rotate, stagger, blob float
+ *   thinkllp.dev            the type scale, surface levels, border tiers,
+ *                           status colour+glow pairs, radius scale, tables
+ *
+ * The comments are kept. They record failure modes that were paid for once.
+ * ═════════════════════════════════════════════════════════════════════════ */
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * 0. THE CONTRACT
+ *
+ * These are DERIVATIONS, not declarations. Everything here is either a
+ * geometry/timing value (which carries no brand) or a value computed from a
+ * variable the product supplies. The `var(--x, fallback)` fallbacks below all
+ * resolve through `currentColor`, so nothing in this file can ever paint a
+ * colour the product did not choose.
+ *
+ * Surfaces and rules are built with color-mix against --elite-ink rather than
+ * hand-picked hexes, which is why the same six lines are correct on a dark
+ * ground AND on a light one: ink is always the opposite of surface, so
+ * "4% of ink over surface" lightens a dark card and darkens a light one.
+ * ═════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── shape ─────────────────────────────────────────────────────────────
+     A radius SCALE, never one radius stamped on everything. */
+  --elite-radius-hero:  var(--elite-radius, 28px);
+  --elite-radius-card:  20px;
+  --elite-radius-input: 12px;
+  --elite-radius-pill:  999px;
+
+  /* ── motion ────────────────────────────────────────────────────────── */
+  --elite-ease:           cubic-bezier(.4, 0, .2, 1);
+  --elite-ease-bounce:    cubic-bezier(.175, .885, .32, 1.275);
+  --elite-ease-editorial: cubic-bezier(.22, 1, .36, 1);
+  --elite-dur-entrance:   900ms;
+  --elite-dur-ambient:    26s;
+
+  /* ── type: 7 steps, each with its OWN line height ──────────────────────
+     thinkllp.dev's scale. Not `text-sm` sprinkled by feel. The line height
+     climbs as the size falls, because small type needs more air, not less. */
+  --elite-t1: 20px; --elite-lh1: 1.5;
+  --elite-t2: 18px; --elite-lh2: 1.55;
+  --elite-t3: 16px; --elite-lh3: 1.6;
+  --elite-t4: 15px; --elite-lh4: 1.6;
+  --elite-t5: 14px; --elite-lh5: 1.65;
+  --elite-t6: 12px; --elite-lh6: 1.7;
+  --elite-t7: 11px; --elite-lh7: 1.8;
+
+  /* ── derived surfaces (product sets --elite-surface and --elite-ink) ── */
+  --elite-surface-1:
+    color-mix(in srgb, var(--elite-ink, currentColor) 4%, var(--elite-surface, transparent));
+  --elite-surface-2:
+    color-mix(in srgb, var(--elite-ink, currentColor) 7%, var(--elite-surface, transparent));
+  --elite-surface-hover:
+    color-mix(in srgb, var(--elite-ink, currentColor) 6%, var(--elite-surface, transparent));
+  --elite-surface-inverse: var(--elite-ink, currentColor);
+
+  /* ── derived border tiers ─────────────────────────────────────────────
+     Hairlines are drawn as `inset 0 0 0 1px`, never as a border, so adding
+     one never shifts layout by a pixel and never changes a grid's rhythm. */
+  --elite-rule-1:        var(--elite-rule, color-mix(in srgb, currentColor 10%, transparent));
+  --elite-rule-strong:   color-mix(in srgb, currentColor 22%, transparent);
+  --elite-rule-highlight: color-mix(in srgb, var(--elite-accent, currentColor) 45%, transparent);
+
+  /* ── light and shade ──────────────────────────────────────────────────
+     --elite-sheen is the highlight a glossy or metallic surface catches;
+     --elite-shade is the ground a shadow falls on. Both are contract points
+     because a light register wants a far weaker sheen than a dark one. */
+  --elite-sheen: color-mix(in srgb, currentColor 88%, transparent);
+  --elite-shade: color-mix(in srgb, currentColor 28%, transparent);
+
+  /* ── the glow channel ─────────────────────────────────────────────────
+     ONE glow keyframe, re-pointed per element. appredding shipped six
+     near-identical @keyframes (green/blue/purple/orange/gold/red) that
+     differed only in the colour literal. Collapsed to one keyframe reading
+     --elite-glow, so a new accent costs a single custom-property, not
+     twenty-four lines of box-shadow. */
+  --elite-glow: var(--elite-accent, currentColor);
+
+  /* ── the trim ─────────────────────────────────────────────────────────
+     The SECOND accent. savvy-fsbo called it gold, flash-repair called it
+     gold, appredding called it amber over navy — it is whatever metal a
+     product's trim is, and the kit refuses to guess. Corner ticks, the
+     hairline, the inner ring, the section rule and the metallic sweep all
+     read this and nothing else. Defaults to the primary accent so a product
+     that has only one accent still looks deliberate. */
+  --elite-trim: var(--elite-accent, currentColor);
+
+  /* ── texture ──────────────────────────────────────────────────────────── */
+  --elite-grain-opacity: .06;
+  --elite-dust-opacity:  .5;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * 1. TYPE + SURFACE UTILITIES
+ * ═════════════════════════════════════════════════════════════════════════ */
+@layer components {
+
+  .elite-t1 { font-size: var(--elite-t1); line-height: var(--elite-lh1); }
+  .elite-t2 { font-size: var(--elite-t2); line-height: var(--elite-lh2); }
+  .elite-t3 { font-size: var(--elite-t3); line-height: var(--elite-lh3); }
+  .elite-t4 { font-size: var(--elite-t4); line-height: var(--elite-lh4); }
+  .elite-t5 { font-size: var(--elite-t5); line-height: var(--elite-lh5); }
+  .elite-t6 { font-size: var(--elite-t6); line-height: var(--elite-lh6); }
+  .elite-t7 { font-size: var(--elite-t7); line-height: var(--elite-lh7); }
+
+  .tabular { font-variant-numeric: tabular-nums; }
+
+  /* Wide content scrolls inside itself. The page body never scrolls sideways. */
+  .elite-scroll-x { overflow-x: auto; overscroll-behavior-x: contain; }
+
+  /* Visually hidden, still announced. `clip-path` plus a 1px box, never
+     `display:none` (which removes it from the accessibility tree) and never
+     a negative text-indent (which a right-to-left locale reverses). */
+  .elite-sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+  }
+
+  /* The eyebrow: mono, uppercase, wide. Never a system label. */
+  .eyebrow {
+    font-family: var(--elite-font-mono, ui-monospace, monospace);
+    font-size: var(--elite-t7); letter-spacing: .17em; text-transform: uppercase;
+    font-weight: 500; color: var(--elite-ink-3, currentColor);
+  }
+
+  /* The pill eyebrow — the "WHY CHOOSE US" / "HOW IT WORKS" chip. */
+  .eyebrow-pill {
+    display: inline-block;
+    font-family: var(--elite-font-mono, ui-monospace, monospace);
+    font-size: var(--elite-t6); letter-spacing: .22em; text-transform: uppercase;
+    color: var(--elite-accent, currentColor);
+    padding: 8px 18px; border-radius: var(--elite-radius-pill);
+    border: 1px solid color-mix(in srgb, var(--elite-accent, currentColor) 35%, transparent);
+    background: color-mix(in srgb, var(--elite-accent, currentColor) 6%, transparent);
+  }
+
+  .card {
+    background: var(--elite-surface, transparent);
+    border-radius: var(--elite-radius-card);
+    box-shadow: inset 0 0 0 1px var(--elite-rule-1);
+  }
+  .card-hero { border-radius: var(--elite-radius-hero); }
+
+  /* Glass. The blur and the saturate are the whole effect; the tint is the
+     product's. `isolation:isolate` so a negative-z child (the button wipe,
+     the conic beam) is trapped inside this card and cannot paint under the
+     page background. */
+  .glass-card {
+    background: color-mix(in srgb, var(--elite-surface, transparent) 72%, transparent);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    backdrop-filter: blur(20px) saturate(180%);
+    border-radius: var(--elite-radius-hero);
+    box-shadow: inset 0 0 0 1px var(--elite-rule-1);
+    isolation: isolate;
+  }
+  .glass-card-light {
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    backdrop-filter: blur(14px) saturate(140%);
+    background: color-mix(in srgb, var(--elite-surface, transparent) 52%, transparent);
+  }
+  .glass-card-strong {
+    -webkit-backdrop-filter: blur(32px) saturate(200%) brightness(1.08);
+    backdrop-filter: blur(32px) saturate(200%) brightness(1.08);
+    background: color-mix(in srgb, var(--elite-surface, transparent) 86%, transparent);
+  }
+
+  .field {
+    width: 100%; background: var(--elite-surface, transparent);
+    border: 1px solid var(--elite-rule-1); border-radius: var(--elite-radius-input);
+    padding: 10px 12px; font-size: var(--elite-t4); line-height: var(--elite-lh4);
+    color: var(--elite-ink, currentColor); font-family: inherit;
+  }
+  .field:focus {
+    outline: 2px solid var(--elite-accent, currentColor); outline-offset: 1px;
+    border-color: transparent;
+  }
+  .field::placeholder { color: var(--elite-ink-3, currentColor); opacity: .75; }
+
+  /* Field labels are --elite-ink-2, never --elite-ink-3. Grey-on-dark field
+     labels are the single fastest way to get a build rejected. */
+  .label {
+    display: block; font-size: 12.5px; font-weight: 600;
+    color: var(--elite-ink-2, currentColor); margin-bottom: 6px; letter-spacing: .01em;
+  }
+
+} /* /components */
+
+:focus-visible { outline: 2px solid var(--elite-accent, currentColor); outline-offset: 2px; }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * 2. CTA BUTTONS  (rucofence)
+ *
+ * Rebuilt, not carried over. The old treatment swapped one background colour
+ * for another on hover, which is the cheapest hover a button has.
+ *
+ * The fill now WIPES in from the left, behind the label, on a pseudo element
+ * at z-index -1. Inside a stacking context the element's own background paints
+ * first and negative-z children paint over it but under the in-flow content,
+ * so the wipe passes between the button's ground and its own words with
+ * nothing layered by hand.
+ *
+ * Every existing class name still works. Dozens of files set `.btn` with
+ * Tailwind !important overrides for the white-on-photograph variant, and those
+ * only ever touch `background`, so they compose with the wipe instead of
+ * fighting it: the default wipe is a tint of the button's own text colour and
+ * is therefore correct on any ground — it darkens dark type on a white hero
+ * button and lightens white type on a ghost button.
+ *
+ * `.btn` lives inside @layer components deliberately. Written in the bare
+ * sheet it beat `lg:hidden` at equal specificity and rendered the mobile menu
+ * button at every width beside the full desktop nav. CLAUDE.md trap 3.
+ * ═════════════════════════════════════════════════════════════════════════ */
+@layer components {
+
+  .btn {
+    position: relative; isolation: isolate; overflow: hidden;
+    display: inline-flex; align-items: center; gap: 8px;
+    font-weight: 600; font-size: 14.5px;
+    padding: 11px 20px; border-radius: var(--elite-radius-input);
+    border: 1px solid transparent; cursor: pointer;
+    --btn-wipe: color-mix(in srgb, currentColor 10%, transparent);
+    transition: background-color 180ms var(--elite-ease),
+                color 180ms var(--elite-ease),
+                border-color 180ms var(--elite-ease),
+                box-shadow 180ms var(--elite-ease),
+                transform 120ms var(--elite-ease);
+  }
+  .btn::before {
+    content: ""; position: absolute; inset: 0; z-index: -1;
+    background: var(--btn-wipe);
+    transform: scaleX(0); transform-origin: left center;
+    transition: transform 420ms var(--elite-ease);
+  }
+  .btn:hover::before,
+  .btn:focus-visible::before { transform: scaleX(1); }
+
+  /* The trailing arrow steps forward. A LEADING icon is left alone — that is
+     what :not(:first-child) buys, since text nodes are not children here, so
+     `Label <IconArrow/>` moves and `<IconTakeoff/> Label` does not. */
+  .btn > svg:last-child:not(:first-child) { transition: transform 260ms var(--elite-ease); }
+  .btn:hover > svg:last-child:not(:first-child) { transform: translateX(3px); }
+
+  /* A real pressed state: the wipe snaps home and the button takes a step down. */
+  .btn:active { transform: translateY(1px); }
+  .btn:active::before { transform: scaleX(1); transition-duration: 90ms; }
+
+  .btn-primary {
+    background: var(--elite-accent, currentColor);
+    color: var(--elite-accent-on, var(--elite-surface, canvas));
+    --btn-wipe: var(--elite-accent-deep, color-mix(in srgb, var(--elite-accent, currentColor) 76%, black));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--elite-sheen) 22%, transparent);
+  }
+  .btn-primary:active { box-shadow: inset 0 2px 6px var(--elite-shade); }
+
+  .btn-ghost {
+    background: transparent; color: var(--elite-accent, currentColor);
+    border-color: var(--elite-rule-1);
+    --btn-wipe: color-mix(in srgb, var(--elite-ink, currentColor) 6%, transparent);
+  }
+  .btn-ghost:hover { border-color: var(--elite-accent, currentColor); }
+
+  /* The trim button — the second accent, for a secondary CTA that must still
+     look expensive. Reads --elite-trim, never a hardcoded gold. */
+  .btn-trim {
+    background: transparent; color: var(--elite-trim);
+    border-color: color-mix(in srgb, var(--elite-trim) 40%, transparent);
+    --btn-wipe: color-mix(in srgb, var(--elite-trim) 12%, transparent);
+  }
+  .btn-trim:hover { border-color: var(--elite-trim); }
+
+  .btn-flag {
+    background: var(--elite-accent, currentColor);
+    color: var(--elite-accent-on, var(--elite-surface, canvas));
+    --btn-wipe: color-mix(in srgb, var(--elite-accent, currentColor) 76%, black);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--elite-sheen) 24%, transparent);
+  }
+
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn:disabled::before { display: none; }
+  .btn:disabled:active { transform: none; }
+
+} /* /components */
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * 3. FAMILY 1 — ENTRANCE
+ *
+ * Four entrances, and they are not interchangeable.
+ *
+ * `.hero-rise` moves transform ONLY; opacity stays 1. padlock-park's note:
+ * an opacity fade on the largest above-the-fold element GATES the Largest
+ * Contentful Paint, because the browser will not count a fully transparent
+ * element as painted. The rise reads the same and costs nothing.
+ *
+ * `.fade-up` is for everything below the fold, where opacity is free.
+ *
+ * `.elite-sundown` is the CSS-only scroll reveal (stillroof). It runs on
+ * `animation-timeline: view()` with no JavaScript at all, and — this is the
+ * part worth copying — the AT-REST state is the VISIBLE one. The animation
+ * only ever hides an element that the browser has confirmed it can also
+ * un-hide. A missing polyfill, a disabled script, an unsupported browser:
+ * the content is simply there. Compare `.reveal`, which starts at opacity 0
+ * and needs JavaScript to arrive.
+ * ═════════════════════════════════════════════════════════════════════════ */
+@layer components {
+
+  @keyframes elite-fade-up {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: none; }
+  }
+  .fade-up { animation: elite-fade-up var(--elite-dur-entrance) var(--elite-ease-editorial) both; }
+  /* ScrollFadeSection sets --fade-delay; nothing else needs wiring. */
+  .fade-up-lazy {
+    opacity: 0;
+    animation: elite-fade-up var(--elite-dur-entrance) var(--elite-ease-editorial) forwards;
+    animation-delay: var(--fade-delay, 0ms);
+  }
+
+  @keyframes elite-hero-rise { from { transform: translateY(22px); } to { transform: none; } }
+  .hero-rise { animation: elite-hero-rise 1100ms var(--elite-ease-editorial) both; }
+
+  /* The bouncing arrival, for a badge or a stat that should feel placed. */
+  @keyframes elite-hero-reveal {
+    0%   { opacity: 0; transform: scale(.85) translateY(30px); }
+    50%  { opacity: .5; transform: scale(.95) translateY(10px); }
+    100% { opacity: 1; transform: none; }
+  }
+  .hero-reveal { animation: elite-hero-reveal 1.2s var(--elite-ease-bounce) both; }
+
+  /* The kinetic headline (flash-repair): blur clears as the line lands. */
+  @keyframes elite-flash-rise {
+    from { opacity: 0; transform: translateY(28px) scale(.96); filter: blur(6px); }
+    to   { opacity: 1; transform: none; filter: blur(0); }
+  }
+  .flash-rise { animation: elite-flash-rise 900ms var(--elite-ease-editorial) both; }
+
+  /* Staggered children without per-child wiring (fusion-overwatch). */
+  @keyframes elite-slide-up-fade {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: none; }
+  }
+  .elite-stagger > * {
+    animation: elite-slide-up-fade var(--elite-dur-entrance) var(--elite-ease-editorial) both;
+  }
+  .elite-stagger > *:nth-child(1) { animation-delay: 0ms; }
+  .elite-stagger > *:nth-child(2) { animation-delay: 60ms; }
+  .elite-stagger > *:nth-child(3) { animation-delay: 120ms; }
+  .elite-stagger > *:nth-child(4) { animation-delay: 180ms; }
+  .elite-stagger > *:nth-child(5) { animation-delay: 240ms; }
+  .elite-stagger > *:nth-child(6) { animation-delay: 300ms; }
+  .elite-stagger > *:nth-child(7) { animation-delay: 360ms; }
+  .elite-stagger > *:nth-child(8) { animation-delay: 420ms; }
+
+  /* Reveal on scroll — once only, never on scroll-out. Driven by the shared
+     rAF pass in motion/Reveal.tsx. */
+  .reveal { opacity: 0; transform: translateY(14px); }
+  .reveal.in {
+    opacity: 1; transform: none;
+    transition: opacity 800ms var(--elite-ease), transform 800ms var(--elite-ease);
+  }
+
+  /* The no-JavaScript reveal. At rest: visible. */
+  .elite-sundown { opacity: 1; filter: none; transform: none; }
+  @keyframes elite-sundown-in {
+    from { opacity: 0; filter: blur(6px); transform: translateY(32px); }
+    to   { opacity: 1; filter: none; transform: none; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      .elite-sundown {
+        animation: elite-sundown-in linear both;
+        animation-timeline: view(block);
+        animation-range: entry 0% entry 34%;
+      }
+    }
+  }
+
+} /* /components */
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * 4. FAMILY 2 — PHOTOGRAPHIC
+ *
+ * Ken Burns is TWO animations, not one, and picking the wrong one costs
+ * Lighthouse points.
+ *
+ * `.hero-zoom` is FINITE — it settles once and stops (padlock-park). An
+ * infinite animation on the LCP element keeps the page off idle and inflates
+ * the measured LCP. Use it on the static hero photograph.
+ *
+ * `.hero-kenburns` is infinite and belongs on a BACKGROUND plate that is not
+ * the LCP element, where the drift is ambience rather than an entrance.
+ *
+ * `.hero-breathe` (stillroof) is the smallest of the three: a 3.5% scale over
+ * 14s, alternating. On video it is the difference between a still frame and
+ * a held shot.
+ * ═════════════════════════════════════════════════════════════════════════ */
+@layer components {
+
+  @keyframes elite-hero-zoom { from { transform: scale(1.06); } to { transform: scale(1); } }
+  .hero-zoom { animation: elite-hero-zoom 5s var(--elite-ease-editorial) forwards; will-change: transform; }
+
+  @keyframes elite-kenburns {
+    0%   { transform: translate3d(-1.5%, -1%, 0) scale(1.06); }
+    50%  { transform: translate3d(1.5%, 1%, 0) scale(1.10); }
+    100% { transform: translate3d(-1.5%, -1%, 0) scale(1.06); }
+  }
+  .hero-kenburns { animation: elite-kenburns var(--elite-dur-ambient) ease-in-out infinite; will-change: transform; }
+
+  @keyframes elite-hero-breathe { to { transform: scale(1.035); } }
+  .hero-breathe { animation: elite-hero-breathe 14s ease-in-out infinite alternate; }
+
+  /* Lens float (stillroof) — a decorative overlay that drifts a few pixels
+     off its anchor, so a pinned label never looks pasted on. */
+  @keyframes elite-lens-float { to { transform: translate(-10px, 14px) rotate(-4deg); } }
+  .lens-float { animation: elite-lens-float 9s var(--elite-ease) infinite alternate; }
+
+  /* The raking light sweep across a photographic hero. `screen` blend so it
+     only ever ADDS light — it can never muddy the photograph underneath. */
+  .hero-sweep {
+    position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(100deg,
+      transparent 0%,
+      color-mix(in srgb, var(--elite-sheen) 0%, transparent) 20%,
+      color-mix(in srgb, var(--elite-trim) 28%, transparent) 48%,
+      color-mix(in srgb, var(--elite-sheen) 42%, transparent) 52%,
+      color-mix(in srgb, var(--elite-trim) 0%, transparent) 80%,
+      transparent 100%);
+    filter: blur(6px); transform: skewX(-12deg); mix-blend-mode: screen;
+  }
+
+  /* The word mask. GSAP (or a transition) slides .hero-word up from behind
+     the clip. The padding-bottom is not decorative: without it the clip cuts
+     the descenders off every g, y and p in the headline. */
+  .hero-word-mask { display: inline-block; overflow: hidden; padding-bottom: .08em; vertical-align: bottom; }
+  .hero-word { display: inline-block; will-change: transform; }
+  .reveal-line { display: block; overflow: hidden; padding-bottom: .08em; }
+
+} /* /components */
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * 5. FAMILY 3 — TEXTURE
+ *
+ * Grain is what stops a flat dark panel from reading as a PDF. All four are
+ * pure CSS: the noise is an inline SVG feTurbulence, so there is no image
+ * request, no 404 risk and nothing to put on a CDN. (The harvested original
+ * pulled a PNG off Wikimedia — a third-party asset on the critical path of a
+ * hero. Replaced.)
+ * ═════════════════════════════════════════════════════════════════════════ */
+@layer components {
+
+  @keyframes elite-grain-shift { from { transform: translate(0, 0); } to { transform: translate(-4%, 3%); } }
+  .film-grain {
+    position: absolute; inset: -50%;
+    pointer-events: none; opacity: var(--elite-grain-opacity); mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 160px 160px;
+    animation: elite-grain-shift .6s steps(2) infinite;
+  }
+
+  /* Drifting dust motes. `screen` again — dust adds light, it never subtracts. */
+  @keyframes elite-hero-dust {
+    0%   { background-position: 0 0, 40px 60px; opacity: var(--elite-dust-opacity); }
+    50%  { opacity: calc(var(--elite-dust-opacity) * 1.6); }
+    100% { background-position: -120px -180px, -80px -120px; opacity: var(--elite-dust-opacity); }
+  }
+  .hero-dust {
+    position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen;
+    background-image:
+      radial-gradient(1.5px 1.5px at 20% 30%, color-mix(in srgb, var(--elite-sheen) 55%, transparent) 50%, transparent 51%),
+      radial-gradient(1px   1px   at 70% 65%, color-mix(in srgb, var(--elite-sheen) 40%, transparent) 50%, transparent 51%);
+    background-size: 220px 220px, 160px 160px;
+    animation: elite-hero-dust 18s linear infinite;
+  }
+
+  /* Scan lines. A repeating-linear-gradient, so it costs one paint. */
+  .film-scanlines {
+    position: absolute; inset: 0; pointer-events: none; opacity: .5;
+    background-image: repeating-linear-gradient(0deg,
+      transparent, transparent 2px,
+      color-mix(in srgb, var(--elite-shade) 14%, transparent) 3px,
+      color-mix(in srgb, var(--elite-shade) 14%, transparent) 4px);
+  }
+
+  /* Wood grain: a 120s cycle. That is not a typo — at two minutes per pass the
+     surface never appears to move, it only ever looks alive. */
+  @keyframes elite-grain-slide {
+    0%, 100% { background-position: 0% 50%; }
+    50%      { background-position: 100% 50%; }
+  }
+  .wood-grain { background-size: 200% 200%; animation: elite-grain-slide 120s ease-in-out infinite; }
+
+  /* Film bars — the three-bar sound indicator on a video invite. */
+  @keyframes elite-film-bars { from { transform: scaleY(.55); } to { transform: scaleY(1); } }
+  @media (prefers-reduced-motion: no-preference) {
+    .film-bars > i { animation: elite-film-bars 1.1s ease-in-out infinite alternate; }
+    .film-bars > i:nth-child(2) { animation-delay: .18s; }
+    .film-bars > i:nth-child(3) { animation-delay: .36s; }
+  }
+  .film-bars { display: inline-flex; align-items: flex-end; gap: 2px; height: 16px; }
+  .film-bars > i {
+    width: 2px; height: 10px; border-radius: 1px;
+    background: var(--elite-accent, currentColor); transform-origin: bottom;
+  }
+  .film-bars > i:nth-child(2) { height: 14px; }
+  .film-bars > i:nth-child(3) { height: 6px; }
+
+} /* /components */
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * 6. FAMILY 4 — SHIMMER
+ *
+ * Every shimmer here is DETERMINISTIC. The harvested originals gave each
+ * instance a `Math.random()` animation-delay inline, which produced a
+ * different value on the server and in the browser and threw a hydration
+ * mismatch on every render. Phase offsets are done with nth-child instead.
+ * ═════════════════════════════════════════════════════════════════════════ */
+@layer components {
+
+  /* Background-position shimmer: for gradient-filled text and metal. */
+  @keyframes elite-shimmer-bg { from { background-position: -200% center; } to { background-position: 200% center; } }
+  /* Transform shimmer: for a moving highlight band over a solid element. */
+  @keyframes elite-shimmer-x  { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+
+  /* The band that crosses a card. Clipped by the parent's overflow. */
+  .shimmer-effect { position: relative; overflow: hidden; }
+  .shimmer-effect::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(90deg, transparent 0%,
+      color-mix(in srgb, var(--elite-sheen) 40%, transparent) 50%, transparent 100%);
+    animation: elite-shimmer-x 3s ease-in-out infinite;
+  }
+  .shimmer-slow::before { animation-duration: 5s; }
+  .shimmer-effect:nth-child(2n)::before { animation-delay: -1.1s; }
+  .shimmer-effect:nth-child(3n)::before { animation-delay: -2.3s; }
+
+  /* Sheen — the slow premium pass over a whole surface. */
+  .sheen {
+    background: linear-gradient(100deg, transparent 35%,
+      color-mix(in srgb, var(--elite-sheen) 50%, transparent) 50%, transparent 65%);
+    background-size: 200% 100%;
+    animation: elite-shimmer-bg 6s linear infinite reverse;
+  }
+
+  /* Metallic sweep — the diagonal bar that crosses a badge or a plate. */
+  @keyframes elite-metallic-sweep {
+    from { transform: translate(-100%, -100%) rotate(45deg); }
+    to   { transform: translate(100%, 100%) rotate(45deg); }
+  }
+  .metallic-sweep { position: relative; overflow: hidden; isolation: isolate; }
+  .metallic-sweep::after {
+    content: ""; position: absolute; inset: -50%; pointer-events: none;
+    background: linear-gradient(90deg, transparent,
+      color-mix(in srgb, var(--elite-trim) 45%, transparent), transparent);
+    animation: elite-metallic-sweep 4.5s ease-in-out infinite;
+  }
+
+  /* Metallic TEXT — brushed metal, built from the trim colour, not from a
+     fixed set of greys, so a bronze product gets bronze and a steel one steel. */
+  .metallic-text {
+    background: linear-gradient(to bottom,
+      color-mix(in srgb, var(--elite-trim) 30%, var(--elite-sheen)) 0%,
+      var(--elite-trim) 45%,
+      color-mix(in srgb, var(--elite-trim) 70%, var(--elite-shade)) 50%,
+      var(--elite-trim) 55%,
+      color-mix(in srgb, var(--elite-trim) 30%, var(--elite-sheen)) 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
+    filter: drop-shadow(0 2px 4px var(--elite-shade));
+  }
+
+  /* Text shimmer — the light travelling THROUGH the letterforms. */
+  .text-shimmer {
+    background: linear-gradient(100deg,
+      var(--elite-ink, currentColor) 20%,
+      var(--elite-trim) 45%,
+      color-mix(in srgb, var(--elite-sheen) 90%, transparent) 50%,
+      var(--elite-trim) 55%,
+      var(--elite-ink, currentColor) 80%);
+    background-size: 200% auto;
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
+    animation: elite-shimmer-bg 4s linear infinite;
+  }
+
+  /* Logo shine — the bar crosses, then WAITS. The 20%/80% hold is what keeps
+     a header logo from looking like a loading spinner. */
+  @keyframes elite-logo-shine {
+    0%, 100% { transform: translateX(-100%); }
+    20%, 80% { transform: translateX(100%); }
+  }
+  .logo-shine { position: relative; overflow: hidden; isolation: isolate; display: inline-block; }
+  .logo-shine::after {
+    content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 45%;
+    pointer-events: none;
+    background: linear-gradient(100deg, transparent,
+      color-mix(in srgb, var(--elite-sheen) 55%, transparent), transparent);
+    animation: elite-logo-shine 6s ease-in-out infinite;
+  }
+
+  /* Glass shimmer — the long, low-opacity pass across a glass hero card. */
+  @keyframes elite-hero-sheen {
+    0%   { transform: translateX(-130%) skewX(-18deg); opacity: 0; }
+    12%  { opacity: .5; }
+    38%  { opacity: 0; }
+    100% { transform: translateX(240%) skewX(-18deg); opacity: 0; }
+  }
+  .glass-shimmer { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; pointer-events: none; }
+  .glass-shimmer::before {
+    content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 45%;
+    background: linear-gradient(100deg, transparent,
+      color-mix(in srgb, var(--elite-sheen) 10%, transparent), transparent);
+    animation: elite-hero-sheen 7s ease-in-out infinite;
+  }
+
+  /* Animated gradient text — the signature two-line hero move's second line. */
+  @keyframes elite-gradient-shift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+  .elite-heading-gradient {
+    background: linear-gradient(135deg,
+      var(--elite-accent, currentColor) 0%,
+      var(--elite-trim) 50%,
+      var(--elite-accent-2, var(--elite-accent, currentColor)) 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
+  }
+  .elite-heading-gradient.is-animated {
+    background-size: 200% 200%;
+    animation: elite-gradient-shift 6s ease infinite;
+  }
+
+} /* /components */
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * 7. FAMILY 5 — GLOW
+ *
+ * appredding shipped six @keyframes — glowPulseGreen / Blue / Purple /
+ * Orange / Gold / Red — that were byte-identical except for the colour.
+ * Adding a seventh accent meant writing twenty-four more lines of box-shadow.
+ *
+ * There is one keyframe here. It reads `--elite-glow`, and a modifier class
+ * repoints that single property. A new accent costs one line.
+ * ═════════════════════════════════════════════════════════════════════════ */
+@layer components {
+
+  /* The four-layer halo: near bloom, far bloom, cast shadow, inner lip. */
+  .edge-glow {
+    box-shadow:
+      0 0 40px color-mix(in srgb, var(--elite-glow) 40%, transparent),
+      0 0 80px color-mix(in srgb, var(--elite-glow) 20%, transparent),
+      0 8px 32px var(--elite-shade),
+      inset 0 1px 2px color-mix(in srgb, var(--elite-glow) 20%, transparent);
+  }
+  .edge-glow-strong {
+    box-shadow:
+      0 0 60px color-mix(in srgb, var(--elite-glow) 60%, transparent),
+      0 0 120px color-mix(in srgb, var(--elite-glow) 30%, transparent),
+      0 12px 40px var(--elite-shade),
+      inset 0 1px 3px color-mix(in srgb, var(--elite-glow) 30%, transparent);
+  }
+
+  @keyframes elite-glow-pulse {
+    0%, 100% {
+      box-shadow:
+        0 0 40px color-mix(in srgb, var(--elite-glow) 40%, transparent),
+        0 0 80px color-mix(in srgb, var(--elite-glow) 20%, transparent),
+        0 8px 32px var(--elite-shade),
+        inset 0 1px 2px color-mix(in srgb, var(--elite-glow) 20%, transparent);
+    }
+    50% {
+      box-shadow:
+        0 0 60px color-mix(in srgb, var(--elite-glow) 60%, transparent),
+        0 0 120px color-mix(in srgb, var(--elite-glow) 30%, transparent),
+        0 12px 40px var(--elite-shade),
+        inset 0 1px 3px color-mix(in srgb, var(--elite-glow) 30%, transparent);
+    }
+  }
+  .animate-glow-pulse { animation: elite-glow-pulse 3s var(--elite-ease) infinite; }
+  /* A wall of cards must not breathe in unison. Offsets, not randomness. */
+  .animate-glow-pulse:nth-child(2n) { animation-delay: -1s; }
+  .animate-glow-pulse:nth-child(3n) { animation-delay: -2s; }
+
+  /* Repoint the channel. This is the whole per-accent API. */
+  .glow-accent { --elite-glow: var(--elite-accent, currentColor); }
+  .glow-trim   { --elite-glow: var(--elite-trim); }
+  .glow-ok     { --elite-glow: var(--elite-ok,   currentColor); }
+  .glow-warn   { --elite-glow: var(--elite-warn, currentColor); }
+  .glow-bad    { --elite-glow: var(--elite-bad,  currentColor); }
+  .glow-info   { --elite-glow: var(--elite-info, currentColor); }
+
+  /* Underglow — the warm bloom UNDER a card, blooming on hover. -20px spread
+     keeps the glow beneath the card instead of haloing its edges. */
+  .underglow {
+    transition: box-shadow 500ms var(--elite-ease-editorial),
+                transform 500ms var(--elite-ease-editorial);
+  }
+  .underglow:hover {
+    box-shadow: 0 20px 40px -20px color-mix(in srgb, var(--elite-trim) 45%, transparent);
+  }
+
+  /* Ambient radial glow — the blurred blob that sits behind a section. It is
+     `position:absolute` and `pointer-events:none` by definition: an ambient
+     glow that eats clicks is a bug report waiting to happen. */
+  .ambient-glow {
+    position: absolute; pointer-events: none; z-index: 0;
+    border-radius: var(--elite-radius-pill); filter: blur(70px);
+    background: radial-gradient(circle,
+      color-mix(in srgb, var(--elite-glow) 16%, transparent) 0%, transparent 70%);
+  }
+
+  /* Corner pulse — the four L-brackets on a hero card, breathing (flash-repair). */
+  @keyframes elite-corner-pulse { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
+  .hero-corner {
+    position: absolute; width: 26px; height: 26px; pointer-events: none; z-index: 3;
+    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--elite-trim) 50%, transparent));
+    animation: elite-corner-pulse 3.2s ease-in-out infinite;
+    --c: color-mix(in srgb, var(--elite-trim) 85%, transparent);
+  }
+  .hero-corner.tl { top: 14px; left: 14px;  border-top: 2px solid var(--c); border-left: 2px solid var(--c);  border-top-left-radius: 10px; }
+  .hero-corner.tr { top: 14px; right: 14px; border-top: 2px solid var(--c); border-right: 2px solid var(--c); border-top-right-radius: 10px; }
+  .hero-corner.bl { bottom: 14px; left: 14px;  border-bottom: 2px solid var(--c); border-left: 2px solid var(--c);  border-bottom-left-radius: 10px; }
+  .hero-corner.br { bottom: 14px; right: 14px; border-bottom: 2px solid var(--c); border-right: 2px solid var(--c); border-bottom-right-radius: 10px; }
+
+  /* Corner brackets — the targeting frame on a mini card (the north-star
+     "YOUR PANELS CATCH IT" mini-cards). Two pseudo elements, two corners. */
+  .corner-bracket { position: relative; }
+  .corner-bracket::before,
+  .corner-bracket::after {
+    content: ""; position: absolute; width: 14px; height: 14px;
+    border-color: color-mix(in srgb, var(--elite-glow) 80%, transparent);
+    border-style: solid; border-width: 0; pointer-events: none;
+  }
+  .corner-bracket::before { top: 10px; right: 10px; border-top-width: 2px; border-right-width: 2px; }
+  .corner-bracket::after  { bottom: 10px; left: 10px; border-bottom-width: 2px; border-left-width: 2px; }
+
+  /* Energy pulse — a glow that breathes without a cast shadow, for a live
+     indicator rather than a card (flash-repair). */
+  @keyframes elite-energy-pulse {
+    0%, 100% {
+      box-shadow: 0 0 10px color-mix(in srgb, var(--elite-glow) 30%, transparent),
+                  0 0 20px color-mix(in srgb, var(--elite-glow) 10%, transparent);
+    }
+    50% {
+      box-shadow: 0 0 25px color-mix(in srgb, var(--elite-glow) 70%, transparent),
+                  0 0 50px color-mix(in srgb, var(--elite-glow) 30%, transparent),
+                  0 0 80px color-mix(in srgb, var(--elite-trim) 15%, transparent);
+    }
+  }
+  .animate-energy-pulse { animation: elite-energy-pulse 2.5s ease-in-out infinite; }
+
+  /* Live pulse and record pulse — opacity only, so they are cheap enough to
+     sit in a header on every page. */
+  @keyframes elite-live-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
+  .live-pulse   { animation: elite-live-pulse 2.4s ease-in-out infinite; }
+  .record-pulse { animation: elite-live-pulse 1.6s ease-in-out infinite; }
+
+  /* Orb pulse — the expanding ring that leaves a live dot (stillroof). */
+  @keyframes elite-orb-pulse {
+    60%  { transform: scale(1.14); opacity: 0; }
+    100% { opacity: 0; }
+  }
+  .orb-pulse { position: relative; }
+  .orb-pulse::after {
+    content: ""; position: absolute; inset: -10px; border-radius: 50%; pointer-events: none;
+    border: 1px solid color-mix(in srgb, var(--elite-glow) 40%, transparent);
+    animation: elite-orb-pulse 2.7s var(--elite-ease) infinite;
+  }
+
+} /* /components */
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * 8. FAMILY 6 — BORDERS
+ *
+ * Four kinds, all built the same way: a pseudo element inset by 1px, filled
+ * with a gradient, and masked to a ring with `mask-composite: exclude`. That
+ * mask trick is why these are borders and not backgrounds — the fill is
+ * punched out and only the 1px band survives, so the card's own background
+ * shows through untouched.
+ *
+ * The rotating ones animate an `@property`-registered <angle> rather than a
+ * background-position. A registered custom property INTERPOLATES; an
+ * unregistered one snaps between keyframes, which is why the naive version
+ * of this effect stutters.
+ * ═════════════════════════════════════════════════════════════════════════ */
+@property --elite-angle { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+
+@layer components {
+
+  /* Rotating ring — the conic comet that runs the perimeter (appredding's
+     "watt-run", flash-repair's hero beam). */
+  @keyframes elite-angle-run { to { --elite-angle: 360deg; } }
+  .border-rotate { position: relative; isolation: isolate; }
+  .border-rotate::before {
+    content: ""; position: absolute; inset: -1px; border-radius: inherit;
+    padding: 1.5px; pointer-events: none; z-index: 1;
+    background: conic-gradient(from var(--elite-angle),
+      transparent 0deg, transparent 295deg,
+      color-mix(in srgb, var(--elite-trim) 35%, transparent) 305deg,
+      var(--elite-trim) 335deg,
+      color-mix(in srgb, var(--elite-sheen) 90%, transparent) 348deg,
+      var(--elite-trim) 357deg,
+      transparent 360deg);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    filter: drop-shadow(0 0 7px color-mix(in srgb, var(--elite-trim) 70%, transparent));
+    animation: elite-angle-run 5.5s linear infinite;
+  }
+  /* Reverse + a different period so two adjacent cards never sync. */
+  .border-rotate.is-alt::before { animation-duration: 6.5s; animation-direction: reverse; }
+
+  /* Neon ring — the full-spectrum version, for a HUD panel. Runs the accent,
+     the trim and the second accent rather than a fixed violet/cyan/pink. */
+  .border-neon { position: relative; isolation: isolate; }
+  .border-neon::before {
+    content: ""; position: absolute; inset: -1px; border-radius: inherit;
+    padding: 1px; pointer-events: none; z-index: 1;
+    background: conic-gradient(from var(--elite-angle),
+      var(--elite-accent, currentColor),
+      var(--elite-trim),
+      var(--elite-accent-2, var(--elite-accent, currentColor)),
+      var(--elite-trim),
+      var(--elite-accent, currentColor));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    animation: elite-angle-run 4s linear infinite;
+  }
+
+  /* Flowing border — a linear gradient sliding along the ring. Cheaper than
+     the conic version (no @property, no drop-shadow) and correct on a long
+     rectangle, where a conic sweep looks fastest at the corners. */
+  @keyframes elite-border-flow { from { background-position: 0% 50%; } to { background-position: 300% 50%; } }
+  .border-flow { position: relative; isolation: isolate; }
+  .border-flow::before {
+    content: ""; position: absolute; inset: -1px; border-radius: inherit;
+    padding: 1px; pointer-events: none; z-index: 1;
+    background: linear-gradient(90deg,
+      var(--elite-trim), var(--elite-accent, currentColor),
+      color-mix(in srgb, var(--elite-trim) 25%, transparent), var(--elite-trim));
+    background-size: 300% 100%;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    animation: elite-border-flow 6s linear infinite;
+  }
+
+  /* Following border — a single lit dot travelling the perimeter. The
+     `left/top` keyframes are deliberate: they are cheap here because the dot
+     is a 1-2px absolutely positioned element with nothing to reflow. */
+  @keyframes elite-border-follow {
+    0%   { left: 0;    top: 0;    }
+    25%  { left: 100%; top: 0;    }
+    50%  { left: 100%; top: 100%; }
+    75%  { left: 0;    top: 100%; }
+    100% { left: 0;    top: 0;    }
+  }
+  .border-follow { position: relative; }
+  .border-follow::after {
+    content: ""; position: absolute; width: 6px; height: 6px; border-radius: 50%;
+    margin: -3px; pointer-events: none;
+    background: var(--elite-trim);
+    box-shadow: 0 0 12px 2px color-mix(in srgb, var(--elite-trim) 70%, transparent);
+    animation: elite-border-follow 6s linear infinite;
+  }
+
+  /* Pulsing border — the quietest of the four. Colour only, no geometry. */
+  @keyframes elite-border-pulse {
+    0%, 100% { border-color: color-mix(in srgb, var(--elite-glow) 25%, transparent); }
+    50%      { border-color: color-mix(in srgb, var(--elite-glow) 70%, transparent); }
+  }
+  .border-pulse {
+    border: 1px solid color-mix(in srgb, var(--elite-glow) 25%, transparent);
+    animation: elite-border-pulse 2s ease-in-out infinite;
+  }
+
+} /* /components */
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * 9. FAMILY 7 — AMBIENT
+ *
+ * The layer that makes a dark section look lit rather than painted. All of it
+ * is `pointer-events: none` and z-index 0, and every host needs
+ * `isolation: isolate` so the blobs cannot escape their section.
+ * ═════════════════════════════════════════════════════════════════════════ */
+@layer components {
+
+  /* Orb drift (stillroof). One keyframe, three orbs, negative delays so they
+     start mid-cycle instead of all leaving the same corner together. */
+  @keyframes elite-orb-drift {
+    from { transform: translate3d(0, 0, 0) scale(1); }
+    to   { transform: translate3d(3vw, -4vw, 0) scale(1.14); }
+  }
+  .orbs { position: absolute; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+  .orbs > i {
+    position: absolute; border-radius: 50%; filter: blur(40px); opacity: .3;
+    background: radial-gradient(circle, var(--elite-glow) 0%, transparent 68%);
+    animation: elite-orb-drift var(--elite-dur-ambient) var(--elite-ease) infinite alternate;
+  }
+  .orbs > i:nth-child(1) { width: 42vw; height: 42vw; top: -14vw; left: -10vw; }
+  .orbs > i:nth-child(2) { width: 30vw; height: 30vw; bottom: -12vw; right: -8vw; animation-delay: -9s; }
+  .orbs > i:nth-child(3) { width: 20vw; height: 20vw; top: 42%; right: 22%; animation-delay: -17s; opacity: .22; }
+
+  /* Blob float (fusion-overwatch) — a four-point wander, less linear than the
+     two-point drift. Use where the section is watched for a long time. */
+  @keyframes elite-blob-float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    25%      { transform: translate(30px, -20px) scale(1.05); }
+    50%      { transform: translate(-20px, 30px) scale(.95); }
+    75%      { transform: translate(10px, 10px) scale(1.02); }
+  }
+  .blob-float { animation: elite-blob-float 24s ease-in-out infinite; }
+
+  /* Mesh move (appredding) — three layers on three different paths, screen
+     blended, so the section ground never sits still. */
+  @keyframes elite-mesh-1 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33%      { transform: translate(30px, -20px) scale(1.1); }
+    66%      { transform: translate(-20px, 30px) scale(.9); }
+  }
+  @keyframes elite-mesh-2 {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    33%      { transform: translate(-30px, 20px) rotate(5deg); }
+    66%      { transform: translate(20px, -30px) rotate(-5deg); }
+  }
+  @keyframes elite-mesh-3 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50%      { transform: translate(15px, 15px) scale(1.05); }
+  }
+  .gradient-mesh { position: absolute; inset: 0; overflow: hidden; z-index: 0; pointer-events: none; }
+  .gradient-mesh > i {
+    position: absolute; inset: 0; opacity: .6; mix-blend-mode: screen;
+  }
+  .gradient-mesh > i:nth-child(1) {
+    background: radial-gradient(circle at 20% 50%, color-mix(in srgb, var(--elite-accent, currentColor) 40%, transparent) 0%, transparent 50%);
+    animation: elite-mesh-1 20s ease-in-out infinite;
+  }
+  .gradient-mesh > i:nth-child(2) {
+    background: radial-gradient(circle at 80% 40%, color-mix(in srgb, var(--elite-trim) 34%, transparent) 0%, transparent 50%);
+    animation: elite-mesh-2 26s ease-in-out infinite;
+  }
+  .gradient-mesh > i:nth-child(3) {
+    background: radial-gradient(circle at 50% 85%, color-mix(in srgb, var(--elite-accent-2, var(--elite-accent, currentColor)) 30%, transparent) 0%, transparent 50%);
+    animation: elite-mesh-3 32s ease-in-out infinite;
+  }
+
+  /* Particle float — a starfield in ONE element. Six radial gradients on a
+     200% canvas, panned. No DOM nodes, no rAF, no per-particle cost. */
+  @keyframes elite-particle-float { 0%, 100% { background-position: 0% 0%; } 50% { background-position: 100% 100%; } }
+  .particle-field {
+    position: absolute; inset: 0; pointer-events: none; z-index: 0;
+    background-image:
+      radial-gradient(2px 2px at 20% 30%, color-mix(in srgb, var(--elite-sheen) 15%, transparent), transparent),
+      radial-gradient(2px 2px at 60% 70%, color-mix(in srgb, var(--elite-sheen) 10%, transparent), transparent),
+      radial-gradient(1px 1px at 50% 50%, color-mix(in srgb, var(--elite-sheen) 10%, transparent), transparent),
+      radial-gradient(1px 1px at 80% 10%, color-mix(in srgb, var(--elite-accent, currentColor) 15%, transparent), transparent),
+      radial-gradient(2px 2px at 90% 60%, color-mix(in srgb, var(--elite-trim) 12%, transparent), transparent),
+      radial-gradient(1px 1px at 33% 90%, color-mix(in srgb, var(--elite-accent-2, var(--elite-accent, currentColor)) 10%, transparent), transparent);
+    background-size: 200% 200%;
+    animation: elite-particle-float 30s ease-in-out infinite;
+  }
+
+  /* A single rising mote, for the handful of cases that want real particles.
+     --particle-x / --particle-y are set per instance. */
+  @keyframes elite-mote {
+    0%   { transform: translate(0, 0) scale(1); opacity: .8; }
+    50%  { transform: translate(calc(var(--particle-x, 15px)), calc(var(--particle-y, -30px))) scale(1.2); opacity: 1; }
+    100% { transform: translate(calc(var(--particle-x, 15px) * -.6), calc(var(--particle-y, -30px) * 2)) scale(.6); opacity: 0; }
+  }
+  .mote { animation: elite-mote 6s ease-out infinite; }
+
+  /* Cyber grid — the moving graph paper under a HUD. 50px tile, 50px travel,
+     20s: the grid moves exactly one cell per cycle, so the loop is invisible. */
+  @keyframes elite-grid-move { from { background-position: 0 0; } to { background-position: 50px 50px; } }
+  .cyber-grid {
+    background-image:
+      linear-gradient(color-mix(in srgb, var(--elite-accent, currentColor) 4%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, var(--elite-accent, currentColor) 4%, transparent) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: elite-grid-move 20s linear infinite;
+  }
+
+} /* /components */
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * 10. FAMILY 8 — SOLAR
+ *
+ * Pure CSS rays. The harvested original replaced a <canvas> with a single
+ * conic-gradient, which removed a script, a resize listener and a whole
+ * animation loop from the hero.
+ * ═════════════════════════════════════════════════════════════════════════ */
+@layer components {
+
+  @keyframes elite-sun-rotate { from { transform: translate(-50%, -50%) rotate(0deg); } to { transform: translate(-50%, -50%) rotate(360deg); } }
+  @keyframes elite-ray-pulse  { 0%, 100% { opacity: .4; } 50% { opacity: .8; } }
+  /* For an element that is not centre-anchored. */
+  @keyframes elite-spin { to { transform: rotate(360deg); } }
+
+  .css-rays { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
+  .css-rays::before {
+    content: ""; position: absolute; top: 50%; left: 50%; width: 200%; height: 200%;
+    transform-origin: center;
+    --ray: color-mix(in srgb, var(--elite-trim) 30%, transparent);
+    background: conic-gradient(from 0deg,
+      transparent 0deg,   var(--ray) 10deg,  transparent 20deg,
+      transparent 60deg,  var(--ray) 70deg,  transparent 80deg,
+      transparent 120deg, var(--ray) 130deg, transparent 140deg,
+      transparent 180deg, var(--ray) 190deg, transparent 200deg,
+      transparent 240deg, var(--ray) 250deg, transparent 260deg,
+      transparent 300deg, var(--ray) 310deg, transparent 320deg,
+      transparent 360deg);
+    animation: elite-sun-rotate 8s linear infinite, elite-ray-pulse 2s ease-in-out infinite;
+  }
+
+  /* The sun presence: concentric rings, the outer two rotating in opposite
+     directions, the core a soft radial. */
+  .sun-presence { position: relative; }
+  .sun-presence > i {
+    position: absolute; inset: 12%; border-radius: 50%; pointer-events: none;
+    border: 1px solid color-mix(in srgb, var(--elite-trim) 22%, transparent);
+    animation: elite-spin 90s linear infinite;
+  }
+  .sun-presence > i:nth-child(2) { inset: 27%; border-style: dashed; animation-duration: 60s; animation-direction: reverse; }
+  .sun-presence > i:nth-child(3) {
+    inset: 43%; border: 0;
+    background: radial-gradient(circle, color-mix(in srgb, var(--elite-trim) 70%, transparent), transparent 70%);
+    animation: elite-ray-pulse 4s ease-in-out infinite;
+  }
+
+} /* /components */
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * 11. FAMILY 9 — MOTION FURNITURE
+ *
+ * The small pieces that make a page feel maintained rather than generated.
+ * ═════════════════════════════════════════════════════════════════════════ */
+@layer components {
+
+  /* Marquee. The track holds TWO copies of the content and travels -50%, so
+     the loop point is a seam between identical halves and is invisible.
+     Halving the travel to -100% with one copy leaves a gap on every pass. */
+  @keyframes elite-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  .marquee { overflow: hidden; }
+  .marquee > * { display: inline-flex; will-change: transform; animation: elite-marquee 40s linear infinite; }
+  .marquee:hover > * { animation-play-state: paused; }
+  /* A marquee is a moving band of text. Someone reading it must be able to
+     stop it, and hover is not available on a phone or to a keyboard. */
+  .marquee:focus-within > * { animation-play-state: paused; }
+
+  /* Scroll cue: the filled bar that runs down the inside of a hollow capsule. */
+  @keyframes elite-scroll-cue { 55%, 100% { transform: translateY(100%); } }
+  .scroll-cue {
+    position: relative; overflow: hidden;
+    width: 22px; height: 34px; border-radius: var(--elite-radius-pill);
+    border: 1px solid var(--elite-rule-strong);
+  }
+  .scroll-cue > span {
+    position: absolute; inset: 0; background: var(--elite-accent, currentColor);
+    transform: translateY(-100%);
+    animation: elite-scroll-cue 2.4s ease-in-out infinite;
+  }
+
+  /* Scroll bob: the chevron under a hero. */
+  @keyframes elite-scroll-bob {
+    0%, 100% { transform: translateY(0);   opacity: .85; }
+    50%      { transform: translateY(4px); opacity: 1; }
+  }
+  .scroll-bob { animation: elite-scroll-bob 2.4s var(--elite-ease-editorial) infinite; }
+
+  /* Hover lift. Two values, deliberately: -3px for a card in a grid (any more
+     and the grid ripples), -6px for a single feature panel with room. */
+  .hover-lift {
+    transition: transform 500ms var(--elite-ease-editorial),
+                box-shadow 500ms var(--elite-ease-editorial),
+                border-color 350ms var(--elite-ease);
+    will-change: transform;
+  }
+  .hover-lift:hover { transform: translateY(-3px); }
+  .hover-lift-lg:hover { transform: translateY(-6px); }
+
+  /* Tab crossfade. Driven by a data attribute rather than a class so the
+     state is readable in the DOM inspector and in tests. */
+  .tab-crossfade {
+    transition: opacity 300ms var(--elite-ease-editorial),
+                transform 300ms var(--elite-ease-editorial);
+  }
+  .tab-crossfade[data-state="enter"] { opacity: 1; transform: translateY(0); }
+  .tab-crossfade[data-state="exit"]  { opacity: 0; transform: translateY(8px); }
+
+  /* Scroll progress rail (see motion/ScrollRail.tsx, which writes scaleX). */
+  .scroll-progress {
+    position: fixed; top: 0; left: 0; z-index: 9999;
+    height: 3px; width: 100%;
+    transform: scaleX(0); transform-origin: 0 50%;
+    pointer-events: none; will-change: transform;
+    background: linear-gradient(90deg, var(--elite-trim), var(--elite-accent, currentColor));
+    box-shadow: 0 0 12px color-mix(in srgb, var(--elite-glow) 60%, transparent);
+  }
+
+  /* The pinned statement's track. The track height IS the pin duration: the
+     stage is one viewport tall and sticks for the track height minus one
+     viewport. Under reduced motion the track collapses to a single viewport,
+     the stage stops sticking, and the section reads as one ordinary
+     full-bleed statement instead of two screens of scrolling past a frozen
+     photograph. See motion/Pinned.tsx. */
+  .pin-track { height: var(--pin-h, 190vh); }
+
+  /* Magnetic: the transform is written by JS on pointermove; this only owns
+     the return. */
+  .magnetic { transition: transform 400ms var(--elite-ease-editorial); }
+
+} /* /components */
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * 12. FAMILY 10 — DATA
+ *
+ * Status is a PAIR — a colour and a glow — so a chip reads at a glance
+ * without a legend (thinkllp.dev). The glow is not decoration: it is the
+ * second channel that survives being photographed, screenshotted into Slack,
+ * or read by somebody with a red/green deficiency, because the bloom differs
+ * in size and softness even where the hue does not separate.
+ *
+ * The kit names five statuses and colours none of them.
+ * ═════════════════════════════════════════════════════════════════════════ */
+@layer components {
+
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 10px 3px 8px; border-radius: var(--elite-radius-pill);
+    font-size: var(--elite-t6); line-height: 1.4; font-weight: 600;
+    letter-spacing: .01em; white-space: nowrap;
+    --chip: var(--elite-ink-2, currentColor);
+    color: color-mix(in srgb, var(--chip) 92%, var(--elite-ink, currentColor));
+    background: color-mix(in srgb, var(--chip) 12%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--chip) 32%, transparent);
+  }
+  /* The dot carries the glow. A 6px dot with a 6px bloom reads as "lit"
+     at any size the chip is rendered. */
+  .chip::before {
+    content: ""; width: 6px; height: 6px; border-radius: 50%; flex: none;
+    background: var(--chip);
+    box-shadow: 0 0 6px 1px color-mix(in srgb, var(--chip) 70%, transparent);
+  }
+  .chip-ok   { --chip: var(--elite-ok,   currentColor); }
+  .chip-warn { --chip: var(--elite-warn, currentColor); }
+  .chip-bad  { --chip: var(--elite-bad,  currentColor); }
+  .chip-info { --chip: var(--elite-info, currentColor); }
+  .chip-idle { --chip: var(--elite-ink-3, currentColor); }
+  .chip-idle::before { box-shadow: none; }
+  /* A chip that must pull the eye — an incident, a breach, a hard stop. */
+  .chip-live::before { animation: elite-live-pulse 1.8s ease-in-out infinite; }
+
+  /* Skeleton trace — the loading placeholder. The band travels across a
+     tinted surface, never across white, so it does not flash on a dark page. */
+  @keyframes elite-skeleton-trace { from { background-position: -200% 0; } to { background-position: 200% 0; } }
+  .skeleton {
+    border-radius: 6px; color: transparent; user-select: none;
+    background-image: linear-gradient(90deg,
+      var(--elite-surface-1) 0%,
+      var(--elite-surface-2) 45%,
+      color-mix(in srgb, var(--elite-sheen) 8%, var(--elite-surface-2)) 50%,
+      var(--elite-surface-2) 55%,
+      var(--elite-surface-1) 100%);
+    background-size: 200% 100%;
+    animation: elite-skeleton-trace 1.6s ease-in-out infinite;
+  }
+  /* Text skeletons should be text-shaped: the last line of a paragraph is
+     short. Getting this wrong is what makes a loading state look broken. */
+  .skeleton-line { height: 1em; margin: .35em 0; }
+  .skeleton-line:last-child { width: 62%; }
+
+  /* Load bar — the indeterminate progress sliver. It travels 540% of its own
+     width so the pause between passes reads as work, not as a stall. */
+  @keyframes elite-loadbar { from { transform: translateX(-120%); } to { transform: translateX(420%); } }
+  .loadbar { position: relative; overflow: hidden; height: 3px; border-radius: 2px; background: var(--elite-surface-2); }
+  .loadbar::before {
+    content: ""; position: absolute; inset: 0; width: 22%;
+    border-radius: inherit; background: var(--elite-accent, currentColor);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--elite-glow) 60%, transparent);
+    animation: elite-loadbar 1.4s var(--elite-ease) infinite;
+  }
+
+  /* Count-up arrival (fusion-overwatch). The NUMBER is animated in
+     motion/Counter.tsx; this is only the entrance of the figure itself. */
+  @keyframes elite-count-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  .animate-count-up { animation: elite-count-up var(--elite-dur-entrance) var(--elite-ease-bounce) both; }
+
+  /* A stat figure is always tabular. A column of numbers whose digits are
+     different widths is the fastest way to look amateur. */
+  .stat-value {
+    font-family: var(--elite-font-mono, ui-monospace, monospace);
+    font-variant-numeric: tabular-nums;
+    font-size: clamp(28px, 4vw, 44px); line-height: 1.05; font-weight: 700;
+    color: var(--elite-accent, currentColor);
+  }
+  .stat-label {
+    font-family: var(--elite-font-mono, ui-monospace, monospace);
+    font-size: var(--elite-t7); line-height: var(--elite-lh7);
+    letter-spacing: .18em; text-transform: uppercase;
+    color: var(--elite-ink-3, currentColor);
+  }
+
+} /* /components */
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * 13. FAMILY 11 — LUXURY TRIM  (savvy-fsbo-WL's polish.css)
+ *
+ * Named as such in the source, and rightly. Every value here reads
+ * --elite-trim. The originals hardcoded #b8935f in eleven places; changing
+ * the metal meant eleven edits and one of them was always missed.
+ * ═════════════════════════════════════════════════════════════════════════ */
+@layer components {
+
+  /* Corner ticks — 5px L-brackets. Smaller and quieter than .corner-bracket:
+     ticks are for an editorial card, brackets are for a HUD mini-card. */
+  .corner-ticks { position: relative; }
+  .corner-ticks::before,
+  .corner-ticks::after {
+    content: ""; position: absolute; width: 5px; height: 5px;
+    pointer-events: none; z-index: 3;
+  }
+  .corner-ticks::before { top: 6px; left: 6px; border-top: 1px solid var(--elite-trim); border-left: 1px solid var(--elite-trim); }
+  .corner-ticks::after  { bottom: 6px; right: 6px; border-bottom: 1px solid var(--elite-trim); border-right: 1px solid var(--elite-trim); }
+  /* Four corners needs two extra elements; pseudo elements only give two. */
+  .corner-ticks-4 { position: relative; }
+  .corner-ticks-4 > .tick {
+    position: absolute; width: 5px; height: 5px; pointer-events: none; z-index: 3;
+  }
+  .corner-ticks-4 > .tick-tr { top: 6px; right: 6px; border-top: 1px solid var(--elite-trim); border-right: 1px solid var(--elite-trim); }
+  .corner-ticks-4 > .tick-bl { bottom: 6px; left: 6px; border-bottom: 1px solid var(--elite-trim); border-left: 1px solid var(--elite-trim); }
+
+  /* Hairline — a trim border at 20% that lights to 80% on hover. */
+  .hairline-trim {
+    border: 1px solid color-mix(in srgb, var(--elite-trim) 20%, transparent);
+    transition: border-color 400ms var(--elite-ease-editorial),
+                box-shadow 400ms var(--elite-ease-editorial);
+  }
+  .hairline-trim:hover { border-color: color-mix(in srgb, var(--elite-trim) 80%, transparent); }
+
+  /* Inner ring — three stacked insets: the ring, a highlight on the top edge,
+     a shadow on the bottom. That triple is what makes a flat panel read as a
+     milled one rather than as a rectangle with a border. */
+  .inner-ring {
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--elite-trim) 50%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--elite-sheen) 6%, transparent),
+      inset 0 -1px 0 var(--elite-shade);
+  }
+
+  /* Glossy top — the sheen across the upper 45% of a panel. The children are
+     lifted to z-index 2 so the gloss passes UNDER the content; without that
+     the sheen washes out the first line of type. */
+  .glossy-top { position: relative; isolation: isolate; }
+  .glossy-top::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 45%;
+    pointer-events: none; border-radius: inherit; z-index: 1;
+    background: linear-gradient(180deg,
+      color-mix(in srgb, var(--elite-sheen) 22%, transparent) 0%,
+      color-mix(in srgb, var(--elite-sheen) 8%,  transparent) 40%,
+      transparent 100%);
+  }
+  .glossy-top > * { position: relative; z-index: 2; }
+
+  /* Stat card — the trim-ringed panel. Radius 2px on purpose: the editorial
+     register's cards are nearly square, which is what separates it from the
+     28px-everything look. */
+  .stat-card-trim {
+    position: relative; isolation: isolate; padding: 24px; border-radius: 2px;
+    background:
+      radial-gradient(ellipse at 20% -10%, color-mix(in srgb, var(--elite-trim) 14%, transparent) 0%, transparent 55%),
+      linear-gradient(180deg, var(--elite-surface-2) 0%, var(--elite-surface, transparent) 55%,
+        color-mix(in srgb, var(--elite-shade) 30%, var(--elite-surface, transparent)) 100%);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--elite-trim) 45%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--elite-sheen) 5%, transparent),
+      0 18px 36px -18px var(--elite-shade),
+      0 6px 14px -6px var(--elite-shade);
+    color: var(--elite-ink, currentColor);
+    transition: transform 500ms var(--elite-ease-editorial),
+                box-shadow 500ms var(--elite-ease-editorial);
+  }
+  .stat-card-trim:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--elite-trim) 75%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--elite-sheen) 8%, transparent),
+      0 24px 48px -20px var(--elite-shade),
+      0 10px 20px -8px var(--elite-shade);
+  }
+
+  /* Section rule — two fading hairlines with a mark between them. The mark is
+     an inline-SVG mask filled with currentColor, so it takes the trim colour
+     automatically and needs no second asset per product. */
+  .section-rule {
+    display: flex; align-items: center; justify-content: center;
+    gap: 14px; width: 100%; margin: 2.5rem 0; color: var(--elite-trim);
+  }
+  .section-rule::before,
+  .section-rule::after {
+    content: ""; flex: 1; height: 1px;
+    background: linear-gradient(to right, transparent 0%,
+      color-mix(in srgb, var(--elite-trim) 55%, transparent) 50%, transparent 100%);
+  }
+  .section-rule__mark {
+    flex: none; width: 10px; height: 10px; display: inline-block;
+    background-color: currentColor;
+    -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 1l2.4 7.6L22 11l-7.6 2.4L12 21l-2.4-7.6L2 11l7.6-2.4z'/></svg>") center / contain no-repeat;
+    mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 1l2.4 7.6L22 11l-7.6 2.4L12 21l-2.4-7.6L2 11l7.6-2.4z'/></svg>") center / contain no-repeat;
+  }
+
+} /* /components */
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * 14. FAMILY 12 — HUD  (fusion-overwatch, flash-repair)
+ *
+ * The instrument register. Everything here is decorative and must be
+ * `pointer-events: none`; a scan line that intercepts a click on the panel
+ * beneath it is the classic version of this bug.
+ * ═════════════════════════════════════════════════════════════════════════ */
+@layer components {
+
+  @keyframes elite-hud-scan { from { transform: translateY(-100%); } to { transform: translateY(100%); } }
+  .hud-scanline {
+    position: absolute; inset: 0; height: 2px; width: 100%;
+    opacity: .15; z-index: 1; pointer-events: none;
+    background: linear-gradient(to bottom, transparent, var(--elite-accent, currentColor), transparent);
+    animation: elite-hud-scan 4s linear infinite;
+  }
+
+  /* Speed trails. Two directions, because a single direction on a symmetric
+     panel reads as a scroll bar rather than as speed. */
+  @keyframes elite-speed-trail {
+    0%   { transform: translateX(-120%) scaleX(.5); opacity: 0; }
+    15%  { opacity: 1; }
+    85%  { opacity: .8; }
+    100% { transform: translateX(120%) scaleX(1.2); opacity: 0; }
+  }
+  @keyframes elite-speed-trail-rev {
+    0%   { transform: translateX(120%) scaleX(.5); opacity: 0; }
+    15%  { opacity: .7; }
+    85%  { opacity: .5; }
+    100% { transform: translateX(-120%) scaleX(1.2); opacity: 0; }
+  }
+  .speed-trail, .speed-trail-rev {
+    position: absolute; height: 1px; pointer-events: none;
+    background: linear-gradient(90deg, transparent, var(--elite-trim), transparent);
+  }
+  .speed-trail     { animation: elite-speed-trail     var(--trail-dur, 2.6s) linear infinite; }
+  .speed-trail-rev { animation: elite-speed-trail-rev var(--trail-dur, 3.4s) linear infinite; }
+
+  /* Bolt drift — the watermark motif that moves just enough to be noticed
+     once and then never again. Opacity peaks at .10; a watermark that reads
+     clearly is a logo, and a logo in a footer background is a mistake. */
+  @keyframes elite-bolt-drift {
+    0%, 100% { transform: translateY(0) rotate(0deg);   opacity: .06; }
+    50%      { transform: translateY(-10px) rotate(2deg); opacity: .10; }
+  }
+  .bolt-motif { animation: elite-bolt-drift 7s ease-in-out infinite; }
+
+} /* /components */
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * 15. TABLES AND DATA GRIDS
+ *
+ * The owner judges a build on its tables. Everything below is a rule from
+ * THE STANDARD, in CSS.
+ *
+ * The hairline under the sticky header is `inset 0 -1px 0`, not
+ * `border-bottom`. A border on a sticky header changes the row's box and the
+ * whole grid shifts by one pixel the moment the header sticks — the classic
+ * "table jumps on scroll" bug. An inset shadow paints inside the existing box
+ * and cannot move anything.
+ * ═════════════════════════════════════════════════════════════════════════ */
+@layer components {
+
+  .elite-table-wrap {
+    overflow-x: auto; overscroll-behavior-x: contain;
+    border-radius: var(--elite-radius-card);
+    background: var(--elite-surface, transparent);
+    box-shadow: inset 0 0 0 1px var(--elite-rule-1);
+  }
+
+  .elite-table {
+    width: 100%; border-collapse: separate; border-spacing: 0;
+    font-size: var(--elite-t5); line-height: var(--elite-lh5);
+    color: var(--elite-ink, currentColor);
+  }
+
+  .elite-table thead th {
+    position: sticky; top: 0; z-index: 2;
+    background: var(--elite-surface-2);
+    box-shadow: inset 0 -1px 0 var(--elite-rule-strong);
+    padding: 10px 14px; text-align: left; white-space: nowrap;
+    font-family: var(--elite-font-mono, ui-monospace, monospace);
+    font-size: var(--elite-t7); line-height: var(--elite-lh7); font-weight: 600;
+    letter-spacing: .12em; text-transform: uppercase;
+    color: var(--elite-ink-2, currentColor);
+  }
+
+  .elite-table tbody td {
+    padding: 11px 14px; vertical-align: middle;
+    box-shadow: inset 0 -1px 0 var(--elite-rule-1);
+  }
+  .elite-table tbody tr:last-child td { box-shadow: none; }
+
+  /* Row hover is a SURFACE change, not an outline. An outline on a row
+     reflows nothing but reads as a selection; a surface change reads as
+     "you are here". */
+  .elite-table tbody tr { transition: background-color 120ms var(--elite-ease); }
+  .elite-table tbody tr:hover td { background: var(--elite-surface-hover); }
+  .elite-table tbody tr[aria-selected="true"] td {
+    background: color-mix(in srgb, var(--elite-accent, currentColor) 10%, var(--elite-surface, transparent));
+  }
+
+  /* Zebra ONLY when the data is dense enough to need it. Opt in. */
+  .elite-table.is-zebra tbody tr:nth-child(even) td { background: var(--elite-surface-1); }
+  .elite-table.is-zebra tbody tr:nth-child(even):hover td { background: var(--elite-surface-hover); }
+
+  /* Numbers right, text left, tabular everywhere. Non-negotiable. */
+  .elite-table .num,
+  .elite-table [data-type="number"] {
+    text-align: right; font-variant-numeric: tabular-nums;
+    font-family: var(--elite-font-mono, ui-monospace, monospace);
+  }
+  .elite-table thead .num { text-align: right; }
+  /* Apply .num to the <th> AND to every <td> in that column — an alignment
+     that is right on some rows and left on others is worse than no alignment
+     at all, and is the single most common table defect in review. */
+
+  /* Compact and comfortable, since one density never fits a dashboard and a
+     report. */
+  .elite-table.is-compact tbody td { padding: 6px 10px; }
+  .elite-table.is-compact thead th { padding: 7px 10px; }
+  .elite-table.is-roomy   tbody td { padding: 16px 18px; }
+
+  /* A sticky first column, for a wide grid whose row label must survive the
+     horizontal scroll. */
+  .elite-table .sticky-col {
+    position: sticky; left: 0; z-index: 1;
+    background: var(--elite-surface, transparent);
+    box-shadow: inset -1px 0 0 var(--elite-rule-1), inset 0 -1px 0 var(--elite-rule-1);
+  }
+  .elite-table thead .sticky-col { z-index: 3; background: var(--elite-surface-2); }
+
+  /* The empty state is DESIGNED, and it carries a real next action. The words
+     "No data" are never acceptable — they tell an operator nothing about
+     whether the query is wrong, the filter is wrong, or the work is done. */
+  .elite-empty {
+    display: grid; place-items: center; gap: 10px;
+    padding: 56px 24px; text-align: center;
+    color: var(--elite-ink-2, currentColor);
+  }
+  .elite-empty__mark {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: color-mix(in srgb, var(--elite-accent, currentColor) 10%, transparent);
+    box-shadow: inset 0 0 0 1px var(--elite-rule-highlight);
+    color: var(--elite-accent, currentColor);
+  }
+  .elite-empty__title { font-size: var(--elite-t2); line-height: var(--elite-lh2); font-weight: 650; color: var(--elite-ink, currentColor); }
+  .elite-empty__body  { font-size: var(--elite-t5); line-height: var(--elite-lh5); max-width: 46ch; }
+
+  /* Column header sort affordance. */
+  .elite-table th[aria-sort] { cursor: pointer; }
+  .elite-table th[aria-sort]:hover { color: var(--elite-ink, currentColor); }
+  .elite-table th[aria-sort="ascending"]::after  { content: " ↑"; color: var(--elite-accent, currentColor); }
+  .elite-table th[aria-sort="descending"]::after { content: " ↓"; color: var(--elite-accent, currentColor); }
+
+} /* /components */
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * 16. REDUCED MOTION
+ *
+ * OUTSIDE every layer, deliberately. Unlayered rules beat layered ones no
+ * matter what a product's Tailwind layer order is, so nothing a product
+ * writes can accidentally out-specify an accessibility guarantee.
+ *
+ * The rule is REMOVE, not shorten. Collapsing every duration to 0.001ms makes
+ * transitions instant but still LANDS the transform — an element that was
+ * meant to travel 22px simply teleports there, and a marquee that was meant
+ * to scroll snaps to -50% and sits there with half its content off screen.
+ * So every family below has its animation removed and its transform reset.
+ * ═════════════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Entrance: arrive, do not travel. */
+  .reveal, .reveal.in,
+  .fade-up, .fade-up-lazy, .hero-rise, .hero-reveal, .flash-rise,
+  .elite-sundown, .elite-stagger > *, .animate-count-up {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* Photographic: the plate holds still. Ken Burns on a stopped animation
+     would freeze mid-scale and crop the subject out; removed outright. */
+  .hero-zoom, .hero-kenburns, .hero-breathe, .lens-float { animation: none !important; transform: none !important; }
+  .hero-sweep, .hero-dust, .film-grain, .film-scanlines { display: none !important; }
+  .hero-word { transform: none !important; }
+
+  /* Texture and shimmer: the surface keeps its colour, loses its motion. */
+  .wood-grain, .film-bars > i,
+  .shimmer-effect::before, .sheen, .metallic-sweep::after,
+  .text-shimmer, .logo-shine::after, .glass-shimmer::before,
+  .elite-heading-gradient.is-animated {
+    animation: none !important;
+    transform: none !important;
+  }
+  .shimmer-effect::before, .metallic-sweep::after, .logo-shine::after,
+  .glass-shimmer::before { display: none !important; }
+  /* The gradient text must still be filled, or the headline vanishes. */
+  .text-shimmer { background-position: 0 center; }
+
+  /* Glow: hold the low end of the pulse. A glow is colour, not movement, so
+     it stays — it simply stops breathing. */
+  .animate-glow-pulse, .animate-energy-pulse, .live-pulse, .record-pulse,
+  .orb-pulse::after, .hero-corner { animation: none !important; }
+  .orb-pulse::after { display: none !important; }
+
+  /* Borders: the ring stays, the sweep stops, and the conic gradient is
+     replaced with a static one — a frozen comet is a bright smear on one
+     corner, which looks like a rendering bug rather than a border. */
+  .border-rotate::before, .border-neon::before, .border-flow::before,
+  .border-follow::after, .border-pulse { animation: none !important; }
+  .border-rotate::before, .border-neon::before {
+    background: linear-gradient(135deg,
+      color-mix(in srgb, var(--elite-trim) 50%, transparent),
+      color-mix(in srgb, var(--elite-trim) 20%, transparent)) !important;
+    filter: none !important;
+  }
+  .border-follow::after { display: none !important; }
+
+  /* Ambient and solar: the light stays, the drift goes. */
+  .orbs > i, .blob-float, .gradient-mesh > i, .particle-field,
+  .mote, .cyber-grid, .css-rays::before, .sun-presence > i {
+    animation: none !important;
+    transform: none !important;
+  }
+  .mote { display: none !important; }
+
+  /* Furniture. A marquee under reduced motion is a static row: it stops AND
+     wraps, so the second copy of the content is hidden rather than left
+     hanging off the edge. */
+  .marquee > * { animation: none !important; transform: none !important; }
+  .marquee > * ~ * { display: none !important; }
+  .scroll-cue > span, .scroll-bob { animation: none !important; transform: none !important; }
+  .scroll-cue > span { transform: translateY(40%) !important; }
+  .hover-lift:hover, .hover-lift-lg:hover, .stat-card-trim:hover,
+  .magnetic { transform: none !important; }
+  .tab-crossfade { transition: none !important; }
+  .tab-crossfade[data-state="exit"] { transform: none !important; }
+  /* The pin collapses to one screen: nothing sticks, nothing scrubs. */
+  .pin-track { height: 100svh; }
+
+  /* Data. The skeleton keeps a visible tint so a loading region is still
+     legible as "loading" without a travelling band. */
+  .skeleton { animation: none !important; background: var(--elite-surface-2) !important; }
+  .loadbar::before { animation: none !important; width: 100% !important; transform: none !important; opacity: .5; }
+  .chip-live::before { animation: none !important; }
+
+  /* HUD. */
+  .hud-scanline, .speed-trail, .speed-trail-rev, .bolt-motif {
+    animation: none !important;
+  }
+  .hud-scanline, .speed-trail, .speed-trail-rev { display: none !important; }
+
+  /* Buttons: state is kept, movement is removed. */
+  .btn:hover > svg:last-child:not(:first-child) { transform: none !important; }
+  .btn:active { transform: none !important; }
+  .btn::before { transition: none !important; }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * 17. THE ONE GLOBAL RULE
+ *
+ * `clip`, never `hidden`. Setting `overflow-x: hidden` on <body> makes <body>
+ * the scroll container, which freezes `window.scrollY` at 0 — and every
+ * scroll-driven thing in motion/ reads exactly that value. Reveals never
+ * fire, the rail never fills, the pin never scrubs, and nothing in the
+ * console says why. `clip` clips without creating a scroll container.
+ *
+ * Scoped to phones because that is where a fixed decoration usually causes
+ * the sideways scroll this is fixing.
+ * ═════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 767px) {
+  html, body { overflow-x: clip; max-width: 100vw; }
+}
